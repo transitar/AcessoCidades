@@ -37,6 +37,14 @@ suppressMessages(library(bit64)) # viz large numbers
 suppressMessages(library(quantreg))
 suppressMessages(library(gtfstools))
 suppressMessages(library(readxl))
+suppressMessages(library(magrittr))
+suppressMessages(library(ceramic))
+suppressMessages(library(ggalt))
+suppressMessages(library(hrbrthemes))
+suppressMessages(library(ggnewscale))
+suppressMessages(library(ggsn))
+suppressMessages(library(ggthemes))
+
 
 
 munis_list <- list(
@@ -92,52 +100,152 @@ munis_list <- list(
   #   pivot_longer(cols = `2017`:`2020`, names_to = "ano_modo", values_to = "modo") %>% 
   #   setDT(),
   
+  # munis_metro = tribble(
+  #   ~abrev_muni, ~ano_metro,  ~code_muni,
+  #   "for",       2017,     2304400,
+  #   "spo",       2017,     3550308,
+  #   "rio",       2017,     3304557,
+  #   "cur",       2017,     4106902,
+  #   "poa",       2017,     4314902,
+  #   "bho",       2017,     3106200,
+  #   "bsb",       2017,     5300108,
+  #   "sal",       2017,     2927408,
+  #   "man",       2017,     1302603,
+  #   "rec",       2017,     2611606,
+  #   "goi",       2017,     5208707,
+  #   "bel",       2017,     1501402,
+  #   "gua",       2017,     3518800,
+  #   "cam",       2017,     3509502,
+  #   "slz",       2017,     2111300,
+  #   "sgo",       2017,     3304904,
+  #   "mac",       2017,     2704302,
+  #   "duq",       2017,     3301702,
+  #   "cgr",       2017,     5002704,
+  #   "nat",       2017,     2408102,
+  #   
+  #   "for",       2018,     2304400,
+  #   "spo",       2018,     3550308,
+  #   "rio",       2018,     3304557,
+  #   "cur",       2018,     4106902,
+  #   "poa",       2018,     4314902,
+  #   "bho",       2018,     3106200,
+  #   "bsb",       2018,     5300108,
+  #   "sal",       2018,     2927408,
+  #   "man",       2018,     1302603,
+  #   "rec",       2018,     2611606,
+  #   "goi",       2018,     5208707,
+  #   "bel",       2018,     1501402,
+  #   "gua",       2018,     3518800,
+  #   "cam",       2018,     3509502,
+  #   "slz",       2018,     2111300,
+  #   "sgo",       2018,     3304904,
+  #   "mac",       2018,     2704302,
+  #   "duq",       2018,     3301702,
+  #   "cgr",       2018,     5002704,
+  #   "nat",       2018,     2408102,
+  #   
+  # 
+  # ) %>% setDT()
+  
   munis_metro = tribble(
     ~abrev_muni, ~ano_metro,  ~code_muni,
-    "for",       2017,     2304400,
-    "spo",       2017,     3550308,
-    "rio",       2017,     3304557,
-    "cur",       2017,     4106902,
-    "poa",       2017,     4314902,
-    "bho",       2017,     3106200,
-    "bsb",       2017,     5300108,
-    "sal",       2017,     2927408,
-    "man",       2017,     1302603,
-    "rec",       2017,     2611606,
-    "goi",       2017,     5208707,
-    "bel",       2017,     1501402,
-    "gua",       2017,     3518800,
-    "cam",       2017,     3509502,
-    "slz",       2017,     2111300,
-    "sgo",       2017,     3304904,
-    "mac",       2017,     2704302,
-    "duq",       2017,     3301702,
-    "cgr",       2017,     5002704,
-    "nat",       2017,     2408102,
+    "poa",       2019,     4314902,
+    "bel",       2019,     1501402,
+    "man",       2019,     1302603,
+    "slz",       2019,     2111300,
+    "rma",       2019,     c(2800308,2804805,2800605,2806701),
+    "noh",       2019,     4313409,
+    "dou",       2019,     5003702,
+    "con",       2019,     3118601,
+    "vic",       2019,     2933307,
+    "cit",       2019,     3201209,
+    "pal",       2019,     1721000
     
-    "for",       2018,     2304400,
-    "spo",       2018,     3550308,
-    "rio",       2018,     3304557,
-    "cur",       2018,     4106902,
-    "poa",       2018,     4314902,
-    "bho",       2018,     3106200,
-    "bsb",       2018,     5300108,
-    "sal",       2018,     2927408,
-    "man",       2018,     1302603,
-    "rec",       2018,     2611606,
-    "goi",       2018,     5208707,
-    "bel",       2018,     1501402,
-    "gua",       2018,     3518800,
-    "cam",       2018,     3509502,
-    "slz",       2018,     2111300,
-    "sgo",       2018,     3304904,
-    "mac",       2018,     2704302,
-    "duq",       2018,     3301702,
-    "cgr",       2018,     5002704,
-    "nat",       2018,     2408102,
     
-
+  ) %>% setDT(),
+  
+  
+  munis_df= tribble(
+    ~abrev_muni, ~ano_metro,  ~code_muni, ~name_muni, ~abrev_estado, ~map_plot_ratio_wh,
+    "poa",       2019,     4314902, "Porto Alegre" , "RS" , 1,
+    "bel",       2019,     1501402, "Belém", "PA", 1,
+    "man",       2019,     1302603, "Manaus", "AM", 1,
+    "slz",       2019,     2111300, "São Luís", "MA", 1, 
+    "rma",       2019,     c(2800308,2804805,2800605,2806701), "Região Metropolitana de Aracaju", "SE", 1, 
+    "noh",       2019,     4313409, "Novo Hamburgo", "RS", 1, 
+    "dou",       2019,     5003702, "Dourados", "MS", 1,
+    "con",       2019,     3118601, "Contagem", "MG", 1,
+    "vic",       2019,     2933307, "Vitória da Conquista", "BA", 1,
+    "cit",       2019,     3201209, "Cachoeiro do Itapemirim", "ES", 1,
+    "pal",       2019,     1721000, "Palmas", "TO", 1
+    
+    
   ) %>% setDT()
   
   
 ) 
+
+
+criate_folder <- function(dir) {
+  
+  if (!dir.exists(dir)){
+    dir.create(dir,recursive = T)
+    print("Dir created!")
+  } else {
+    print("Dir already exists!")
+  }}
+
+
+consolida_basico <- function(caminho) {
+  
+  ler_basico <- fread(caminho)
+  
+  # df <- ler_basico %>% 
+  #   select(1:33) %>% 
+  #   mutate_at(c(1:21), as.character) %>% 
+  #   mutate_at(c(22:33), ~ str_replace(., ",", ".")) %>% 
+  #   mutate_at(c(22:33), as.numeric)
+  
+  df <- ler_basico %>% 
+    select(1:21) %>% 
+    mutate_at(c(1:21), as.character)  
+    # mutate_at(c(22:33), ~ str_replace(., ",", ".")) %>% 
+    # mutate_at(c(22:33), as.numeric)
+  
+  
+  return(df)
+  
+  
+}
+
+
+tabela_variaveis_censo <-  tribble(
+  ~ original_name,
+  ~ prefix_name,
+  "Domicilio01","Dom01",
+  "Domicilio02","Dom02",
+  "DomicilioRenda","Dom_Renda",
+  "Entorno01","Ent01",
+  "Entorno02","Ent02",
+  "Entorno03","Ent03",
+  "Entorno04","Ent04",
+  "Entorno05","Ent05",
+  "Pessoa01","Pess01",
+  "Pessoa02","Pess02",
+  "Pessoa03","Pess03",
+  "Pessoa04","Pess04",
+  "Pessoa05","Pess05",
+  "Pessoa06","Pess06" ,
+  "Pessoa07","Pess07",
+  "Pessoa08","Pess08",
+  "Pessoa09","Pess09",
+  "Pessoa10","Pess10",
+  "Pessoa11","Pess11",
+  "Pessoa12","Pess12",
+  "Pessoa13","Pess13",
+  "PessoaRenda","Pess_Renda",
+  "Responsavel01","Resp01",
+  "Responsavel02","Resp02",
+  "ResponsavelRenda","Resp_Renda",
+  
+) %>% setDT()
