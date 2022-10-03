@@ -44,7 +44,8 @@ suppressMessages(library(hrbrthemes))
 suppressMessages(library(ggnewscale))
 suppressMessages(library(ggsn))
 suppressMessages(library(ggthemes))
-
+suppressMessages(library(rlist))
+suppressMessages(library(pipeR))
 
 
 munis_list <- list(
@@ -184,6 +185,31 @@ munis_list <- list(
   
   
 ) 
+
+censo <- list(
+  
+  
+  variaveis_interesse = tribble(
+    
+    variavel ,descricao ,planilha_censo,id_inicio,id_fim,delta,
+    "P001" ,"Pessoas brancas do sexo masculino" ,"Pessoa03",087,162,5,
+    "P002","Pessoas pretas do sexo masculino" ,"Pessoa03",088,163,5,
+    "P003","Pessoas amarelas do sexo masculino" ,"Pessoa03",089,164,5,
+    "P004","Pessoas pardas do sexo masculino" ,"Pessoa03",090,165,5,
+    "P005","Pessoas indígenas do sexo masculino" ,"Pessoa03",091,166,5,
+    "P006","Pessoas brancas do sexo feminino" ,"Pessoa03",167,242,5,
+    "P007","Pessoas pretas do sexo feminino" ,"Pessoa03",168,243,5,
+    "P008","Pessoas amarelas do sexo feminino" ,"Pessoa03",169,244,5,
+    "P009","Pessoas pardas do sexo feminino" ,"Pessoa03",170,245,5,
+    "P010","Pessoas indígenas do sexo feminino" ,"Pessoa03",171,246,5
+    
+    
+  ) %>% setDT()
+  
+  
+)
+
+
 
 
 criate_folder <- function(dir) {

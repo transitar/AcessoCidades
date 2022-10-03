@@ -7,7 +7,7 @@
 # mudanca no seu shape (goiania p/ 2019, por exemplo, q considera a RM) e portanto devem ser consideradas
 
 # carregar bibliotecas
-source('R/fun/setup.R')
+source('fun/setup.R')
 
 
 # função do geobr para dissolver polígonos

@@ -1,14 +1,12 @@
 # consolida todas as tabelas do censo em uma única 
 
-source('R/fun/setup.R')
+source('fun/setup.R')
 
 # 1 - definindo a tabela com informacoes padroes  -------------------------
 
 # lendo arquivos Basico.csv 
 
-lista.diretorios <- list.dirs(path = '../data-raw/censo_2010/AM_20171016/',full.names = TRUE)
-
-lista.diretorios[9]
+lista.diretorios <- list.dirs(path = '../../data-raw/censo_2010_A/',full.names = TRUE)
 
 arquivos.basicos.path <- list.files(path = lista.diretorios,pattern="(Basico_).*\\.xls$")
 
@@ -54,6 +52,97 @@ consolida_basico <- function(caminho) {
 
 
 tabela_basico <- map_df(.x = lista_dos_basicos,.f = consolida_basico)
+
+head(tabela_basico)
+
+# 2 - juntando tabela das variáveis  --------------------------------------
+
+caminhos_s_basico <-  data.frame(caminhos = list.files(path = lista.diretorios,pattern = '.xls|.XLS',full.names = T)) %>% 
+  filter(str_detect(caminhos,pattern = 'Basico') == FALSE) %>% 
+  unlist()
+
+caminho <- caminhos_s_basico[1]
+
+rm(caminho)
+
+consolida_variaveis_censo <- function(caminho) {
+  
+  message(paste("rodando", which(caminhos_s_basico %in% caminho)))
+  
+  tabela <- read_excel(caminho) %>% select(-2)
+  
+  estado <- str_sub(string = caminho,start = -6,end = -5)
+  
+  prefix <- tabela_variaveis_censo %>% mutate(caminho = caminho) %>% 
+    filter(str_detect(string = caminho,pattern = original_name) == TRUE) %>% 
+    pull(prefix_name)
+  
+  tabela2 <- tabela %>% 
+    rename_at(2:ncol(tabela),~ paste0(prefix,"_", .x))
+    
+  write_rds(x = tabela2,file = sprintf('../../data-raw/censo_2010_treated_A/%s_%s.rds',prefix,estado))
+  
+  
+}
+
+walk(.x = caminhos_s_basico,.f = consolida_variaveis_censo)
+
+length(caminhos_s_basico)
+
+# OKKKK
+
+
+# 3 - dados para cada municipio de interesse  -----------------------------
+
+sigla_muni <- "con"
+
+salvar_dados_censo_municipio <- function(munis = "all"){
+  
+  filter_censo_total_municipio <- function(sigla_muni){
+    
+    message(paste("rodando", sigla_muni))
+    
+    code_munis <- munis_list$munis_metro[abrev_muni == sigla_muni]$code_muni %>% 
+      unlist()
+    
+    code_uf <- munis_list$munis_df[abrev_muni == sigla_muni]$abrev_estado %>% unlist()
+    
+    path_arquivos_UF <- list.files(path = '../../data-raw/censo_2010_treated_A/',pattern = paste0(code_uf,".rds"),full.names = T)
+    
+    lista.dfs <- lapply(path_arquivos_UF, read_rds)
+    
+    lista_setores_censitarios <- tabela_basico %>% filter(Cod_municipio %in% code_munis) %>% pull(Cod_setor)
+    
+    lista.dfs2 <- map(lista.dfs, ~filter(.x, Cod_setor %in% lista_setores_censitarios))
+    
+    df_final <- reduce(lista.dfs2, left_join, by = 'Cod_setor')
+    
+    write_rds(x = df_final,file = sprintf('../../data-raw/censo_2021_info_muni/muni_%s.rds',sigla_muni))
+    
+  }
+  
+  # 2. Aplica funcao ------------------------------------------
+  if (munis == "all") {
+    
+    # seleciona todos municipios ou RMs do ano escolhido
+    x = munis_list$munis_metro$abrev_muni
+    
+  } else (x = munis)
+  
+  
+  lapply(X=x, FUN=filter_censo_total_municipio)
+  
+  
+}
+
+salvar_dados_censo_municipio(munis = "all")
+
+
+
+
+
+
+
 
 
 
