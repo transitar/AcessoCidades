@@ -275,3 +275,7 @@ tabela_variaveis_censo <-  tribble(
   "ResponsavelRenda","Resp_Renda",
   
 ) %>% setDT()
+
+#q
+
+#oiii#
