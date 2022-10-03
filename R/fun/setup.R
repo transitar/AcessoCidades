@@ -251,3 +251,5 @@ tabela_variaveis_censo <-  tribble(
 ) %>% setDT()
 
 #q
+
+#oiii#
