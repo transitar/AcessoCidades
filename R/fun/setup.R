@@ -278,4 +278,4 @@ tabela_variaveis_censo <-  tribble(
 
 #q
 
-#oiii#
+#oteste
