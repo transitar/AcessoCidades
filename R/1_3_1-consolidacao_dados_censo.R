@@ -155,6 +155,7 @@ cols_gen_cor <- dados_vars_interesse %>%
   rowwise() %>% 
   mutate(cols_vec = list(paste0(prefix_name,"_V", seq_variaveis)))
 
+#Lista com os nomes das variável a serem construídas
 var_list <- cols_gen_cor$variavel
 
 
