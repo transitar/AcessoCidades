@@ -242,6 +242,25 @@ consolida_basico <- function(caminho) {
   return(df)
   
   
+  coleta_variaveis <- function(var,arq_munis){
+    
+    
+    message(paste("rodando", which(var_list %in% var), "de", length(var_list)))
+    
+    col_vec <- cols_gen_cor %>% filter(variavel == var) %>% pull(cols_vec) %>% unlist()
+    
+    x <- arq_munis %>% select(1,col_vec) %>% mutate_if(is.character, as.numeric) %>%
+      rowwise() %>% mutate(!!var := sum(across(.cols = 2:ncol(.)))) %>%
+      select(Cod_setor, var)
+    
+    return(x)
+    
+    
+    # return(x_f)
+    
+  }
+  
+  
 }
 
 

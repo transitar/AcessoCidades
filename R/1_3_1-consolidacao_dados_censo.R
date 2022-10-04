@@ -145,64 +145,54 @@ lista_diretorios_dados_muni <- list.dirs(path = '../data-raw/censo_2021_info_mun
 
 path_munis <- list.files(path = lista_diretorios_dados_muni, pattern= "(muni).*\\.rds$", full.names = TRUE)
 
-arq_munis <- lapply(X = path_munis, FUN = readr::read_rds) %>%
-  rbindlist(fill = TRUE)
 
-cols_gen_cor <- censo$variaveis_interesse %>%
+# sigla_muni <- "bel"
+
+dados_vars_interesse <- censo$variaveis_interess %>%
+  left_join(tabela_variaveis_censo, by = c("planilha_censo"="original_name"))
+
+cols_gen_cor <- dados_vars_interesse %>%
   rowwise() %>% 
-  mutate(cols_vec = list(paste0("Pess03_V", seq_variaveis)))
+  mutate(cols_vec = list(paste0(prefix_name,"_V", seq_variaveis)))
+
+var_list <- cols_gen_cor$variavel
 
 
-
-col_vec <- cols_gen_cor$cols_vec[1] %>% unlist()
-var  = "P001"
-
-coleta_variaveis <- function(col_vec){
+consolida_variaveis_interesse <- function(munis = "all") {
   
   
-  
-  x <- arq_munis %>% select(1,col_vec) %>% mutate_if(is.character, as.numeric) %>%
+  vamo <- function(sigla_muni) {
     
-    rowwise() %>% mutate(var = sum(across(.cols = 2:ncol(.)))) %>%
-    select(Cod_setor, var)
-  
+    message(paste("rodando", sigla_muni))
     
-
+    arq_munis <- read_rds(file = sprintf('../data-raw/censo_2021_info_muni/muni_%s.rds',sigla_muni))
+    
+    
+    tudo <- map(.x = var_list, .f = coleta_variaveis, arq_munis = arq_munis)
+    
+    
+    variaveis_munis <- reduce(tudo, left_join, by = 'Cod_setor')
+    
+    
+    write_rds(variaveis_munis,sprintf('../data-raw/censo_2021_info_muni_treated/muni_%s.rds',sigla_muni))
+    
+  }
   
   
+  if (munis == "all") {
+    
+    # seleciona todos municipios ou RMs do ano escolhido
+    x = munis_list$munis_metro$abrev_muni
+    
+  } else (x = munis)
   
+  
+  lapply(X=x, FUN=vamo)
   
   
 }
-  
 
 
-
-
-colstoread <- c('Cod_setor', paste0("Pess03_", rep(seq(censo$variaveis_interesse$id_inicio[1],censo$variaveis_interesse$id_fim[1],censo$variaveis_interesse$delta[1]))))
-
-seq2 <- Vectorize(seq.default, vectorize.args = c("from", "to"))
-
-
-dados_munis_gen_cor
-
-
-
-
-
-#function
-
-
-
-
-
-
-
-
-
-
-
-
-
+consolida_variaveis_interesse(munis = "all")
 
 
