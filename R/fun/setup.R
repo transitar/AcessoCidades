@@ -191,7 +191,7 @@ censo <- list(
   
   variaveis_interesse = tribble(
     
-    variavel ,descricao ,planilha_censo,id_inicio,id_fim,delta,
+    ~variavel ,~descricao ,~planilha_censo,~id_inicio,~id_fim,~delta,
     "P001" ,"Pessoas brancas do sexo masculino" ,"Pessoa03",087,162,5,
     "P002","Pessoas pretas do sexo masculino" ,"Pessoa03",088,163,5,
     "P003","Pessoas amarelas do sexo masculino" ,"Pessoa03",089,164,5,
