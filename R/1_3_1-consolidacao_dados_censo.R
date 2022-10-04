@@ -1,12 +1,12 @@
 # consolida todas as tabelas do censo em uma única 
 
-source('fun/setup.R')
+source('R/fun/setup.R')
 
 # 1 - definindo a tabela com informacoes padroes  -------------------------
 
 # lendo arquivos Basico.csv 
 
-lista.diretorios <- list.dirs(path = '../../data-raw/censo_2010_A/',full.names = TRUE)
+lista.diretorios <- list.dirs(path = '../data-raw/censo_2010_A/',full.names = TRUE)
 
 arquivos.basicos.path <- list.files(path = lista.diretorios,pattern="(Basico_).*\\.xls$")
 
@@ -80,7 +80,7 @@ consolida_variaveis_censo <- function(caminho) {
   tabela2 <- tabela %>% 
     rename_at(2:ncol(tabela),~ paste0(prefix,"_", .x))
     
-  write_rds(x = tabela2,file = sprintf('../../data-raw/censo_2010_treated_A/%s_%s.rds',prefix,estado))
+  write_rds(x = tabela2,file = sprintf('../data-raw/censo_2010_treated_A/%s_%s.rds',prefix,estado))
   
   
 }
@@ -107,7 +107,7 @@ salvar_dados_censo_municipio <- function(munis = "all"){
     
     code_uf <- munis_list$munis_df[abrev_muni == sigla_muni]$abrev_estado %>% unlist()
     
-    path_arquivos_UF <- list.files(path = '../../data-raw/censo_2010_treated_A/',pattern = paste0(code_uf,".rds"),full.names = T)
+    path_arquivos_UF <- list.files(path = '../data-raw/censo_2010_treated_A/',pattern = paste0(code_uf,".rds"),full.names = T)
     
     lista.dfs <- lapply(path_arquivos_UF, read_rds)
     
