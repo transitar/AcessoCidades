@@ -139,6 +139,64 @@ salvar_dados_censo_municipio(munis = "all")
 
 
 
+# Seleção das variáveis de interesse --------------------------------------
+
+lista_diretorios_dados_muni <- list.dirs(path = '../data-raw/censo_2021_info_muni/',full.names = TRUE)
+
+path_munis <- list.files(path = lista_diretorios_dados_muni, pattern= "(muni).*\\.rds$", full.names = TRUE)
+
+arq_munis <- lapply(X = path_munis, FUN = readr::read_rds) %>%
+  rbindlist(fill = TRUE)
+
+cols_gen_cor <- censo$variaveis_interesse %>%
+  rowwise() %>% 
+  mutate(cols_vec = list(paste0("Pess03_V", seq_variaveis)))
+
+
+
+col_vec <- cols_gen_cor$cols_vec[1] %>% unlist()
+var  = "P001"
+
+coleta_variaveis <- function(col_vec){
+  
+  
+  
+  x <- arq_munis %>% select(1,col_vec) %>% mutate_if(is.character, as.numeric) %>%
+    
+    rowwise() %>% mutate(var = sum(across(.cols = 2:ncol(.)))) %>%
+    select(Cod_setor, var)
+  
+    
+
+  
+  
+  
+  
+  
+}
+  
+
+
+
+
+colstoread <- c('Cod_setor', paste0("Pess03_", rep(seq(censo$variaveis_interesse$id_inicio[1],censo$variaveis_interesse$id_fim[1],censo$variaveis_interesse$delta[1]))))
+
+seq2 <- Vectorize(seq.default, vectorize.args = c("from", "to"))
+
+
+dados_munis_gen_cor
+
+
+
+
+
+#function
+
+
+
+
+
+
 
 
 

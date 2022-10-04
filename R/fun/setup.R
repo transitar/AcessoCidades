@@ -191,17 +191,17 @@ censo <- list(
   
   variaveis_interesse = tribble(
     
-    ~variavel ,~descricao ,~planilha_censo,~id_inicio,~id_fim,~delta,
-    "P001" ,"Pessoas brancas do sexo masculino" ,"Pessoa03",087,162,5,
-    "P002","Pessoas pretas do sexo masculino" ,"Pessoa03",088,163,5,
-    "P003","Pessoas amarelas do sexo masculino" ,"Pessoa03",089,164,5,
-    "P004","Pessoas pardas do sexo masculino" ,"Pessoa03",090,165,5,
-    "P005","Pessoas indígenas do sexo masculino" ,"Pessoa03",091,166,5,
-    "P006","Pessoas brancas do sexo feminino" ,"Pessoa03",167,242,5,
-    "P007","Pessoas pretas do sexo feminino" ,"Pessoa03",168,243,5,
-    "P008","Pessoas amarelas do sexo feminino" ,"Pessoa03",169,244,5,
-    "P009","Pessoas pardas do sexo feminino" ,"Pessoa03",170,245,5,
-    "P010","Pessoas indígenas do sexo feminino" ,"Pessoa03",171,246,5
+    ~variavel ,~descricao ,~planilha_censo,~seq_variaveis,
+    "P001" ,"Pessoas brancas do sexo masculino" ,"Pessoa03",c("087","092","097",102,107,112,117,122,127,132,137,142,147,152,157,162),
+    "P002","Pessoas pretas do sexo masculino" ,"Pessoa03",c("088","093","098",103,108,113,118,123,128,133,138,143,148,153,158,163),
+    "P003","Pessoas amarelas do sexo masculino" ,"Pessoa03",c("089","094","099",104,109,114,119,124,129,134,139,144,149,154,159,164),
+    "P004","Pessoas pardas do sexo masculino" ,"Pessoa03",c("090","095",100,105,110,115,120,125,130,135,140,145,150,155,160,165),
+    "P005","Pessoas indígenas do sexo masculino" ,"Pessoa03",c("091","096",101,106,111,116,121,126,131,136,141,146,151,156,161,166),
+    "P006","Pessoas brancas do sexo feminino" ,"Pessoa03",c(167,172,177,182,187,192,197,202,207,212,217,222,227,232,237,242),
+    "P007","Pessoas pretas do sexo feminino" ,"Pessoa03",c(168,173,178,183,188,193,198,203,208,213,218,223,228,233,238,243),
+    "P008","Pessoas amarelas do sexo feminino" ,"Pessoa03",c(169,174,179,184,189,194,199,204,209,214,219,224,229,234,239,244),
+    "P009","Pessoas pardas do sexo feminino" ,"Pessoa03",c(170,175,180,185,190,195,200,205,210,215,220,225,230,235,240,245),
+    "P010","Pessoas indígenas do sexo feminino" ,"Pessoa03",c(171,176,181,186,191,196,201,206,211,216,221,226,231,236,241,246)
     
     
   ) %>% setDT()
