@@ -139,7 +139,7 @@ salvar_dados_censo_municipio(munis = "all")
 
 
 
-# Seleção das variáveis de interesse --------------------------------------
+# 4 - Seleção das variáveis de interesse --------------------------------------
 
 lista_diretorios_dados_muni <- list.dirs(path = '../data-raw/censo_2021_info_muni/',full.names = TRUE)
 
