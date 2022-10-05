@@ -43,7 +43,7 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
   
   temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(5000)
   
-  mapview(temp_sf)
+  # mapview(temp_sf)
   
   # temp_sf <- read_municipality(code_muni = muni1,year = 2019) 
   
