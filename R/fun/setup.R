@@ -1,6 +1,7 @@
 Sys.setenv(TZ='UTC') # Fuso horario local
 
 # carregar bibliotecas
+suppressMessages(library(osmdata))
 suppressMessages(library(raster))
 suppressMessages(library(ggplot2) )     # visualizacao de dados
 suppressMessages(library(ggthemes)  )   # temas para visualizacao de dados
@@ -264,19 +265,34 @@ consolida_basico <- function(caminho) {
 }
 
 #labelling function
+label_names2 <- tribble(~variavel, ~legenda,
+  "P001" , "Homens Brancos",
+  "P002","Homens Pretos",
+  "P003" , "Homens Amarelos",
+  "P004" , "Homens Pardos",
+  "P005" , "Homens Indígenas",
+  "P006" , "Mulheres Brancas",
+  "P007" , "Mulheres Pretas",
+  "P008" , "Mulheres Amarelas",
+  "P009" , "Mulheres Pardas",
+  "P010" , "Mulheres Indígenas",
+  "Ptot_mulheres" , "Mulheres (Total)",
+  "Ptot_homens" , "Homens (Total)"
+)
+
 label_names <- list(
-  "P001" = "Homens Brancos",
-  "P002" = "Homens Pretos",
-  "P003" = "Homens Amarelos",
-  "P004" = "Homens Pardos",
-  "P005" = "Homens Indígenas",
-  "P006" = "Mulheres Brancas",
-  "P007" = "Mulheres Pretas",
-  "P008" = "Mulheres Amarelas",
-  "P009" = "Mulheres Pardas",
-  "P010" = "Mulheres Indígenas",
-  "Ptot_mulheres" = "Mulheres (Total)",
-  "Ptot_homens" = "Homens (Total)"
+                       "P001" = "Homens Brancos",
+                       "P002"="Homens Pretos",
+                       "P003" = "Homens Amarelos",
+                       "P004" = "Homens Pardos",
+                       "P005" = "Homens Indígenas",
+                       "P006" = "Mulheres Brancas",
+                       "P007" = "Mulheres Pretas",
+                       "P008" = "Mulheres Amarelas",
+                       "P009" = "Mulheres Pardas",
+                       "P010" = "Mulheres Indígenas",
+                       "Ptot_mulheres" = "Mulheres (Total)",
+                       "Ptot_homens" = "Homens (Total)"
 )
 
 labeller_grupos <- function(variable, value){
