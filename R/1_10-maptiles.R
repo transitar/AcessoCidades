@@ -21,7 +21,7 @@ Sys.setenv(MAPBOX_API_KEY = my_api$V1)
 
 Sys.getenv("MAPBOX_API_KEY")
 
-sigla_muni = 'rma'
+sigla_muni = 'slz'
 ano = 2019
 
 # 2.1) Baixar e salvar os maps tiles de todos os municipios ---------------------
@@ -55,10 +55,13 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
     # download tile based on custom template (style)
   
     tile_for <- cc_location(temp_sf2,
-                            type = "styles/v1/jlucasao/cl8vylwtv000v14oxyp33krfc/tiles",
+                            type = "styles/v1/jlucasao/cl8xeo1n4001515peioq6rk7f/tiles",
                             # mapbox://styles/jlucasao/cl8boo6f6002c14mdxm7dr32r
                             # mapbox://styles/v1/jlucasao/cl8boo6f6002c14mdxm7dr32r
                              # debug = TRUE
+                            
+                            #https://api.mapbox.com/styles/v1/jlucasao/cl8xeo1n4001515peioq6rk7f.html?title=view&access_token=pk.eyJ1Ijoiamx1Y2FzYW8iLCJhIjoiY2w4YWsyZXd3MDhqODN1cGl2aXhzYzgwbyJ9.FwJIPGPdR3i-hNfNa75J-A&zoomwheel=true&fresh=true#11.4/-2.5291/-44.2844
+                            #https://api.mapbox.com/styles/v1/jlucasao/cl8xegzs900c415mvn8w9tkr5.html?title=view&access_token=pk.eyJ1Ijoiamx1Y2FzYW8iLCJhIjoiY2w4YWsyZXd3MDhqODN1cGl2aXhzYzgwbyJ9.FwJIPGPdR3i-hNfNa75J-A&zoomwheel=true&fresh=true#10.74/-3.7465/-38.4776
                             # https://api.mapbox.com/styles/v1/jlucasao/cl8vylwtv000v14oxyp33krfc.html?title=view&access_token=pk.eyJ1Ijoiamx1Y2FzYW8iLCJhIjoiY2w4YWsyZXd3MDhqODN1cGl2aXhzYzgwbyJ9.FwJIPGPdR3i-hNfNa75J-A&zoomwheel=true&fresh=true#10.78/-3.7796/-38.5001
                             #https://api.mapbox.com/styles/v1/jlucasao/cl8vylwtv000v14oxyp33krfc.html?title=view&access_token=pk.eyJ1Ijoiamx1Y2FzYW8iLCJhIjoiY2w4YWsyZXd3MDhqODN1cGl2aXhzYzgwbyJ9.FwJIPGPdR3i-hNfNa75J-A&zoomwheel=true&fresh=true#10.78/-3.7796/-38.5001
                             # https://api.mapbox.com/styles/v1/jlucasao/cl8vylwtv000v14oxyp33krfc.html?title=view&access_token=pk.eyJ1Ijoiamx1Y2FzYW8iLCJhIjoiY2w4YWsyZXd3MDhqODN1cGl2aXhzYzgwbyJ9.FwJIPGPdR3i-hNfNa75J-A&zoomwheel=true&fresh=true#10.43/-3.8313/-38.5157
