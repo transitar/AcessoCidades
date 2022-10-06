@@ -288,10 +288,10 @@ tema_populacao <- function(base_size){
   theme_void() %+replace%
     theme(legend.position = "bottom",
           strip.text.x = element_text(size=rel(1.5)),
-          # strip.background = element_rect(
-          #   color = NA,
-          #   fill = NA
-          # ),
+          strip.background = element_rect(
+            color = NA,
+            fill = "grey70"
+          ),
           panel.background = element_rect(fill = NA, colour = NA),
           axis.text = element_blank(),
           axis.ticks = element_blank(), 
