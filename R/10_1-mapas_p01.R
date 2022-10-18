@@ -228,6 +228,11 @@ ciclovias_osm <- function(munis = 'all'){
   }
 }
   
-  
+
+
+
+
+
+
 
 
