@@ -4,7 +4,7 @@ rm(list = ls())
 
 source('./R/fun/setup.R')
 width <- 16.5
-height = 16.5
+height <- 16.5
 
 sigla_muni <- 'poa'
 
@@ -18,17 +18,19 @@ graficos <- function(munis = "all"){
     
     path_contorno <- sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds', sigla_muni)
     
-    path_muni_data_censo <- sprintf('../data-raw/censo_2021_info_muni_treated/muni_%s.rds',sigla_muni)
+    path_muni_data_censo <- sprintf('../data-raw/censo_2021_info_muni_treated_v2/muni_%s.rds',sigla_muni)
+    path_muni_hex <- sprintf('../data/hex_municipio/hex_2019_%s_09.rds', sigla_muni)
     path_muni_setor <- sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',sigla_muni)
     path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
     
     data_muni <- read_rds(path_muni_data_censo) %>%  mutate(Cod_setor = as.character(Cod_setor))
-    data_msetor <- read_rds(path_muni_setor) 
+    data_msetor <- read_rds(path_muni_setor)
+    data_mhex <- read_rds(path_muni_hex)
     data_contorno <- read_rds(path_contorno)
     
     maptiles <- read_rds(path_maptiles)
     
-    data_complete <- data_msetor %>% left_join(data_muni, by = c("code_tract"="Cod_setor")) %>% 
+    data_complete <- data_mhex %>% left_join(data_muni, by = c("id_hex"="Cod_setor")) %>% 
       mutate(area = st_area(.)/10^6) %>%
       rowwise() %>% 
       mutate(Ptot_mulheres = sum(P006,P007,P008,P009,P010),
