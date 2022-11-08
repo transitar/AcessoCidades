@@ -1,6 +1,7 @@
 Sys.setenv(TZ='UTC') # Fuso horario local
 
 # carregar bibliotecas
+suppressMessages(library(osmdata))
 suppressMessages(library(raster))
 suppressMessages(library(ggplot2) )     # visualizacao de dados
 suppressMessages(library(ggthemes)  )   # temas para visualizacao de dados
@@ -44,7 +45,8 @@ suppressMessages(library(hrbrthemes))
 suppressMessages(library(ggnewscale))
 suppressMessages(library(ggsn))
 suppressMessages(library(ggthemes))
-
+suppressMessages(library(rlist))
+suppressMessages(library(pipeR))
 
 
 munis_list <- list(
@@ -185,6 +187,31 @@ munis_list <- list(
   
 ) 
 
+censo <- list(
+  
+  
+  variaveis_interesse = tribble(
+    
+    ~variavel ,~descricao ,~planilha_censo,~seq_variaveis,~legenda,
+    "P001" ,"Pessoas brancas do sexo masculino" ,"Pessoa03",c("087","092","097",102,107,112,117,122,127,132,137,142,147,152,157,162),"Homens Brancos",
+    "P002","Pessoas pretas do sexo masculino" ,"Pessoa03",c("088","093","098",103,108,113,118,123,128,133,138,143,148,153,158,163),"Homens Pretos",
+    "P003","Pessoas amarelas do sexo masculino" ,"Pessoa03",c("089","094","099",104,109,114,119,124,129,134,139,144,149,154,159,164),"Homens Amarelos",
+    "P004","Pessoas pardas do sexo masculino" ,"Pessoa03",c("090","095",100,105,110,115,120,125,130,135,140,145,150,155,160,165),"Homens Pardos",
+    "P005","Pessoas indígenas do sexo masculino" ,"Pessoa03",c("091","096",101,106,111,116,121,126,131,136,141,146,151,156,161,166),"Homens Indígenas",
+    "P006","Pessoas brancas do sexo feminino" ,"Pessoa03",c(167,172,177,182,187,192,197,202,207,212,217,222,227,232,237,242),"Mulheres Brancas",
+    "P007","Pessoas pretas do sexo feminino" ,"Pessoa03",c(168,173,178,183,188,193,198,203,208,213,218,223,228,233,238,243),"Mulheres Pretas",
+    "P008","Pessoas amarelas do sexo feminino" ,"Pessoa03",c(169,174,179,184,189,194,199,204,209,214,219,224,229,234,239,244),"Mulheres Amarelas",
+    "P009","Pessoas pardas do sexo feminino" ,"Pessoa03",c(170,175,180,185,190,195,200,205,210,215,220,225,230,235,240,245),"Mulheres Pardas",
+    "P010","Pessoas indígenas do sexo feminino" ,"Pessoa03",c(171,176,181,186,191,196,201,206,211,216,221,226,231,236,241,246),"Mulheres Indígenas"
+    
+    
+  ) %>% setDT()
+  
+  
+)
+
+
+
 
 criate_folder <- function(dir) {
   
@@ -216,7 +243,88 @@ consolida_basico <- function(caminho) {
   return(df)
   
   
+  coleta_variaveis <- function(var,arq_munis){
+    
+    
+    message(paste("rodando", which(var_list %in% var), "de", length(var_list)))
+    
+    col_vec <- cols_gen_cor %>% filter(variavel == var) %>% pull(cols_vec) %>% unlist()
+    
+    x <- arq_munis %>% select(1,col_vec) %>% mutate_if(is.character, as.numeric) %>%
+      rowwise() %>% mutate(!!var := sum(across(.cols = 2:ncol(.)))) %>%
+      select(Cod_setor, var)
+    
+    return(x)
+    
+    
+    # return(x_f)
+    
+  }
+  
+  
 }
+
+#labelling function
+label_names2 <- tribble(~variavel, ~legenda,
+  "P001" , "Homens Brancos",
+  "P002","Homens Pretos",
+  "P003" , "Homens Amarelos",
+  "P004" , "Homens Pardos",
+  "P005" , "Homens Indígenas",
+  "P006" , "Mulheres Brancas",
+  "P007" , "Mulheres Pretas",
+  "P008" , "Mulheres Amarelas",
+  "P009" , "Mulheres Pardas",
+  "P010" , "Mulheres Indígenas",
+  "Ptot_mulheres" , "Mulheres (Total)",
+  "Ptot_homens" , "Homens (Total)"
+)
+
+label_names <- list(
+                       "P001" = "Homens Brancos",
+                       "P002"="Homens Pretos",
+                       "P003" = "Homens Amarelos",
+                       "P004" = "Homens Pardos",
+                       "P005" = "Homens Indígenas",
+                       "P006" = "Mulheres Brancas",
+                       "P007" = "Mulheres Pretas",
+                       "P008" = "Mulheres Amarelas",
+                       "P009" = "Mulheres Pardas",
+                       "P010" = "Mulheres Indígenas",
+                       "Ptot_mulheres" = "Mulheres (Total)",
+                       "Ptot_homens" = "Homens (Total)"
+)
+
+labeller_grupos <- function(variable, value){
+  return(label_names[value])
+}
+
+
+tema_populacao <- function(base_size){
+  theme_void() %+replace%
+    theme(legend.position = "bottom",
+          strip.text.x = element_text(size=rel(1.5)),
+          strip.background = element_rect(
+            color = NA,
+            fill = "grey70"
+          ),
+          panel.background = element_rect(fill = NA, colour = NA),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(), 
+          panel.grid = element_blank(),
+          plot.margin=unit(c(2,0,0,0),"mm"),
+          legend.key.width=unit(2,"line"),
+          legend.key.height = unit(.5,"cm"),
+          legend.text=element_text(size=rel(1)),
+          legend.title=element_text(size=rel(1),                                   ),
+          plot.title = element_text(hjust = 0, vjust = 4),
+          strip.text = element_text(size = 10)
+    )
+}  
+
+
+
+
 
 
 tabela_variaveis_censo <-  tribble(
@@ -252,4 +360,4 @@ tabela_variaveis_censo <-  tribble(
 
 #q
 
-#oiii#
+#oteste
