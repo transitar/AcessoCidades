@@ -3,7 +3,8 @@
 source('R/fun/setup.R')
 
 
-#Paradas - stops.txt
+# Paradas - stops.txt -----------------------------------------------------
+
 
 stops <- read_sf('../11 - GTFS/muni_pal/Pontos_Onibus_Out_2018.shp')
 
@@ -29,3 +30,15 @@ stops2 <- stops %>% select(stop_id) %>% st_transform(crs = "+proj=longlat + datu
 # crs(stops2)
 
 stops2 <- stops2 %>% st_drop_geometry()
+
+write.table(stops2, file = '../11 - GTFS/muni_pal/gtfs_files/stops.txt',sep = ',', na = "",
+            row.names = F, quote = F)
+
+# Itinerários - shapes.txt ------------------------------------------------
+
+shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.kmz')
+mapview(shapes)
+
+
+
+
