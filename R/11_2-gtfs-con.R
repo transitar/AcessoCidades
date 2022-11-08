@@ -24,7 +24,7 @@ source('R/fun/setup.R')
 
 # Paradas - stops.txt -----------------------------------------------------
 
-# b
+# c
 install.packages('sf')
 library(sf)
 stops <- read_sf('../11 - GTFS/muni_con/Base de dados PED_03.shp') %>% st_zm (drop=T)
