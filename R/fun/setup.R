@@ -47,6 +47,7 @@ suppressMessages(library(ggsn))
 suppressMessages(library(ggthemes))
 suppressMessages(library(rlist))
 suppressMessages(library(pipeR))
+suppressMessages(library(xlsx))
 
 
 munis_list <- list(
