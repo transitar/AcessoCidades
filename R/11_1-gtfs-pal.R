@@ -71,3 +71,9 @@ agency <- data.frame(agency_id = 1,
 
 write.table(agency, file = '../11 - GTFS/muni_pal/gtfs_files/agency.txt',sep = ',', na = "",
             row.names = F, quote = F)
+
+
+# Trips -------------------------------------------------------------------
+
+teste <- shapes %>% filter(ITINERARIO == "Eixão Javaé/Apinagé") %>% mapview()
+
