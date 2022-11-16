@@ -4,10 +4,24 @@
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
+options(java.parameters = '-Xmx50G')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
 
+create_diretorios <- function(sigla_muni){
+  
+  dir.create(sprintf("../r5r/routing/2022/muni_%s", sigla_muni), recursive = TRUE)
+  
+}
+walk(munis_list$munis_df$abrev_muni, create_diretorios)
+
+create_diretorios <- function(sigla_muni){
+  
+  dir.create(sprintf("../r5r/log/2022/muni_%s", sigla_muni), recursive = TRUE)
+  
+}
+walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 sigla_munii <- 'poa'; ano <- 2022; modo <- c("WALK", "TRANSIT")
@@ -91,10 +105,11 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                    mode = c("WALK", "TRANSIT"),
                                    departure_datetime = departure_datetime_pico,
                                    time_window = 120,
-                                   max_walk_time = max_walk_dist,
+                                   max_walk_dist = max_walk_dist*3.6,
                                    max_trip_duration = max_trip_duration,
-                                   n_threads = 39,
-                                   draws_per_minute = 1)
+                                   n_threads = 16)
+                                   # draws_per_minute = 1)
+    
     time_ttmatrix_tp_pico <- Sys.time() - a
     print(time_ttmatrix_tp_pico)
     
@@ -102,16 +117,18 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     ttm_pico[, pico := 1]
     
     # rename columns
-    ttm_pico <- ttm_pico %>% rename(origin = from_id, destination = to_id) %>% setDT()
+    ttm_pico <- ttm_pico %>% rename(origin = fromId, destination = toId) %>% setDT()
     
     # identify columns
     ttm_pico[, city := sigla_munii]
     ttm_pico[, ano := ano]
     
+
     if (break_ttmatrix) {
       
-      fwrite(ttm_pico, sprintf("E:/data/output_ttmatrix/%s/r5/ttmatrix_%s_%s_r5_pico.csv",
+      fwrite(ttm_pico, sprintf("../r5r/routing/%s/muni_%s/ttmatrix_transit_%s_%s_r5_pico.csv",
                                ano,
+                               sigla_munii,
                                ano,
                                sigla_munii))
       rm(ttm_pico)
@@ -126,10 +143,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                     mode = c("WALK", "TRANSIT"),
                                     departure_datetime = departure_datetime_fpico,
                                     time_window = 120,
-                                    max_walk_time = max_walk_dist,
+                                    max_walk_dist = max_walk_dist*3.6,
                                     max_trip_duration = max_trip_duration,
-                                    n_threads = 39,
-                                    draws_per_minute = 1)
+                                    n_threads = 16)
     time_ttmatrix_tp_fpico <- Sys.time() - a
     print(time_ttmatrix_tp_fpico)
     
@@ -137,7 +153,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     ttm_fpico[, pico := 0]
     
     # rename columns
-    ttm_fpico <- ttm_fpico %>% rename(origin = from_id, destination = to_id) %>% setDT()
+    ttm_fpico <- ttm_fpico %>% rename(origin = fromId, destination = toId) %>% setDT()
     
     # identify columns
     ttm_fpico[, city := sigla_munii]
@@ -147,8 +163,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
       
       
       
-      fwrite(ttm_fpico, sprintf("E:/data/output_ttmatrix/%s/r5/ttmatrix_%s_%s_r5_fpico.csv",
+      fwrite(ttm_fpico, sprintf("../r5r/routing/%s/muni_%s/ttmatrix_transit_%s_%s_r5_fora_pico.csv",
                                 ano,
+                                sigla_munii,
                                 ano,
                                 sigla_munii))
       
@@ -156,10 +173,10 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
       
     }
     
-  }
+  # }
   
   max_trip_duration_walk <- 60 # minutes
-  max_trip_duration_bike <- 90 # minutes
+  max_trip_duration_bike <- 60 # minutes
   
   a <- Sys.time()
   ttm_walk <- travel_time_matrix(r5r_core = setup,
@@ -167,14 +184,14 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  destinations = points,
                                  mode = "WALK",
                                  max_trip_duration = max_trip_duration_walk,
-                                 n_threads = 39)
+                                 n_threads = 16)
   time_ttmatrix_walk <- Sys.time() - a
   
   ttm_walk[, mode := "walk"]
   ttm_walk[, pico := 1]
   
   # rename columns
-  ttm_walk <- ttm_walk %>% rename(origin = from_id, destination = to_id) %>% setDT()
+  ttm_walk <- ttm_walk %>% rename(origin = fromId, destination = toId) %>% setDT()
   
   # identify columns
   ttm_walk[, city := sigla_munii]
@@ -182,10 +199,11 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   
   if (break_ttmatrix) {
     
-    fwrite(ttm_walk, sprintf("E:/data/output_ttmatrix/%s/r5/ttmatrix_%s_%s_r5_walk.csv",
-                             ano,
-                             ano,
-                             sigla_munii))
+    fwrite(ttm_walk,  sprintf("../r5r/routing/%s/muni_%s/ttmatrix_walk_%s_%s_r5_pico.csv",
+                              ano,
+                              sigla_munii,
+                              ano,
+                              sigla_munii))
     rm(ttm_walk)
     
   }
@@ -197,7 +215,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  destinations = points,
                                  mode = "BICYCLE",
                                  max_trip_duration = max_trip_duration_bike,
-                                 n_threads = 39)
+                                 n_threads = 16)
   time_ttmatrix_bike <- Sys.time() - a
   
   ttm_bike[, mode := "bike"]
@@ -205,7 +223,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   
   
   # rename columns
-  ttm_bike <- ttm_bike %>% rename(origin = from_id, destination = to_id) %>% setDT()
+  ttm_bike <- ttm_bike %>% rename(origin = fromId, destination = toId) %>% setDT()
   
   # identify columns
   ttm_bike[, city := sigla_munii]
@@ -214,8 +232,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   
   if (break_ttmatrix) {
     
-    fwrite(ttm_bike, sprintf("E:/data/output_ttmatrix/%s/r5/ttmatrix_%s_%s_r5_bike.csv",
+    fwrite(ttm_bike, sprintf("../r5r/routing/%s/muni_%s/ttmatrix_bike_%s_%s_r5_pico.csv",
                              ano,
+                             sigla_munii,
                              ano,
                              sigla_munii))
     rm(ttm_bike)
@@ -231,8 +250,11 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                time_ttmatrix_tp_fpico = as.numeric(time_ttmatrix_tp_fpico, "mins"),
                time_ttmatrix_walk = as.numeric(time_ttmatrix_walk, "secs"),
                time_ttmatrix_bike = as.numeric(time_ttmatrix_bike, "secs")) %>%
-      fwrite(sprintf("E:/data/output_ttmatrix/%s/r5/process_time/proces_ttmatrix_%s_%s.csv",
-                     ano, ano, sigla_munii))
+      fwrite(sprintf("../r5r/log/%s/muni_%s/ttmatrix_log_%s_%s_r5.csv",
+                     ano,
+                     sigla_munii,
+                     ano,
+                     sigla_munii))
     
     
     if (break_ttmatrix == FALSE)
@@ -249,7 +271,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
       rm(ttm_walk)
       rm(ttm_bike)
       
-    }
+    } 
     
     
   } else {
@@ -258,8 +280,11 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                ano = ano,
                time_ttmatrix_walk = time_ttmatrix_walk,
                time_ttmatrix_bike = time_ttmatrix_bike) %>%
-      fwrite(sprintf("E:/data/output_ttmatrix/%s/r5/process_time/proces_ttmatrix_%s_%s.csv",
-                     ano, ano, sigla_munii))
+      fwrite(sprintf("../r5r/log/%s/muni_%s/ttmatrix_log_%s_%s_r5.csv",
+                     ano,
+                     sigla_munii,
+                     ano,
+                     sigla_munii))
     
     if (break_ttmatrix == FALSE) {
       
@@ -279,8 +304,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
     # save ttmatrix/
     # colocar em rds com compactacao
-    fwrite(ttm, sprintf("E:/data/output_ttmatrix/%s/r5/ttmatrix_%s_%s_r5.csv",
+    fwrite(ttm, sprintf("../r5r/routing/%s/muni_%s/ttmatrix_all_%s_%s_r5.csv",
                         ano,
+                        sigla_munii,
                         ano,
                         sigla_munii))
   }
@@ -292,7 +318,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
 
 
 
-
+#adaptado até aqui
 
 # apply function ----------------
 # walk(munis_list$munis_metro[ano_metro == 2017]$abrev_muni,
