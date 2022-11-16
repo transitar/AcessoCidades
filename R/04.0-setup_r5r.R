@@ -60,21 +60,22 @@ walk(munis_list$munis_modo[ano_modo == 2022 & modo == "todos"]$abrev_muni, copy_
 # walk(munis_list$munis_modo[ano_modo == 2019 & modo == "todos"]$abrev_muni, copy_gtfs, ano1 = 2019)
 
 #stopped here
-
+sigla_muni1 <- 'pal'
+ano1 <- 2022
 # copy other r5 files ----------------------------
 copy_r5_files <- function(sigla_muni1, ano1){
   
   # malha viaria
-  malha_viaria_dir <- sprintf("../../data-raw/malha_viaria/2020/%s/%s_2020.osm.pbf", sigla_muni1, sigla_muni1)
+  malha_viaria_dir <- sprintf("../data-raw/malha_viaria/%s/muni_%s/muni_%s_%s.osm.pbf",ano1, sigla_muni1, sigla_muni1, ano1)
   
   file.copy(from = malha_viaria_dir,
-            to = sprintf("../../r5/network/%s/%s", ano1, sigla_muni1))
+            to = sprintf("../r5r/network/%s/muni_%s/", ano1, sigla_muni1))
   
   # topografia
-  topografia_dir <- sprintf("../../data-raw/topografia/%s/topografia3_%s.tif", sigla_muni1, sigla_muni1)
+  topografia_dir <- sprintf("../data-raw/topodata/2020/muni_%s/topografia_%s.tif", sigla_muni1, sigla_muni1)
   
   file.copy(from = topografia_dir,
-            to = sprintf("../../r5/network/%s/%s", ano1, sigla_muni1))
+            to = sprintf("../r5r/network/%s/muni_%s/", ano1, sigla_muni1))
   
 }
 
