@@ -183,7 +183,25 @@ munis_list <- list(
     "pal",       2019,     1721000, "Palmas", "TO", 1
     
     
-  ) %>% setDT()
+  ) %>% setDT(),
+  
+  munis_modo = tribble(
+    ~abrev_muni, ~`2017`,  ~`2018`,  ~`2019`,  ~`2022`, 
+    "poa",       "todos",  "todos",  "todos",  "todos",     
+    "bel",       "todos",  "todos",  "todos",  "ativo",   
+    "man",       "ativo",  "todos",  "todos",  "ativo",   
+    "slz",       "todos",  "todos",  "todos",  "todos",   
+    "rma",       "todos",  "todos",  "todos",  "todos",   
+    "noh",       "todos",  "todos",  "todos",  "todos",   
+    "dou",       "ativo",  "ativo",  "ativo",  "todos",   
+    "con",       "ativo",  "ativo",  "ativo",  "todos",   
+    "vic",       "ativo",  "ativo",  "ativo",  "ativo",   
+    "cit",       "ativo",  "ativo",  "todos",  "ativo",   
+    "pal",       "ativo",  "ativo",  "todos",  "todos"   
+      
+  ) %>% 
+    pivot_longer(cols = `2017`:`2022`, names_to = "ano_modo", values_to = "modo") %>% 
+    setDT()
   
   
 ) 
