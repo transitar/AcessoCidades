@@ -55,7 +55,8 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
     # download tile based on custom template (style)
   
     tile_for <- cc_location(temp_sf2,
-                            type = "styles/v1/jlucasao/cl8xeo1n4001515peioq6rk7f/tiles",
+                            type = "styles/v1/jlucasao/clal64hz7000414qjw5rxkv7r/tiles",
+                            # type = "styles/v1/jlucasao/cl8xeo1n4001515peioq6rk7f/tiles",
                             # mapbox://styles/jlucasao/cl8boo6f6002c14mdxm7dr32r
                             # mapbox://styles/v1/jlucasao/cl8boo6f6002c14mdxm7dr32r
                              # debug = TRUE
@@ -84,7 +85,7 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
       geom_sf(data = st_transform(temp_sf,3857), fill = NA)
     
     # save tile
-    readr::write_rds(tab, sprintf("../data/maptiles_crop/%s/mapbox/maptile_crop_mapbox_%s_%s.rds", ano, sigla_muni, ano))
+    readr::write_rds(tab, sprintf("../data/maptiles_crop/%s/mapbox_2/maptile_crop_mapbox_%s_%s.rds", ano, sigla_muni, ano))
     
   }
   
