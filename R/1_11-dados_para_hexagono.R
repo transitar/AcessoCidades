@@ -120,6 +120,13 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   write_rds(hex_total_sf, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds", sigla_muni, sigla_muni))
   
+  #abertura dos dados da microssimulaçço
+  #para os demais, fazer a juntaçço antes da escrita
+  
+  data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+                                 sigla_muni, sigla_muni))
+  #ajeitar o formato
+  
   
   
 }

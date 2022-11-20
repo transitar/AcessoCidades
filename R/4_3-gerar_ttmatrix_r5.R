@@ -4,7 +4,7 @@
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-Xmx50G')
+options(java.parameters = '-Xmx8G')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -86,7 +86,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     df <- jdx::convertToR(df$getDataFrame())
     
     max_walk_dist <- 30   # minutes
-    max_trip_duration <- 180 # minutes
+    max_trip_duration <- 60 # minutes
     departure_pico <- paste0(date, " 06:00:00")
     departure_fpico <- paste0(date, " 14:00:00")
     departure_datetime_pico <- as.POSIXct(departure_pico, format = "%Y-%m-%d %H:%M:%S")
@@ -105,9 +105,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                    mode = c("WALK", "TRANSIT"),
                                    departure_datetime = departure_datetime_pico,
                                    time_window = 120,
-                                   max_walk_dist = max_walk_dist*3.6,
+                                   max_walk_dist = max_walk_dist/60*3.6*1000,
                                    max_trip_duration = max_trip_duration,
-                                   n_threads = 16)
+                                   n_threads = 12)
                                    # draws_per_minute = 1)
     
     time_ttmatrix_tp_pico <- Sys.time() - a

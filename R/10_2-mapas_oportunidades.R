@@ -59,7 +59,10 @@ graficos <- function(munis = "all"){
     #   gather(key = dado,value = valor, 2:7) %>% 
     #   mutate(valor = as.numeric(valor))
     
-    
+
+    dados_acc <- left_join(hex_empty, acess_cma, by = c("id_hex"="origin")) %>% st_as_sf() %>%
+      filter(mode == "transit")
+    mapview(dados_acc, zcol = "CMATT60")
     
     colors_purple <- c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
     
@@ -87,7 +90,7 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
       # theme_map() +
-      geom_sf(data = st_transform(dados_hex,3857),aes(fill = n_jobs),color = NA, alpha = .8) +
+      geom_sf(data = st_transform(dados_acc,3857),aes(fill = CMATT60),color = NA, alpha = .8) +
       
       # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
       
@@ -98,7 +101,7 @@ graficos <- function(munis = "all"){
       # facet_wrap(~dado, labeller = labeller_grupos) +
       scale_fill_gradientn(
         name = "Nº de Empregos",
-        colors =colors_purple ,
+        colors =colors_acc ,
         # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
         # values = NULL,
         space = "Lab",
