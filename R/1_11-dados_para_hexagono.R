@@ -90,7 +90,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   ano <- 2019
   file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)
-  hex_empty <- read_rds(file_hex)
+  hex_empty <- read_rds(file_hex) %>% select(id_hex)
   
   hex_lazer <- sf::st_join(hex_empty, dados_lazer)
   
@@ -106,11 +106,18 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   
   hex_total <- left_join(hex5, hex_lazer3, by = "id_hex")
-  hex_total_sf <- left_join(hex_total, hex_empty %>% select(id_hex), by = "id_hex") %>% st_as_sf()
   
   # mapview(hex_total_sf, zcol = 'lazer_tot')
   
+  #paraciclos
   
+  paraciclos_hex <- read_rds(sprintf('../data/paraciclos/muni_%s/paraciclos_%s.rds', sigla_muni, sigla_muni))
+  
+  # hex_total <- read_rds('../data/dados_hex/muni_poa/dados_hex_poa.rds') %>% st_drop_geometry()
+  
+  hex_total <- left_join(hex_total, paraciclos_hex, by = "id_hex")
+  
+  hex_total_sf <- left_join(hex_total, hex_empty, by = "id_hex")
   
   # teste <- hex_jobs %>% filter(h3_resolution > 0)
   # mapview(teste, zcol = 'n_jobs', alpha.regions = 0.6)

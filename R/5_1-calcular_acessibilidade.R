@@ -97,7 +97,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                       n_jobs, S001, S002, S003,  
                                       S004, E001, E002, E003,
                                       E004, M001, M002, M003,
-                                      M004, lazer_tot)]
+                                      M004, lazer_tot, paraciclos)]
   
   
   # if (access %in% c("all", "active")) {
@@ -149,12 +149,12 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                          c("empregos_total", "saude_total","saude_baixa","saude_media",
                            "saude_alta", "edu_total", "edu_infantil", "edu_fundamental",
                            "edu_medio","mat_total","mat_infantil","mat_fundamental",
-                           "mat_medio", "lazer_total") :=
+                           "mat_medio", "lazer_total", "paraciclos") :=
                            list(n_jobs,
                                 S001, S002, S003, S004,
                                 E001,E002,E003,E004,
                                 M001, M002, M003, M004,
-                                lazer_tot)] 
+                                lazer_tot, paraciclos)] 
     
     
     
@@ -204,7 +204,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # - EF ~ "edu_fundamental"
   # - EM ~ "edu_medio"
   # - EI ~ "edu_infantil"
-  # - CT ~ "cras_total"
+  # - LZ ~ "lazer_total"
+  # - PR ~ "paraciclos"
   
   
   # 3) Calcular acessibilidade cumulativa ativa ----------------------------------------------------
@@ -222,7 +223,9 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       # educacao - matriculas
       "MT", "MI", "MF", "MM",
       # lazer
-      "LZ"
+      "LZ",
+      # paraciclos
+      "PR"
     )
     # criar dummy para tt
     tt <- c(1, 2, 3, 4, 5)
@@ -233,9 +236,9 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       mutate(tt_tp = case_when(
         tt_sigla == 1 ~ 15,
         tt_sigla == 2 ~ 30,
-        tt_sigla == 3 ~ 60,
-        tt_sigla == 4 ~ 90,
-        tt_sigla == 5 ~ 120
+        tt_sigla == 3 ~ 45,
+        tt_sigla == 4 ~ 60,
+        tt_sigla == 5 ~ 75
       )) %>%
       mutate(tt_ativo = case_when(
         tt_sigla == 1 ~ 15,
@@ -259,7 +262,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                         atividade_sigla == "MF" ~ "mat_fundamental",
                                         atividade_sigla == "MM" ~ "mat_medio",
                                         atividade_sigla == "MI" ~ "mat_infantil",
-                                        atividade_sigla == "LZ" ~ "lazer_total"))
+                                        atividade_sigla == "LZ" ~ "lazer_total",
+                                        atividade_sigla == "PR" ~ "paraciclos"))
     
     
     # gerar o codigo
@@ -511,11 +515,11 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
           ttmatrix[travel_time <= 30 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
+          ttmatrix[travel_time <= 45 & mode %in% c("transit"),
+                   lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
           ttmatrix[travel_time <= 60 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
-          ttmatrix[travel_time <= 90 & mode %in% c("transit"),
-                   lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
-          ttmatrix[travel_time <= 120 & mode %in% c("transit"),
+          ttmatrix[travel_time <= 75 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ]
         )
         
@@ -555,9 +559,9 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       mutate(tt_tp = case_when(
         tt_sigla == 1 ~ 15,
         tt_sigla == 2 ~ 30,
-        tt_sigla == 3 ~ 60,
-        tt_sigla == 4 ~ 90,
-        tt_sigla == 5 ~ 120
+        tt_sigla == 3 ~ 45,
+        tt_sigla == 4 ~ 60,
+        tt_sigla == 5 ~ 75
       )) %>%
       mutate(tt_ativo = case_when(
         tt_sigla == 1 ~ 15,
@@ -737,7 +741,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
   if (indicator_access %in% c("all", "active")) {
     acess_tmi <- "TMI"
-    atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ")
+    atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ", "PR")
     
     grid_tmi <- expand.grid(acess_tmi, atividade_tmi, stringsAsFactors = FALSE) %>%
       rename(acess_sigla = Var1, atividade_sigla = Var2) %>%
@@ -751,7 +755,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                         atividade_sigla == "EF" ~ "edu_fundamental",
                                         atividade_sigla == "EM" ~ "edu_medio",
                                         atividade_sigla == "EI" ~ "edu_infantil",
-                                        atividade_sigla == "LZ" ~ "lazer_total"))
+                                        atividade_sigla == "LZ" ~ "lazer_total",
+                                        atividade_sigla == "PR" ~ "paraciclos"))
     
     
     # gerar o codigo
@@ -867,16 +872,42 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       
       #problema aqui
       
-      acess_tmi <- ttmatrix[,  .(TMIST = min(travel_time[which(saude_total >= 1)]),   
-                                 TMISB = min(travel_time[which(saude_baixa >= 1)]), 
-                                 TMISM = min(travel_time[which(saude_media >= 1)]),      
-                                 TMISA = min(travel_time[which(saude_alta >= 1)]), 
-                                 TMIET = min(travel_time[which(edu_total >= 1)]),   
-                                 TMIEI = min(travel_time[which(edu_infantil >= 1)]), 
-                                 TMIEF = min(travel_time[which(edu_fundamental >= 1)]),       
-                                 TMIEM = min(travel_time[which(edu_medio >= 1)]), 
-                                 TMILZ = min(travel_time[which(lazer_total >= 1)])),
-                            by=.(city, mode, origin, pico)]
+      ttmatrix <- ttmatrix %>% mutate(lazer_total = as.integer(lazer_total),
+                                      paraciclos = as.integer(paraciclos))
+      #demora muito
+      tictoc::tic()
+      acess_tmi <- ttmatrix %>% group_by(origin, mode) %>%
+        mutate(TMIST = min(travel_time[which(saude_total >=1 )]),
+               TMISB = min(travel_time[which(saude_baixa >= 1)]),
+               TMISM = min(travel_time[which(saude_media >= 1)]),
+               TMISA = min(travel_time[which(saude_alta >= 1)]),
+               TMIET = min(travel_time[which(edu_total >= 1)]),
+               TMIEI = min(travel_time[which(edu_infantil >= 1)]),
+               TMIEF = min(travel_time[which(edu_fundamental >= 1)]),       
+               TMIEM = min(travel_time[which(edu_medio >= 1)]), 
+               TMILZ = min(travel_time[which(lazer_total >= 1)]),
+               TMIPR = min(travel_time[which(paraciclos >= 1)])
+               )
+      
+      tictoc::toc()
+      
+      acess_tmi2 <- acess_tmi %>%  distinct(origin, .keep_all = TRUE)
+      
+      #escrita 
+      suppressWarnings(dir.create(sprintf('../r5r/accessibility/muni_%s/tmi/', sigla_muni)))
+      write_rds(acess_tmi2, sprintf('../r5r/accessibility/muni_%s/tmi/acc_tmi_%s.rds', sigla_muni, sigla_muni))
+      
+      # acess_tmi <- ttmatrix[,  .(TMIST = min(travel_time[which(saude_total >= 1)]),   
+      #                            TMISB = min(travel_time[which(saude_baixa >= 1)]), 
+      #                            TMISM = min(travel_time[which(saude_media >= 1)]),      
+      #                            TMISA = min(travel_time[which(saude_alta >= 1)]), 
+      #                            TMIET = min(travel_time[which(edu_total >= 1)]),   
+      #                            TMIEI = min(travel_time[which(edu_infantil >= 1)]), 
+      #                            TMIEF = min(travel_time[which(edu_fundamental >= 1)]),       
+      #                            TMIEM = min(travel_time[which(edu_medio >= 1)]), 
+      #                            TMILZ = min(travel_time[which(lazer_total >= 1)]),
+      #                            TMIPR = min(travel_time[which(paraciclos >= 1)])),
+      #                       by=.(mode, origin)]
       # tictoc::toc()
       
       # acess_tmi1 <- list(

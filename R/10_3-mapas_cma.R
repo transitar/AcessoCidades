@@ -125,18 +125,16 @@ graficos <- function(munis = "all"){
     }
     
 
-# BIKE --------------------------------------------------------------------
-
 
 # CMA-Trabalho ------------------------------------------------------------
 
     
-    sigla_munii <- 'poa'
+    # sigla_munii <- 'poa'
     options(scipen = 100000000)
-    cols <- 2
-    width <- 14
-    height <- 10
-    mode1 <- "transit"
+    # cols <- 2
+    # width <- 14
+    # height <- 10
+    # mode1 <- "transit"
     
     fazer_mapa_1530_t <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
       
@@ -1986,7 +1984,7 @@ graficos <- function(munis = "all"){
         
         
         ggsave(plot3, 
-               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/%s_CMA_EF_4560.png",
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/%s_CMA_E2_4560.png",
                              sigla_munii, sigla_munii), 
                dpi = 300, width = width, height = height, units = "cm")
       } else if (mode1 == "transit") {
@@ -1995,7 +1993,7 @@ graficos <- function(munis = "all"){
         
         
         ggsave(plot3, 
-               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/%s_CMA_EF_4560.png",
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/%s_CMA_E2_4560.png",
                              sigla_munii, sigla_munii), 
                dpi = 300, width = width, height = height, units = "cm")
         
@@ -2004,7 +2002,7 @@ graficos <- function(munis = "all"){
         
         
         ggsave(plot3, 
-               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/%s_CMA_EF_4560.png",
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/%s_CMA_E2_4560.png",
                              sigla_munii, sigla_munii), 
                dpi = 300, width = width, height = height, units = "cm")
         
@@ -2335,6 +2333,165 @@ graficos <- function(munis = "all"){
     fazer_mapa_4560_et('poa', mode1 = "bike")
     fazer_mapa_4560_et('poa', mode1 = "transit")
     fazer_mapa_4560_et('poa', mode1 = "walk")
+    
+
+# Paraciclos --------------------------------------------------------------
+
+    #15 e 30 minutos
+    fazer_mapa_1530_pr <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, CMAPR15, CMAPR30) %>%
+        gather(ind, valor, CMAPR15:CMAPR30)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(ind = factor(ind, 
+                            levels = c("CMAPR15", "CMAPR30"), 
+                            labels = c("15 Minutos", "30 Minutos")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), color = NA, alpha=.7)+
+        viridis::scale_fill_viridis(option = "B"
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        facet_wrap(~ind, ncol = 2)+
+        theme_for_CMA()+
+        labs(fill = "Oportunidades\n acessíveis",
+             title = subset(munis_list$munis_df, abrev_muni == sigla_munii)$name_muni) +
+        theme(plot.title = element_text(hjust = 0.5))
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/%s_CMA_PR_1530.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/%s_CMA_PR_1530.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/%s_CMA_PR_1530.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    fazer_mapa_1530_pr('poa', mode1 = "bike")
+    fazer_mapa_1530_pr('poa', mode1 = "transit")
+    fazer_mapa_1530_pr('poa', mode1 = "walk")
+    
+    #45 e 60 minutos
+    
+    fazer_mapa_4560_pr <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, CMAPR45, CMAPR60) %>%
+        gather(ind, valor, CMAPR45:CMAPR60)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(ind = factor(ind, 
+                            levels = c("CMAPR45", "CMAPR60"), 
+                            labels = c("45 Minutos", "60 Minutos")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), color = NA, alpha=.7)+
+        viridis::scale_fill_viridis(option = "B"
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        facet_wrap(~ind, ncol = 2)+
+        theme_for_CMA()+
+        labs(fill = "Oportunidades\n acessíveis",
+             title = subset(munis_list$munis_df, abrev_muni == sigla_munii)$name_muni) +
+        theme(plot.title = element_text(hjust = 0.5))
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/%s_CMA_PR_4560.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/%s_CMA_PR_4560.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/%s_CMA_PR_4560.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+      
+      
+    }
+    fazer_mapa_4560_pr('poa', mode1 = "bike")
+    fazer_mapa_4560_pr('poa', mode1 = "transit")
+    fazer_mapa_4560_pr('poa', mode1 = "walk")
+
 
 
 

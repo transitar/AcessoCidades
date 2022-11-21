@@ -127,7 +127,7 @@ download_osm <- function(munis = 'all'){
     
     # mapview(lazer2)
     
-    readr::write_rds(lazer_final,
+    readr::write_rds(ciclo_final,
                      sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm.rds',
                              sigla_muni,
                              sigla_muni))
