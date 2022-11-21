@@ -3,7 +3,7 @@
 # 2. Scripts em Python
 
 # carregar bibliotecas
-options(java.parameters = '-Xmx50G')
+options(java.parameters = '-Xmx7G')
 source('./R/fun/setup.R')
 
 sigla_muni <- 'poa'

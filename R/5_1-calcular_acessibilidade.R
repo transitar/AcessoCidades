@@ -270,7 +270,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     # para tp
     codigo_cma_tp <- c(
       
-      sprintf("%s = (sum(%s[which(travel_time <= %s)], na.rm = T))", 
+      sprintf("%s = (sum(%s[which(travel_time_p50 <= %s)], na.rm = T))", 
               grid_cma$junto_tp, 
               grid_cma$atividade_nome, 
               grid_cma$tt_tp
@@ -297,7 +297,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     # para ativo
     codigo_cma_ativo <- c(
       
-      sprintf("%s = (sum(%s[which(travel_time <= %s)], na.rm = T))", 
+      sprintf("%s = (sum(%s[which(travel_time_p50 <= %s)], na.rm = T))", 
               grid_cma$junto_ativo, 
               grid_cma$atividade_nome, 
               grid_cma$tt_ativo
@@ -511,15 +511,15 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
         
         cols <- unique(grid_cma$atividade_nome)
         acess_cma_tp <- list(
-          ttmatrix[travel_time <= 15 & mode %in% c("transit"),
+          ttmatrix[travel_time_p50 <= 15 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
-          ttmatrix[travel_time <= 30 & mode %in% c("transit"),
+          ttmatrix[travel_time_p50 <= 30 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
-          ttmatrix[travel_time <= 45 & mode %in% c("transit"),
+          ttmatrix[travel_time_p50 <= 45 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
-          ttmatrix[travel_time <= 60 & mode %in% c("transit"),
+          ttmatrix[travel_time_p50 <= 60 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ],
-          ttmatrix[travel_time <= 75 & mode %in% c("transit"),
+          ttmatrix[travel_time_p50 <= 75 & mode %in% c("transit"),
                    lapply(.SD, sum, na.rm=TRUE), by=.(city, mode, origin, pico), .SDcols=cols ]
         )
         
@@ -760,7 +760,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     
     
     # gerar o codigo
-    codigo_tmi <- sprintf("%s = min(travel_time[which(%s >= 1)])", 
+    codigo_tmi <- sprintf("%s = min(travel_time_p50[which(%s >= 1)])", 
                           grid_tmi$junto, 
                           grid_tmi$atividade_nome)
     # codigo_tmi_carro_pico <- sprintf("%s = min(median_morning_peak[which(%s >= 1)], na.rm = TRUE)", 
@@ -877,16 +877,16 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       #demora muito
       tictoc::tic()
       acess_tmi <- ttmatrix %>% group_by(origin, mode) %>%
-        mutate(TMIST = min(travel_time[which(saude_total >=1 )]),
-               TMISB = min(travel_time[which(saude_baixa >= 1)]),
-               TMISM = min(travel_time[which(saude_media >= 1)]),
-               TMISA = min(travel_time[which(saude_alta >= 1)]),
-               TMIET = min(travel_time[which(edu_total >= 1)]),
-               TMIEI = min(travel_time[which(edu_infantil >= 1)]),
-               TMIEF = min(travel_time[which(edu_fundamental >= 1)]),       
-               TMIEM = min(travel_time[which(edu_medio >= 1)]), 
-               TMILZ = min(travel_time[which(lazer_total >= 1)]),
-               TMIPR = min(travel_time[which(paraciclos >= 1)])
+        mutate(TMIST = min(travel_time_p50[which(saude_total >=1 )]),
+               TMISB = min(travel_time_p50[which(saude_baixa >= 1)]),
+               TMISM = min(travel_time_p50[which(saude_media >= 1)]),
+               TMISA = min(travel_time_p50[which(saude_alta >= 1)]),
+               TMIET = min(travel_time_p50[which(edu_total >= 1)]),
+               TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
+               TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),       
+               TMIEM = min(travel_time_p50[which(edu_medio >= 1)]), 
+               TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
+               TMIPR = min(travel_time_p50[which(paraciclos >= 1)])
                )
       
       tictoc::toc()

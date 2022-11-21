@@ -4,7 +4,7 @@
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-Xmx8G')
+options(java.parameters = '-Xmx5G')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -86,7 +86,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     df <- jdx::convertToR(df$getDataFrame())
     
     max_walk_dist <- 30   # minutes
-    max_trip_duration <- 60 # minutes
+    max_trip_duration <- 180 # minutes
     departure_pico <- paste0(date, " 06:00:00")
     departure_fpico <- paste0(date, " 14:00:00")
     departure_datetime_pico <- as.POSIXct(departure_pico, format = "%Y-%m-%d %H:%M:%S")
@@ -95,7 +95,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
     
     
-    
+    dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni), recursive = T)
     # 3.1) calculate a travel time matrix
     message("Running transit peak matrix...")
     a <- Sys.time()
@@ -105,19 +105,26 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                    mode = c("WALK", "TRANSIT"),
                                    departure_datetime = departure_datetime_pico,
                                    time_window = 120,
-                                   max_walk_dist = max_walk_dist/60*3.6*1000,
+                                   max_walk_time = max_walk_dist,
                                    max_trip_duration = max_trip_duration,
-                                   n_threads = 12)
+                                   n_threads = 15,
+                                   output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni)
+                                   )
                                    # draws_per_minute = 1)
     
     time_ttmatrix_tp_pico <- Sys.time() - a
     print(time_ttmatrix_tp_pico)
     
+    files <- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni), full.names = T)
+    
+    ttm_pico <- map_df(.x = files, .f = fread)
+    setDT(ttm_pico)
+    
     ttm_pico[, mode := "transit"]
     ttm_pico[, pico := 1]
     
     # rename columns
-    ttm_pico <- ttm_pico %>% rename(origin = fromId, destination = toId) %>% setDT()
+    ttm_pico <- ttm_pico %>% rename(origin = from_id, destination = to_id) %>% setDT()
     
     # identify columns
     ttm_pico[, city := sigla_munii]
@@ -135,48 +142,52 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
       
     }
     
-    message("Running transit off-peak matrix...")
-    a <- Sys.time()
-    ttm_fpico <- travel_time_matrix(r5r_core = setup,
-                                    origins = points,
-                                    destinations = points,
-                                    mode = c("WALK", "TRANSIT"),
-                                    departure_datetime = departure_datetime_fpico,
-                                    time_window = 120,
-                                    max_walk_dist = max_walk_dist*3.6,
-                                    max_trip_duration = max_trip_duration,
-                                    n_threads = 16)
-    time_ttmatrix_tp_fpico <- Sys.time() - a
-    print(time_ttmatrix_tp_fpico)
-    
-    ttm_fpico[, mode := "transit"]
-    ttm_fpico[, pico := 0]
-    
-    # rename columns
-    ttm_fpico <- ttm_fpico %>% rename(origin = fromId, destination = toId) %>% setDT()
-    
-    # identify columns
-    ttm_fpico[, city := sigla_munii]
-    ttm_fpico[, ano := ano]
-    
-    if (break_ttmatrix) {
-      
-      
-      
-      fwrite(ttm_fpico, sprintf("../r5r/routing/%s/muni_%s/ttmatrix_transit_%s_%s_r5_fora_pico.csv",
-                                ano,
-                                sigla_munii,
-                                ano,
-                                sigla_munii))
-      
-      rm(ttm_fpico)
-      
-    }
-    
+# 
+#     message("Running transit off-peak matrix...")
+#     a <- Sys.time()
+#     ttm_fpico <- travel_time_matrix(r5r_core = setup,
+#                                     origins = points,
+#                                     destinations = points,
+#                                     mode = c("WALK", "TRANSIT"),
+#                                     departure_datetime = departure_datetime_fpico,
+#                                     time_window = 120,
+#                                     max_walk_dist = max_walk_dist*3.6,
+#                                     max_trip_duration = max_trip_duration,
+#                                     n_threads = 16)
+#     time_ttmatrix_tp_fpico <- Sys.time() - a
+#     print(time_ttmatrix_tp_fpico)
+#     
+#     ttm_fpico[, mode := "transit"]
+#     ttm_fpico[, pico := 0]
+#     
+#     # rename columns
+#     ttm_fpico <- ttm_fpico %>% rename(origin = fromId, destination = toId) %>% setDT()
+#     
+#     # identify columns
+#     ttm_fpico[, city := sigla_munii]
+#     ttm_fpico[, ano := ano]
+#     
+#     if (break_ttmatrix) {
+#       
+#       
+#       
+#       fwrite(ttm_fpico, sprintf("../r5r/routing/%s/muni_%s/ttmatrix_transit_%s_%s_r5_fora_pico.csv",
+#                                 ano,
+#                                 sigla_munii,
+#                                 ano,
+#                                 sigla_munii))
+#       
+#       rm(ttm_fpico)
+#       
+#     }
+#     
   # }
   
-  max_trip_duration_walk <- 60 # minutes
-  max_trip_duration_bike <- 60 # minutes
+  max_trip_duration_walk <- 180 # minutes
+  max_trip_duration_bike <- 180 # minutes
+  
+  suppressWarnings(dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk',
+                     sigla_muni), recursive = T))
   
   a <- Sys.time()
   ttm_walk <- travel_time_matrix(r5r_core = setup,
@@ -184,14 +195,27 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  destinations = points,
                                  mode = "WALK",
                                  max_trip_duration = max_trip_duration_walk,
-                                 n_threads = 16)
+                                 n_threads = 15,
+                                 output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni))
   time_ttmatrix_walk <- Sys.time() - a
+  
+  files_walk<- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni),
+                           full.names = T,
+                           pattern = ".csv")
+  
+  plan(multicore, workers = 15)
+  tictoc::tic()
+  ttm_walk <- furrr::future_map_dfr(.x = files_walk, .f = fread)
+  tictoc::toc()
+  
+  setDT(ttm_walk)
+
   
   ttm_walk[, mode := "walk"]
   ttm_walk[, pico := 1]
   
   # rename columns
-  ttm_walk <- ttm_walk %>% rename(origin = fromId, destination = toId) %>% setDT()
+  ttm_walk <- ttm_walk %>% rename(origin = from_id, destination = to_id) %>% setDT()
   
   # identify columns
   ttm_walk[, city := sigla_munii]
@@ -208,22 +232,39 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
   }
   
-  
+  dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni), recursive = T)
   a <- Sys.time()
   ttm_bike <- travel_time_matrix(r5r_core = setup,
                                  origins = points,
                                  destinations = points,
                                  mode = "BICYCLE",
                                  max_trip_duration = max_trip_duration_bike,
-                                 n_threads = 16)
+                                 n_threads = 15,
+                                 output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni))
   time_ttmatrix_bike <- Sys.time() - a
+  print(paste0("Routing Bike took:", time_ttmatrix_bike))
+  
+  files_bike<- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni),
+                          full.names = T,
+                          pattern = ".csv")
+  a <- Sys.time()
+  plan(multicore, workers = 15)
+  tictoc::tic()
+  ttm_bike <- furrr::future_map_dfr(.x = files_bike, .f = fread)
+  tictoc::toc()
+  time_ttmatrix_bike <- Sys.time() - a
+  print(paste0("Reading and biding bike files took:", time_ttmatrix_bike))
+  
+  setDT(ttm_walk)
+
+  
   
   ttm_bike[, mode := "bike"]
   ttm_bike[, pico := 1]
   
   
   # rename columns
-  ttm_bike <- ttm_bike %>% rename(origin = fromId, destination = toId) %>% setDT()
+  ttm_bike <- ttm_bike %>% rename(origin = from_id, destination = to_id) %>% setDT()
   
   # identify columns
   ttm_bike[, city := sigla_munii]
@@ -263,7 +304,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
       
       
       # juntar matrizes
-      ttm <- rbind(ttm_pico, ttm_fpico, ttm_walk, ttm_bike)
+      ttm <- rbind(ttm_pico, ttm_walk, ttm_bike)
       # ttm <- rbind(ttm_pico)
       
       rm(ttm_pico)

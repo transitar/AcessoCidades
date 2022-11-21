@@ -1,6 +1,6 @@
 #criação de graphs no r5r
 
-options(java.parameters = '-Xmx100G')
+options(java.parameters = '-Xmx7G')
 library(r5r)
 
 
@@ -14,7 +14,7 @@ construir_graph_muni <- function(sigla_muni, ano) {
   
   
   path <- sprintf("../r5r/network/%s/muni_%s/", ano, sigla_muni)
-  r5r::setup_r5(data_path = path, use_elevation = TRUE, overwrite = TRUE)
+  r5r::setup_r5(data_path = path, elevation = "TOBLER", overwrite = TRUE)
   
 }
 
