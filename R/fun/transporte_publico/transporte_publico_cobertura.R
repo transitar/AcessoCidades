@@ -1,3 +1,5 @@
+#Acesso físico transporte público
+
 #10_3-mapas cicloviários e de transporte público
 
 #geraação de mapas
@@ -39,7 +41,7 @@ graficos <- function(munis = "all"){
     data_contorno <- read_rds(path_contorno)
     
     maptiles <- read_rds(path_maptiles)
-
+    
     
     # shape de bairros
     
@@ -59,24 +61,40 @@ graficos <- function(munis = "all"){
                                sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
     
     
-    #ciclovias
+    #TP
     
-    if (decisao_muni$fonte_ciclo == "muni"){
+    if (decisao_muni$fonte_dados_tp == "muni_shape"){
       
-      dados_ciclovias <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+      dados_peds <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
                                          sigla_muni, sigla_muni),
-                                 layer = "infra_cicloviaria"
-                                )
+                                 layer = "tp_peds")
+      
+      dados_linhas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                    sigla_muni, sigla_muni),
+                            layer = "tp_linhas")
+      
+      
     }
     # mapview(dados_ciclovias)
     
-    dados_ciclovias <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
-      mutate(Tipo = ifelse(TIPO == "CICLOVIA",
-                                         "Ciclovia",
-                                         ifelse(TIPO == "CICLOFAIXA",
-                                                "Ciclofaixa",
-                                                "Compartilhado")))
-      
+    dados_peds <- dados_peds %>% st_transform(decisao_muni$epsg)
+    dados_linhas <- dados_linhas %>% st_transform(decisao_muni$epsg)
+    
+    dados_peds_buffer_300 <- dados_peds %>% st_buffer(300) %>% st_union() %>% st_as_sf()
+    dados_peds_buffer_500 <- dados_peds %>% st_buffer(500) %>% st_union() %>% st_as_sf()
+    
+    area_natend300 <- data_contorno %>% st_transform(decisao_muni$epsg) %>%
+      st_difference(dados_peds_buffer_300)%>%
+      st_union() %>% st_as_sf()
+    
+    area_natend500 <- data_contorno  %>% st_transform(decisao_muni$epsg) %>%
+      st_difference(dados_peds_buffer_500)%>%
+      st_union() %>% st_as_sf()
+    
+    
+    
+    
+    # mapview(area_natend300)
     
     #mapa localização
     cores_ciclo <- c('#5766cc', '#33b099', '#d96e0a')
@@ -85,80 +103,18 @@ graficos <- function(munis = "all"){
     
     #mapa localização
     
-    map_ciclovias <- ggplot() +
+    map_linhas_tp <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
       # theme_map() +
-      geom_sf(data = st_transform(dados_ciclovias,3857),aes(color = Tipo), alpha = 1) +
+      geom_sf(data = st_transform(dados_linhas,3857), alpha = 1, colour = '#d96e0a') +
       
       # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
-      
-      
-      
-      # facet_wrap(~dado, labeller = labeller_grupos) +
-      scale_fill_manual(name = "Tipo",
-                        values = cores_ciclo,
-                        breaks = c('CICLOVIA', 'CICLOFAIXA', 'COMPARTILHADO'),
-                        labels = c('Ciclovia', 'Ciclofaixa', 'Compartilhado')
-                        ) +
-      # tema_populacao()
-      theme(legend.position = "bottom",
-            strip.text.x = element_text(size=rel(1.2)),
-            strip.background = element_rect(
-              color = NA,
-              fill = "#eff0f0"
-            ),
-            panel.background = element_rect(fill = NA, colour = NA),
-            axis.text = element_blank(),
-            axis.title = element_blank(),
-            axis.ticks = element_blank(), 
-            panel.grid = element_blank(),
-            plot.margin=unit(c(2,0,0,0),"mm"),
-            legend.key.width=unit(2,"line"),
-            legend.key.height = unit(.5,"cm"),
-            legend.text=element_text("Tipo", size=rel(1)),
-            legend.title=element_text(size=rel(1),                                   ),
-            plot.title = element_text(hjust = 0, vjust = 4),
-            strip.text = element_text(size = 10)
-      )
-    # width = 16; height = 16
-    # map_empregos
-    ggsave(map_ciclovias,
-           device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
-           width = width, height = height, units = "cm" )
-    
-    
-    
-
-# Mapa - Buffer Ciclovias -------------------------------------------------
-
-    dados_ciclovias_buffer <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
-      st_buffer(300) %>% st_union() %>% st_as_sf()
-    dados_ciclovias_buffer2 <- dados_ciclovias_buffer %>% as.data.frame()
-    mapview(dados_ciclovias_buffer)
-    
-    
-    
-    map_ciclovias_buffer <- ggplot() +
-      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-      coord_equal() +
-      scale_fill_identity()+
-      # nova escala
-      new_scale_fill() +
-      # theme_map() +
-      geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),fill = '#21367d',
-              color = 'grey70',alpha = .7, size = 0.1) +
-  
-      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
-      
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = NA, size = .1) +
 
       # tema_populacao()
       theme(legend.position = "bottom",
@@ -182,34 +138,241 @@ graficos <- function(munis = "all"){
       )
     # width = 16; height = 16
     # map_empregos
-    ggsave(map_ciclovias_buffer,
+    ggsave(map_linhas_tp,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/4-ciclovias_buffer_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s.png", sigla_muni, sigla_muni),
            dpi = 400,
            width = width, height = height, units = "cm" )
     
     
     
     
+    # Mapa - Buffer PEDS -------------------------------------------------
+    
+    # dados_peds_buffer_300
+
+    map_peds300_buffer <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      # theme_map() +
+      geom_sf(data = st_transform(dados_peds_buffer_300, 3857),fill = '#0f805e',
+              color = NA,alpha = .7, size = 0.1) +
+      
+      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+      
+      # tema_populacao()
+      theme(legend.position = "bottom",
+            strip.text.x = element_text(size=rel(1.2)),
+            strip.background = element_rect(
+              color = NA,
+              fill = "#eff0f0"
+            ),
+            panel.background = element_rect(fill = NA, colour = NA),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.ticks = element_blank(), 
+            panel.grid = element_blank(),
+            plot.margin=unit(c(2,0,0,0),"mm"),
+            legend.key.width=unit(2,"line"),
+            legend.key.height = unit(.5,"cm"),
+            legend.text=element_text("Tipo", size=rel(1)),
+            legend.title=element_text(size=rel(1),                                   ),
+            plot.title = element_text(hjust = 0, vjust = 4),
+            strip.text = element_text(size = 10)
+      )
+    # width = 16; height = 16
+    # map_empregos
+    ggsave(map_peds300_buffer,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/6-peds_buffer_300m_%s.png", sigla_muni, sigla_muni),
+           dpi = 400,
+           width = width, height = height, units = "cm" )
+    
+    
+    
+    #buffer 500m
+    
+    map_peds500_buffer <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      # theme_map() +
+      geom_sf(data = st_transform(dados_peds_buffer_500, 3857),fill = '#0f805e',
+              color = NA,alpha = .7, size = 0.1) +
+      
+      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+      
+      # tema_populacao()
+      theme(legend.position = "bottom",
+            strip.text.x = element_text(size=rel(1.2)),
+            strip.background = element_rect(
+              color = NA,
+              fill = "#eff0f0"
+            ),
+            panel.background = element_rect(fill = NA, colour = NA),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.ticks = element_blank(), 
+            panel.grid = element_blank(),
+            plot.margin=unit(c(2,0,0,0),"mm"),
+            legend.key.width=unit(2,"line"),
+            legend.key.height = unit(.5,"cm"),
+            legend.text=element_text("Tipo", size=rel(1)),
+            legend.title=element_text(size=rel(1),                                   ),
+            plot.title = element_text(hjust = 0, vjust = 4),
+            strip.text = element_text(size = 10)
+      )
+    # width = 16; height = 16
+    # map_empregos
+    ggsave(map_peds500_buffer,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/7-peds_buffer_500m_%s.png", sigla_muni, sigla_muni),
+           dpi = 400,
+           width = width, height = height, units = "cm" )
+    
+    
+    #mapa diferença de 300m
+    
+    map_peds300_diff <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      # theme_map() +
+      geom_sf(data = st_transform(area_natend300, 3857),fill = 'grey30',
+              color = NA,alpha = .7, size = 0.1) +
+      
+      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+      
+      # tema_populacao()
+      theme(legend.position = "bottom",
+            strip.text.x = element_text(size=rel(1.2)),
+            strip.background = element_rect(
+              color = NA,
+              fill = "#eff0f0"
+            ),
+            panel.background = element_rect(fill = NA, colour = NA),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.ticks = element_blank(), 
+            panel.grid = element_blank(),
+            plot.margin=unit(c(2,0,0,0),"mm"),
+            legend.key.width=unit(2,"line"),
+            legend.key.height = unit(.5,"cm"),
+            legend.text=element_text("Tipo", size=rel(1)),
+            legend.title=element_text(size=rel(1),                                   ),
+            plot.title = element_text(hjust = 0, vjust = 4),
+            strip.text = element_text(size = 10)
+      )
+    # width = 16; height = 16
+    # map_empregos
+    ggsave(map_peds300_diff,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/8-peds_n_atendido_300m_%s.png", sigla_muni, sigla_muni),
+           dpi = 400,
+           width = width, height = height, units = "cm" )
+    
+    
+    # área n atendida 500m
+    map_peds500_diff <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      # theme_map() +
+      geom_sf(data = st_transform(area_natend500, 3857),fill = 'grey30',
+              color = NA,alpha = .7, size = 0.1) +
+      
+      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+      
+      # tema_populacao()
+      theme(legend.position = "bottom",
+            strip.text.x = element_text(size=rel(1.2)),
+            strip.background = element_rect(
+              color = NA,
+              fill = "#eff0f0"
+            ),
+            panel.background = element_rect(fill = NA, colour = NA),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.ticks = element_blank(), 
+            panel.grid = element_blank(),
+            plot.margin=unit(c(2,0,0,0),"mm"),
+            legend.key.width=unit(2,"line"),
+            legend.key.height = unit(.5,"cm"),
+            legend.text=element_text("Tipo", size=rel(1)),
+            legend.title=element_text(size=rel(1),                                   ),
+            plot.title = element_text(hjust = 0, vjust = 4),
+            strip.text = element_text(size = 10)
+      )
+    # width = 16; height = 16
+    # map_empregos
+    ggsave(map_peds500_diff,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/9-peds_n_atendido_500m_%s.png", sigla_muni, sigla_muni),
+           dpi = 400,
+           width = width, height = height, units = "cm" )
+    
+    
     
     #intersect com hex
     
-    dados_hex_intersect <- dados_hex %>%
+    dados_hex_intersect_300 <- dados_hex %>%
       st_as_sf() %>%
       st_transform(decisao_muni$epsg) %>%
-      st_intersection(dados_ciclovias_buffer)
+      st_intersection(dados_peds_buffer_300)
     dados_hex_intersect <- dados_hex_intersect %>%
       mutate(area = st_area(.))
-  
+    
+    
+    
+    dados_hex_intersect_500 <- dados_hex %>%
+      st_as_sf() %>%
+      st_transform(decisao_muni$epsg) %>%
+      st_intersection(dados_peds_buffer_500)
+    dados_hex_intersect <- dados_hex_intersect %>%
+      mutate(area = st_area(.))
+    
+    dados_hex_intersect_n300 <- dados_hex %>%
+      st_as_sf() %>%
+      st_transform(decisao_muni$epsg) %>%
+      st_intersection(area_natend300)
+    dados_hex_intersect <- dados_hex_intersect %>%
+      mutate(area = st_area(.))
+    
+    # mapview(dados_hex_intersect_n500)
+    
+    dados_hex_intersect_n500 <- dados_hex %>%
+      st_as_sf() %>%
+      st_transform(decisao_muni$epsg) %>%
+      st_intersection(area_natend500)
+    dados_hex_intersect <- dados_hex_intersect %>%
+      mutate(area = st_area(.))
     
     #bikes compartilhadas
-    
+    if (decisao_muni$bike_comp == 1){
     if (decisao_muni$fonte_bikecomp == "muni"){
       
       dados_bikecomp <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                         sigla_muni, sigla_muni),
-                                 layer = "bike_comp"
+                                        sigla_muni, sigla_muni),
+                                layer = "bike_comp"
       )
+    }
     }
     # mapview(dados_bikecomp)
     
@@ -227,7 +390,7 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
       # theme_map() +
-      geom_sf(data = st_transform(dados_bikecomp,3857),colour = cores_bikecomp, alpha = 1, size = .8) +
+      geom_sf(data = st_transform(dados_bikecomp,3857),aes(color = Tipo), alpha = 1, size = .8) +
       
       # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
       
@@ -259,50 +422,6 @@ graficos <- function(munis = "all"){
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10)
       )
-    
-    
-    map_bikecomp_zoom <- ggplot() +
-      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-      coord_equal() +
-      scale_fill_identity()+
-      # nova escala
-      new_scale_fill() +
-      # theme_map() +
-      geom_sf(data = st_transform(dados_bikecomp,3857),colour = cores_bikecomp, alpha = 1, size = 2) +
-      
-      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
-      
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
-      
-      
-      
-      # facet_wrap(~dado, labeller = labeller_grupos) +
-      scale_fill_manual(name = "Tipo",
-                        values = cores_bikecomp
-      ) +
-      # tema_populacao()
-      theme(legend.position = "bottom",
-            strip.text.x = element_text(size=rel(1.2)),
-            strip.background = element_rect(
-              color = NA,
-              fill = "#eff0f0"
-            ),
-            panel.background = element_rect(fill = NA, colour = NA),
-            axis.text = element_blank(),
-            axis.title = element_blank(),
-            axis.ticks = element_blank(), 
-            panel.grid = element_blank(),
-            plot.margin=unit(c(2,0,0,0),"mm"),
-            legend.key.width=unit(2,"line"),
-            legend.key.height = unit(.5,"cm"),
-            legend.text=element_text("Tipo", size=rel(1)),
-            legend.title=element_text(size=rel(1),                                   ),
-            plot.title = element_text(hjust = 0, vjust = 4),
-            strip.text = element_text(size = 10)
-      ) +
-      coord_sf(ylim = c(-3503224,-3516303), xlim = c(-5707898,-5692457), expand = FALSE)
-    
-    
     # width = 16; height = 16
     # map_empregos
     ggsave(map_bikecomp,
@@ -311,23 +430,17 @@ graficos <- function(munis = "all"){
            dpi = 300,
            width = width, height = height, units = "cm" )
     
-    ggsave(map_bikecomp_zoom,
-           device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/2-bikes_compartilhadas_%s_zoom.png", sigla_muni, sigla_muni),
-           dpi = 300,
-           width = width, height = height, units = "cm" )
-
-# Paraciclos --------------------------------------------------------------
-
+    # Paraciclos --------------------------------------------------------------
+    
     
     #map paraciclos
-
+    
     
     if (decisao_muni$fonte_paraciclos == "muni_e_osm"){
       
       dados_paraciclos_muni <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                        sigla_muni, sigla_muni),
-                                layer = "paraciclos"
+                                               sigla_muni, sigla_muni),
+                                       layer = "paraciclos"
       ) %>% mutate(Tipo = "Público", id=1) %>% st_transform(decisao_muni$epsg) %>%
         select(name = Name, id, Tipo) %>% st_zm(drop = T)
       

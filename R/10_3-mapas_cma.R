@@ -128,7 +128,8 @@ graficos <- function(munis = "all"){
 
 # CMA-Trabalho ------------------------------------------------------------
 
-    
+    library("future")
+    plan(multisession)
     # sigla_munii <- 'poa'
     options(scipen = 100000000)
     # cols <- 2
@@ -2365,7 +2366,7 @@ graficos <- function(munis = "all"){
         scale_fill_identity()+
         # nova escala
         new_scale_fill() +
-        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), color = NA, alpha=.7)+
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.7)+
         viridis::scale_fill_viridis(option = "B"
                                     # , limits = c(0, 0.72)
                                     # , breaks = c(0.001, 0.35, 0.7)
@@ -2373,7 +2374,7 @@ graficos <- function(munis = "all"){
         ) +
         facet_wrap(~ind, ncol = 2)+
         theme_for_CMA()+
-        labs(fill = "Oportunidades\n acessíveis",
+        labs(fill = "Paraciclos\n acessíveis",
              title = subset(munis_list$munis_df, abrev_muni == sigla_munii)$name_muni) +
         theme(plot.title = element_text(hjust = 0.5))
       
@@ -2442,7 +2443,7 @@ graficos <- function(munis = "all"){
         scale_fill_identity()+
         # nova escala
         new_scale_fill() +
-        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), color = NA, alpha=.7)+
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.7)+
         viridis::scale_fill_viridis(option = "B"
                                     # , limits = c(0, 0.72)
                                     # , breaks = c(0.001, 0.35, 0.7)
@@ -2450,7 +2451,7 @@ graficos <- function(munis = "all"){
         ) +
         facet_wrap(~ind, ncol = 2)+
         theme_for_CMA()+
-        labs(fill = "Oportunidades\n acessíveis",
+        labs(fill = "Paraciclos\n acessíveis",
              title = subset(munis_list$munis_df, abrev_muni == sigla_munii)$name_muni) +
         theme(plot.title = element_text(hjust = 0.5))
       
@@ -2493,6 +2494,165 @@ graficos <- function(munis = "all"){
     fazer_mapa_4560_pr('poa', mode1 = "walk")
 
 
+# Bikes Compartilhadas ----------------------------------------------------
+
+    if (decisao_muni$bike_comp == 1) {
+      #15 e 30 minutos
+      fazer_mapa_1530_bk <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+        
+        # abrir acess
+        acess <- dados_acc %>% filter(sigla_muni == sigla_munii) %>%
+          filter(mode == mode1) %>%
+          select(sigla_muni, CMABK15, CMABK30) %>%
+          gather(ind, valor, CMABK15:CMABK30)
+        
+        # abrir tiles
+        path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+        
+        map_tiles <- read_rds(path_maptiles)
+        
+        # ajustar levels
+        acess <- acess %>%
+          mutate(ind = factor(ind, 
+                              levels = c("CMABK15", "CMABK30"), 
+                              labels = c("15 Minutos", "30 Minutos")))
+        
+        
+        # fazer plots
+        plot3 <- ggplot()+
+          geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+          coord_equal() +
+          scale_fill_identity()+
+          # nova escala
+          new_scale_fill() +
+          geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.7)+
+          viridis::scale_fill_viridis(option = "B"
+                                      # , limits = c(0, 0.72)
+                                      # , breaks = c(0.001, 0.35, 0.7)
+                                      # , labels = c(0, "35", "70%")
+          ) +
+          facet_wrap(~ind, ncol = 2)+
+          theme_for_CMA()+
+          labs(fill = "Estações de\n Bicletas Compartilhadas \n acessíveis",
+               title = subset(munis_list$munis_df, abrev_muni == sigla_munii)$name_muni) +
+          theme(plot.title = element_text(hjust = 0.5))
+        
+        # create dir
+        if (mode1 == "bike"){
+          suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/', sigla_munii)))
+          
+          
+          ggsave(plot3, 
+                 file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/%s_CMA_BK_1530.png",
+                               sigla_munii, sigla_munii), 
+                 dpi = 300, width = width, height = height, units = "cm")
+        } else if (mode1 == "transit") {
+          
+          suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/', sigla_munii)))
+          
+          
+          ggsave(plot3, 
+                 file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/%s_CMA_BK_1530.png",
+                               sigla_munii, sigla_munii), 
+                 dpi = 300, width = width, height = height, units = "cm")
+          
+        } else if (mode1 == "walk") {
+          suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/', sigla_munii)))
+          
+          
+          ggsave(plot3, 
+                 file= sprintf("../data/map_plots_acc/muni_%s/caminhada/%s_CMA_BK_1530.png",
+                               sigla_munii, sigla_munii), 
+                 dpi = 300, width = width, height = height, units = "cm")
+          
+        }
+        
+        
+      }
+      temp1 %<-% fazer_mapa_1530_bk('poa', mode1 = "bike")
+      temp2 %<-% fazer_mapa_1530_bk('poa', mode1 = "transit")
+      temp3 %<-% fazer_mapa_1530_bk('poa', mode1 = "walk")
+      rm(list = ls(pattern = "temp"))
+      #45 e 60 minutos
+      
+      fazer_mapa_4560_bk <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+        
+        # abrir acess
+        acess <- dados_acc %>% filter(sigla_muni == sigla_munii) %>%
+          filter(mode == mode1) %>%
+          select(sigla_muni, CMABK45, CMABK60) %>%
+          gather(ind, valor, CMABK45:CMABK60)
+        
+        # abrir tiles
+        path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+        
+        map_tiles <- read_rds(path_maptiles)
+        
+        # ajustar levels
+        acess <- acess %>%
+          mutate(ind = factor(ind, 
+                              levels = c("CMABK45", "CMABK60"), 
+                              labels = c("45 Minutos", "60 Minutos")))
+        
+        
+        # fazer plots
+        plot3 <- ggplot()+
+          geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+          coord_equal() +
+          scale_fill_identity()+
+          # nova escala
+          new_scale_fill() +
+          geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.7)+
+          viridis::scale_fill_viridis(option = "B"
+                                      # , limits = c(0, 0.72)
+                                      # , breaks = c(0.001, 0.35, 0.7)
+                                      # , labels = c(0, "35", "70%")
+          ) +
+          facet_wrap(~ind, ncol = 2)+
+          theme_for_CMA()+
+          labs(fill = "Estações de\n Bicletas Compartilhadas \n acessíveis",
+               title = subset(munis_list$munis_df, abrev_muni == sigla_munii)$name_muni) +
+          theme(plot.title = element_text(hjust = 0.5))
+        
+        # create dir
+        if (mode1 == "bike"){
+          suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/', sigla_munii)))
+          
+          
+          ggsave(plot3, 
+                 file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/%s_CMA_BK_4560.png",
+                               sigla_munii, sigla_munii), 
+                 dpi = 300, width = width, height = height, units = "cm")
+        } else if (mode1 == "transit") {
+          
+          suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/', sigla_munii)))
+          
+          
+          ggsave(plot3, 
+                 file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/%s_CMA_BK_4560.png",
+                               sigla_munii, sigla_munii), 
+                 dpi = 300, width = width, height = height, units = "cm")
+          
+        } else if (mode1 == "walk") {
+          suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/', sigla_munii)))
+          
+          
+          ggsave(plot3, 
+                 file= sprintf("../data/map_plots_acc/muni_%s/caminhada/%s_CMA_BK_4560.png",
+                               sigla_munii, sigla_munii), 
+                 dpi = 300, width = width, height = height, units = "cm")
+          
+        }
+        
+        
+        
+        
+      }
+      temp1 %<-% fazer_mapa_4560_bk('poa', mode1 = "bike")
+      temp2 %<-% fazer_mapa_4560_bk('poa', mode1 = "transit")
+      temp3 %<-% fazer_mapa_4560_bk('poa', mode1 = "walk")
+      rm(list = ls(pattern = "temp"))
+    }
 
 
 # Modelo com escala personalizada -----------------------------------------

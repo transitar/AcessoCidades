@@ -117,7 +117,44 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   hex_total <- left_join(hex_total, paraciclos_hex, by = "id_hex")
   
+  
+  #bikes compartilhadas
+  #dados de bikes
+  sigla_municipio <- sigla_muni
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+ 
+   if (decisao_muni$bike_comp == 1) {
+    
+     if (decisao_muni$fonte_bikecomp == "muni"){
+       
+       dados_bikecomp <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                         sigla_muni, sigla_muni),
+                                 layer = "bike_comp"
+       )
+     }
+    
+   }
+  
+  dados_bikecomp <- dados_bikecomp %>% st_transform(decisao_muni$epsg)
+  
+  join_bikecomp_hex <- sf::st_join(dados_bikecomp,st_transform(hex,decisao_muni$epsg ))
+  
+  hex2 <- join_bikecomp_hex %>%
+    st_drop_geometry() %>%
+    group_by(id_hex) %>% 
+    summarise(n_bikes = n())
+  
+  hex_total <- left_join(hex_total, hex2, by = "id_hex") %>%
+    mutate(n_bikes = ifelse(is.na(n_bikes)==T,
+                           0,
+                           n_bikes)) %>% st_drop_geometry()
+  
+
+  
   hex_total_sf <- left_join(hex_total, hex_empty, by = "id_hex")
+  
+  #
   
   # teste <- hex_jobs %>% filter(h3_resolution > 0)
   # mapview(teste, zcol = 'n_jobs', alpha.regions = 0.6)

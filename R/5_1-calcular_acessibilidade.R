@@ -93,21 +93,37 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   
   # Filtrar apenas colunas com info de uso do solo no destino
   # corrigir para dplyr
+  
+  sigla_municipio <- sigla_muni
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+  
+  if (decisao_muni$bike_comp == 1) {
+    
+    hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
+                                        n_jobs, S001, S002, S003,  
+                                        S004, E001, E002, E003,
+                                        E004, M001, M002, M003,
+                                        M004, lazer_tot, paraciclos,
+                                        n_bikes)]
+    
+  } else {
+  
   hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
                                       n_jobs, S001, S002, S003,  
                                       S004, E001, E002, E003,
                                       E004, M001, M002, M003,
                                       M004, lazer_tot, paraciclos)]
-  
+  }
   
   # if (access %in% c("all", "active")) {
-  if (sigla_muni %like% "goi" & ano %in% c(2017, 2018)) {
-    
-    
-    ttmatrix <- ttmatrix[origin %in% hexagonos_sf$id_hex]
-    ttmatrix <- ttmatrix[destination %in% hexagonos_sf$id_hex]
-    
-  }
+  # if (sigla_muni %like% "goi" & ano %in% c(2017, 2018)) {
+  #   
+  #   
+  #   ttmatrix <- ttmatrix[origin %in% hexagonos_sf$id_hex]
+  #   ttmatrix <- ttmatrix[destination %in% hexagonos_sf$id_hex]
+  #   
+  # }
   
   message("Joining data...")
   a <- Sys.time()
@@ -143,6 +159,20 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     
   } else if(indicator_access == "active") {
     
+    if (decisao_muni$bike_comp == 1) {
+      
+      ttmatrix <- ttmatrix[hex_dest, on = c("destination" = "id_hex"),  
+                           c("empregos_total", "saude_total","saude_baixa","saude_media",
+                             "saude_alta", "edu_total", "edu_infantil", "edu_fundamental",
+                             "edu_medio","mat_total","mat_infantil","mat_fundamental",
+                             "mat_medio", "lazer_total", "paraciclos", "bikes_compartilhadas") :=
+                             list(n_jobs,
+                                  S001, S002, S003, S004,
+                                  E001,E002,E003,E004,
+                                  M001, M002, M003, M004,
+                                  lazer_tot, paraciclos, n_bikes)] 
+      
+    } else {
     
     # Join2 -  Merge dados de destino na matrix de tempo de viagem
     ttmatrix <- ttmatrix[hex_dest, on = c("destination" = "id_hex"),  
@@ -156,7 +186,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                 M001, M002, M003, M004,
                                 lazer_tot, paraciclos)] 
     
-    
+    }
     
   } else if(indicator_access == "passive") {
     
@@ -212,6 +242,27 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if (indicator_access %in% c("all", "active")) {
     
+    
+    if (decisao_muni$bike_comp == 1) {
+      acess_cma <- "CMA"
+      atividade_cma <- c(
+        # emprego
+        "TT",
+        # saude
+        "ST", "SB", "SM", "SA", 
+        # educacao - escolas
+        "ET", "EI", "EF", "EM",
+        # educacao - matriculas
+        "MT", "MI", "MF", "MM",
+        # lazer
+        "LZ",
+        # paraciclos
+        "PR",
+        #Bikes Compartilhadas
+        "BK"
+      )
+    } else {
+    
     acess_cma <- "CMA"
     atividade_cma <- c(
       # emprego
@@ -227,8 +278,51 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       # paraciclos
       "PR"
     )
+    
+    }
     # criar dummy para tt
     tt <- c(1, 2, 3, 4, 5)
+    
+    if (decisao_muni$bike_comp == 1) {
+      
+      grid_cma <- expand.grid(acess_cma, atividade_cma, tt, stringsAsFactors = FALSE) %>%
+        rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
+        # adicionar colunas de time threshold  para cada um dos modos
+        mutate(tt_tp = case_when(
+          tt_sigla == 1 ~ 15,
+          tt_sigla == 2 ~ 30,
+          tt_sigla == 3 ~ 45,
+          tt_sigla == 4 ~ 60,
+          tt_sigla == 5 ~ 75
+        )) %>%
+        mutate(tt_ativo = case_when(
+          tt_sigla == 1 ~ 15,
+          tt_sigla == 2 ~ 30,
+          tt_sigla == 3 ~ 45,
+          tt_sigla == 4 ~ 60,
+          tt_sigla == 5 ~ 75
+        )) %>%
+        mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
+        mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
+        mutate(atividade_nome = case_when(atividade_sigla == "TT" ~ "empregos_total",
+                                          atividade_sigla == "ST" ~ "saude_total",
+                                          atividade_sigla == "SB" ~ "saude_baixa",
+                                          atividade_sigla == "SM" ~ "saude_media",
+                                          atividade_sigla == "SA" ~ "saude_alta",
+                                          atividade_sigla == "ET" ~ "edu_total",
+                                          atividade_sigla == "EF" ~ "edu_fundamental",
+                                          atividade_sigla == "EM" ~ "edu_medio",
+                                          atividade_sigla == "EI" ~ "edu_infantil",
+                                          atividade_sigla == "MT" ~ "mat_total",
+                                          atividade_sigla == "MF" ~ "mat_fundamental",
+                                          atividade_sigla == "MM" ~ "mat_medio",
+                                          atividade_sigla == "MI" ~ "mat_infantil",
+                                          atividade_sigla == "LZ" ~ "lazer_total",
+                                          atividade_sigla == "PR" ~ "paraciclos",
+                                          atividade_sigla == "BK" ~ "bikes_compartilhadas"))
+      
+      
+    } else {
     
     grid_cma <- expand.grid(acess_cma, atividade_cma, tt, stringsAsFactors = FALSE) %>%
       rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
@@ -265,7 +359,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                         atividade_sigla == "LZ" ~ "lazer_total",
                                         atividade_sigla == "PR" ~ "paraciclos"))
     
-    
+    }
     # gerar o codigo
     # para tp
     codigo_cma_tp <- c(
@@ -545,6 +639,9 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # 4) Calcular acessibilidade cumulativa passiva --------------------------------------------------
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if (indicator_access %in% c("all", "passive")) {
+    
+    
+    
     acess_cmp <- "CMP"
     atividade_cmp <- c("PT", 
                        "PH", "PM",
@@ -740,6 +837,31 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # (aqui eh feito junto para os dois modos)
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
   if (indicator_access %in% c("all", "active")) {
+    
+    if (decisao_muni$bike_comp == 1) {
+      acess_tmi <- "TMI"
+      atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ", "PR, BK")
+      
+      
+      grid_tmi <- expand.grid(acess_tmi, atividade_tmi, stringsAsFactors = FALSE) %>%
+        rename(acess_sigla = Var1, atividade_sigla = Var2) %>%
+        mutate(junto = paste0(acess_sigla, atividade_sigla)) %>%
+        mutate(atividade_nome = case_when(atividade_sigla == "ST" ~ "saude_total",
+                                          atividade_sigla == "SB" ~ "saude_baixa",
+                                          atividade_sigla == "SM" ~ "saude_media",
+                                          atividade_sigla == "SA" ~ "saude_alta",
+                                          atividade_sigla == "ET" ~ "edu_total",
+                                          atividade_sigla == "EI" ~ "edu_infantil",
+                                          atividade_sigla == "EF" ~ "edu_fundamental",
+                                          atividade_sigla == "EM" ~ "edu_medio",
+                                          atividade_sigla == "EI" ~ "edu_infantil",
+                                          atividade_sigla == "LZ" ~ "lazer_total",
+                                          atividade_sigla == "PR" ~ "paraciclos",
+                                          atividade_sigla == "BK" ~ "bikes_compartilhadas"))
+      
+    } else {
+    
+    
     acess_tmi <- "TMI"
     atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ", "PR")
     
@@ -758,7 +880,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                         atividade_sigla == "LZ" ~ "lazer_total",
                                         atividade_sigla == "PR" ~ "paraciclos"))
     
-    
+    }
     # gerar o codigo
     codigo_tmi <- sprintf("%s = min(travel_time_p50[which(%s >= 1)])", 
                           grid_tmi$junto, 
@@ -872,6 +994,27 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       
       #problema aqui
       
+      if (decisao_muni$bike_comp == 1) {
+        ttmatrix <- ttmatrix %>% mutate(lazer_total = as.integer(lazer_total),
+                                        paraciclos = as.integer(paraciclos),
+                                        bikes_compartilhadas = as.integer(bikes_compartilhadas))
+        tictoc::tic()
+        acess_tmi <- ttmatrix %>% group_by(origin, mode) %>%
+          mutate(TMIST = min(travel_time_p50[which(saude_total >=1 )]),
+                 TMISB = min(travel_time_p50[which(saude_baixa >= 1)]),
+                 TMISM = min(travel_time_p50[which(saude_media >= 1)]),
+                 TMISA = min(travel_time_p50[which(saude_alta >= 1)]),
+                 TMIET = min(travel_time_p50[which(edu_total >= 1)]),
+                 TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
+                 TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),       
+                 TMIEM = min(travel_time_p50[which(edu_medio >= 1)]), 
+                 TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
+                 TMIPR = min(travel_time_p50[which(paraciclos >= 1)]),
+                 TMIBK = min(travel_time_p50[which(bikes_compartilhadas >= 1)])
+          )
+        tictoc::toc()
+      } else {
+      
       ttmatrix <- ttmatrix %>% mutate(lazer_total = as.integer(lazer_total),
                                       paraciclos = as.integer(paraciclos))
       #demora muito
@@ -890,6 +1033,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                )
       
       tictoc::toc()
+      }
       
       acess_tmi2 <- acess_tmi %>%  distinct(origin, .keep_all = TRUE)
       
@@ -897,16 +1041,16 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       suppressWarnings(dir.create(sprintf('../r5r/accessibility/muni_%s/tmi/', sigla_muni)))
       write_rds(acess_tmi2, sprintf('../r5r/accessibility/muni_%s/tmi/acc_tmi_%s.rds', sigla_muni, sigla_muni))
       
-      # acess_tmi <- ttmatrix[,  .(TMIST = min(travel_time[which(saude_total >= 1)]),   
-      #                            TMISB = min(travel_time[which(saude_baixa >= 1)]), 
-      #                            TMISM = min(travel_time[which(saude_media >= 1)]),      
-      #                            TMISA = min(travel_time[which(saude_alta >= 1)]), 
-      #                            TMIET = min(travel_time[which(edu_total >= 1)]),   
-      #                            TMIEI = min(travel_time[which(edu_infantil >= 1)]), 
-      #                            TMIEF = min(travel_time[which(edu_fundamental >= 1)]),       
-      #                            TMIEM = min(travel_time[which(edu_medio >= 1)]), 
-      #                            TMILZ = min(travel_time[which(lazer_total >= 1)]),
-      #                            TMIPR = min(travel_time[which(paraciclos >= 1)])),
+      # acess_tmi <- ttmatrix[,  .(TMIST = min(travel_time_p50[which(saude_total >= 1)]),
+      #                            TMISB = min(travel_time_p50[which(saude_baixa >= 1)]),
+      #                            TMISM = min(travel_time_p50[which(saude_media >= 1)]),
+      #                            TMISA = min(travel_time_p50[which(saude_alta >= 1)]),
+      #                            TMIET = min(travel_time_p50[which(edu_total >= 1)]),
+      #                            TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
+      #                            TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),
+      #                            TMIEM = min(travel_time_p50[which(edu_medio >= 1)]),
+      #                            TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
+      #                            TMIPR = min(travel_time_p50[which(paraciclos >= 1)])),
       #                       by=.(mode, origin)]
       # tictoc::toc()
       
