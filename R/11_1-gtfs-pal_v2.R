@@ -82,7 +82,7 @@ stops <- read_sf('../11 - GTFS/muni_pal/Pontos_Onibus_Out_2018.shp')
 
 #pontos presentes no shape que não estão no GPS:
 
-#Foi aplicado um buffer de 5m nos pontos de parada do GPS. As paradas até essa distância no shape foram
+#Foi aplicado um buffer de 80m nos pontos de parada do GPS. As paradas até essa distância no shape foram
 #como as mesmas do gps. Verificou-se que essa distância não causava overlaping de pontos
 
 stops_gps_buffer <- stops_gps %>% st_transform(31982) %>% st_buffer(80)
@@ -120,6 +120,10 @@ stops2 <- stops2 %>%
          platform_code = NA
   )
 
+stops2$stop_id <- seq(from = (as.numeric(max(stops_gps_txt$stop_id))+1000+1),
+                      to = (as.numeric(max(stops_gps_txt$stop_id))+1000 +nrow(stops2)),
+                      by = 1)
+
 stops_shapes_txt <- stops2 %>% st_drop_geometry()
 #Junção dos pontos no gps com os pontos do shape e remoção das vírgulas nos nomes dos pontos
 
@@ -127,6 +131,8 @@ stops_shapes_txt <- stops2 %>% st_drop_geometry()
 stops_all <- rbind(stops_gps_txt,
                    stops_shapes_txt) %>%
   mutate(stop_name = gsub(",", " ", stop_name))
+nrow(stops_all)
+# stops_all %>% distinct(stop_id) %>% nrow()
 
 #escrita do aquivo stops.txt
 write.table(stops_all, file = '../11 - GTFS/muni_pal/gtfs_files/stops.txt',sep = ',', na = "",
@@ -163,11 +169,14 @@ dflinhas <- do.call(rbind, dflinhas)
 
 dflinhas <- as.data.frame(dflinhas)
 
+names(dflinhas) <- c('route_id','sentido','stop_sequence','stop_id')
+
 lista_linhas_gps <- dflinhas %>%
   mutate(cod_linha = paste0(route_id, substr(sentido, start = 1L, stop = 1L))) %>%
   distinct(cod_linha, .keep_all = T)
 
-names(dflinhas) <- c('route_id','sentido','stop_sequence','stop_id')
+
+
 
 #Existem paradas referenciadas no arquivo de rotas do gps que não estão no arquivo de paradas. Foram
 #removidas.
@@ -186,7 +195,8 @@ linhas_gps_info_stops %>% distinct(route_id) %>% nrow()
 
 #arquivo shapefile com o nome das linhas
 
-shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%
+shapes <- st_read('../11 - GTFS/muni_pal/itinerarios.gpkg') %>%
+  st_zm(drop = T) %>%
   st_transform(4326) %>% mutate(route_id = substr(Name_1, start = 1L, stop = 3L),
                                 agency_id = NA,
                                 route_short_name = ITINERARIO,
@@ -198,7 +208,7 @@ shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(
                                 route_text_color = NA,
                                 route_text_color = NA) %>%
   select(-Name_1,-ITINERARIO, -Exten_Km) %>%  distinct(route_id, .keep_all = T)
-
+# mapview(shapes)
 shapes_st <- shapes %>% st_drop_geometry()
 
 #comparativo das linhas presentes no GPS e no shapefile
@@ -207,7 +217,8 @@ shapes_st <- shapes %>% st_drop_geometry()
 n_lines_shape <- shapes %>% distinct(route_id) %>% nrow()
 #linhas no gps: 54
 linhas_gps <- linhas_gps_info_stops %>% distinct(route_id, .keep_all = T)
-nrow(linhas_gps)
+
+# nrow(linhas_gps)
 #linhas no quadro de horários:
 arquivo <- '../11 - GTFS/muni_pal/Quadro de Horários anexo à Ordem de Serviço Nº 12 2022 - 1º a 31 de Agosto 2022_2.xlsx'
 n_abas <- length((excel_sheets(arquivo)))
@@ -217,7 +228,7 @@ sheets <- sheets[4:(length(sheets)-5)]
 names <- names(sheets)
 names_linhas <- substr(names, start = 1L, stop = 3L)
 
-lista_linhas_gps %>% filter(!cod_linha %in% names) %>% filter(!route_id %in% names)
+lista_linhas_apenas_gps  <- lista_linhas_gps %>% filter(!cod_linha %in% names) %>% filter(!route_id %in% names)
 #linhas presentes no GPS mas não na tabela de horários: 1 LUZIM e 80T ida e volta 
 #linha 1 LUZIM atende o lado oeste do reservatório UHE Luís Eduardo Magalhães (Não está no shape)
 #linha 80T atende Taquarussu do Porto (zona rural) e santa terezinha do TO (Não está no shape)
@@ -235,40 +246,44 @@ as.data.frame(names) %>% filter(!names %in% lista_linhas_gps$cod_linha) %>% filt
 
 #remoção da linha 610
 names <- names[!610]
-
+#Apenas a linha 610 não estava nos arquivos de GPS, porém essa linha não tinha nenhum horário
+#no quadro de horários e foi removida
 #Assim, todas as linhas utilizadas estão no gps, e este será o utulizado
 
 #sttoped here
 
 
-shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%
-  st_transform(4326)
+# shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%
+#   st_transform(4326)
 
 # shapes <- st_read('../11 - GTFS/muni_pal/itinerarios.gpkg') %>% st_transform(4326)
 # mydata2 <- st_collection_extract(shapes, "LINESTRING")
 
 mapview(shapes)
 
-routes <- shapes %>% mutate(route_id = substr(Name_1, start = 1L, stop = 3L),
-                            agency_id = NA,
-                            route_short_name = ITINERARIO,
-                            route_long_name = NA,
-                            route_desc = NA,
+routes <- linhas_gps %>%
+  select(route_id) %>%
+  left_join(shapes_st, by = "route_id") %>%
+  mutate( agency_id = 1,
+          route_short_name = ifelse(is.na(route_short_name) == T, route_id, route_short_name),
+#                             route_long_name = NA,
+#                             route_desc = NA,
                             route_type = 3,
-                            route_url = NA,
-                            route_color = NA,
-                            route_text_color = NA,
-                            route_text_color = NA) %>%
-  select(-Name_1,-ITINERARIO, -Exten_Km) %>% st_drop_geometry() %>% distinct(route_id, .keep_all = T)
-nrow(routes)
+#                             route_url = NA,
+#                             route_color = NA,
+#                             route_text_color = NA,
+                            route_text_color = NA)
+#   select(-Name_1,-ITINERARIO, -Exten_Km) %>% st_drop_geometry() %>% distinct(route_id, .keep_all = T)
+# nrow(routes)
+routes_st <- routes %>% st_drop_geometry()
 
-write.table(routes, file = '../11 - GTFS/muni_pal/gtfs_files/routes.txt',sep = ',', na = "",
+write.table(routes_st, file = '../11 - GTFS/muni_pal/gtfs_files/routes.txt',sep = ',', na = "",
             row.names = F, quote = F)
 
 
 #linhas que estão no shape mas não no gps
-linhas_faltando1 <- linhas2 %>% left_join(routes, by ='route_id')
-linhas_faltando2 <- routes %>% left_join(linhas2, by ='route_id')
+# linhas_faltando1 <- linhas2 %>% left_join(routes, by ='route_id')
+# linhas_faltando2 <- routes %>% left_join(linhas2, by ='route_id')
 
 #linhas que tem ida e volta no gps mas não tem na planilha de horas
 
@@ -350,16 +365,86 @@ dados2 <- dados %>% filter(valor %like% ":") %>%
 
   # mutate(valor = ymd_hms(valor))
 
-routes2 <- routes %>% filter(route_id %in% names_linhas)
+# routes2 <- routes %>% filter(route_id %in% names_linhas)
 
-write.table(routes2, file = '../11 - GTFS/muni_pal/gtfs_files/routes.txt',sep = ',', na = "",
-            row.names = F, quote = F)
+# write.table(routes2, file = '../11 - GTFS/muni_pal/gtfs_files/routes.txt',sep = ',', na = "",
+            # row.names = F, quote = F)
 
 # dados2 <- dados %>% mutate(x = substr(valor, start = 3L, stop = 3L)) %>% filter(x==":") %>% select(-x)
 
 #construção do arquivo trips.txt
 
 # shapes.txt --------------------------------------------------------------
+
+#refazer o shapes.txt a partir do gps
+
+#linhas_gps_info_stops
+
+
+
+shapes_gps <- linhas_gps_info_stops %>% group_by(cod_linha) %>%
+  st_cast("LINESTRING")
+
+library(sp)
+points_to_line <- function(data, long, lat, id_field = NULL, sort_field = NULL) {
+  
+  # Convert to SpatialPointsDataFrame
+  coordinates(data) <- c(long, lat)
+  
+  # If there is a sort field...
+  if (!is.null(sort_field)) {
+    if (!is.null(id_field)) {
+      data <- data[order(data[[id_field]], data[[sort_field]]), ]
+    } else {
+      data <- data[order(data[[sort_field]]), ]
+    }
+  }
+  
+  # If there is only one path...
+  if (is.null(id_field)) {
+    
+    lines <- SpatialLines(list(Lines(list(Line(data)), "id")))
+    
+    return(lines)
+    
+    # Now, if we have multiple lines...
+  } else if (!is.null(id_field)) {  
+    
+    # Split into a list by ID field
+    paths <- sp::split(data, data[[id_field]])
+    
+    sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), "line1")))
+    
+    # I like for loops, what can I say...
+    for (p in 2:length(paths)) {
+      id <- paste0("line", as.character(p))
+      l <- SpatialLines(list(Lines(list(Line(paths[[p]])), id)))
+      sp_lines <- spRbind(sp_lines, l)
+    }
+    
+    return(sp_lines)
+  }
+}
+
+dat <- linhas_gps_info_stops %>% select(shape_id = cod_linha, route_id, shape_pt_sequence = stop_sequence)
+
+dat$shape_pt_lat <- as.data.frame(st_coordinates(dat))$Y
+dat$shape_pt_lon <- as.data.frame(st_coordinates(dat))$X
+
+dat <- dat %>% st_drop_geometry()
+dat2 <- dat %>% select(-route_id)
+#parei aqui
+
+v_lines <- points_to_line(data = dat2, 
+                          long = "shape_pt_lon", 
+                          lat = "shape_pt_lat", 
+                          id_field = "shape_id", 
+                          sort_field = "shape_pt_sequence")
+
+leaflet(data = v_lines) %>%
+  addTiles() %>%
+  addPolylines()
+
 
 shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%
   st_transform(4326)

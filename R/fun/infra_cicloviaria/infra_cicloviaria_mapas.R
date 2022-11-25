@@ -142,7 +142,7 @@ graficos <- function(munis = "all"){
     dados_ciclovias_buffer <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
       st_buffer(300) %>% st_union() %>% st_as_sf()
     dados_ciclovias_buffer2 <- dados_ciclovias_buffer %>% as.data.frame()
-    mapview(dados_ciclovias_buffer)
+    # mapview(dados_ciclovias_buffer)
     
     
     
@@ -200,7 +200,362 @@ graficos <- function(munis = "all"){
       st_intersection(dados_ciclovias_buffer)
     dados_hex_intersect <- dados_hex_intersect %>%
       mutate(area = st_area(.))
-  
+    
+    id_hex_intersects <- dados_hex_intersect$id_hex %>% unique()
+    
+    #dados da microssimulação
+    
+    data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+                                   sigla_muni, sigla_muni))
+    #ajeitar o formato
+    grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+                                   sigla_muni, sigla_muni))
+    
+    #checar setores com todos os renda_class_pc == n_col
+    
+    lista_tract <- data_micro %>% group_by(code_tract, renda_class_pc) %>%
+      summarise(n = n()) %>% ungroup() %>%
+      group_by(code_tract) %>% summarise(n_classes = length(code_tract), 
+                                         n_classes_col = length(code_tract[renda_class_pc == "n_col"])) %>%
+      filter(n_classes > n_classes_col) %>% pull(code_tract)
+    
+    data_micro2 <- data_micro %>% filter(code_tract %in% lista_tract) %>% select(1:10, V0606, hex) %>%
+      mutate(V0606 = as.factor(V0606))
+    
+    data_micro_ciclo <- data_micro2 %>% filter(hex %in% id_hex_intersects)
+    
+    
+    #tema dos mapas de barras
+    
+    theme_bar_plots <- function(base_size) {
+      
+      # theme_void(base_family="Roboto Condensed") %+replace%
+      theme_minimal() %+replace%
+        
+        theme(
+          # legend.position = "bottom",
+          # plot.margin=unit(c(2,0,0,0),"mm"),
+          # legend.key.width=unit(1,"line"),
+          # legend.key.height = unit(0.4,"cm"),
+          legend.text=element_text(size=12),
+          legend.title=element_text(size=12),
+          panel.background = element_blank(),
+          panel.border = element_blank(),
+          # strip.text = element_text(size=rel(1.3))
+          # plot.title = element_text(size = rel(1.5)),
+          axis.title.y = element_text(size = 12, angle = 90),
+          axis.title.x = element_blank(),
+          axis.text.y = element_text(size = 12),
+          axis.text.x = element_text(size = 12),
+          legend.position = c(0.9,0.85),
+          legend.background = element_rect(size = 0.5,
+                                           linetype = "solid",
+                                           colour = "grey70")
+          # panel.grid.major = element_blank(),
+          # panel.grid.minor = element_blank()
+          
+        )
+    }
+    
+    #Acesso infra Ciclo
+    #Parte 1 - Recorte de cor e gênero
+    levels(data_micro2$V0606) <- c("Branca", "Preta", "Amarela", "Parda", "Indígena")
+    recorte_cg <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+                                         cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                                                         cor == "pretos" ~ "Pretos",
+                                                         cor == "brancos" ~ "Brancos")) %>%
+      group_by(V0606, genero, teste) %>% summarise(n = n()) %>% 
+      ungroup() %>% group_by(V0606, genero) %>% 
+      summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"])
+    
+    
+    ggplot(recorte_cg,
+           aes(y = prop, x = genero, fill = V0606)) + 
+      geom_col(position = position_dodge(),
+               width = .5) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc", "grey70", "blue", "pink")) +
+      geom_text(aes(label = scales::percent(prop), group = V0606),position = position_dodge(width = .5),
+                vjust = -0.5, size = 4.5) +
+      
+      geom_text(aes(label = scales::label_number(suffix = "K \n(hab)", scale = 1e-3)(n), group = V0606),
+                position = position_dodge(width = .5),
+                vjust = 1.5, size = 4.5, colour = "white",
+                fontface = "bold") +
+      ylab("Proporção de\nHabitantes (%)")+
+      scale_y_continuous(labels = scales::percent,
+                         limits = c(0,1))+
+      labs(fill = "Cor") +
+      theme_bar_plots()
+      
+    
+    #Gráfico 2 - Recorte de Raça e Cor
+      
+    
+    recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      group_by(V0606) %>%
+      mutate(
+             quintil_renda = ntile(Rend_pc, 5)) %>%
+      ungroup() %>%
+      group_by(V0606, quintil_renda, teste) %>% summarise(n = n()) %>% 
+      ungroup() %>% group_by(V0606, quintil_renda) %>% 
+      summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"])
+    
+    
+    ggplot(recorte_rr,
+           aes(y = prop, x = quintil_renda, fill = V0606)) + 
+      geom_col(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc", "yellow", "blue", "grey70")) +
+      geom_text(aes(label = scales::percent(prop), group = V0606),position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      
+      geom_text(aes(label = scales::label_number(suffix = "K\n(hab)", scale = 1e-3)(n), group = V0606),
+                position = position_dodge(width = .7),
+                vjust = 1.5, size = 3.5, colour = "white",
+                fontface = "bold") +
+      ylab("Proporção de\nHabitantes (%)")+
+      scale_y_continuous(labels = scales::percent,
+                         limits = c(0,1))+
+      labs(fill = "Cor") +
+      theme_bar_plots()
+    
+    
+    #Recorte 3 - Gênero e renda
+    
+    
+    recorte_gr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      filter(!renda_class == "Total_u10") %>%
+      
+      mutate(
+        quintil_renda = ntile(Rend_pc, 5)) %>%
+      
+      group_by(genero, quintil_renda, teste) %>% summarise(n = n()) %>% 
+      ungroup() %>% group_by(genero, quintil_renda) %>% 
+      summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"])
+    
+    
+    ggplot(recorte_gr,
+           aes(y = prop, x = quintil_renda, fill = genero)) + 
+      geom_col(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc")) +
+      geom_text(aes(label = scales::percent(prop), group = genero),position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      
+      geom_text(aes(label = scales::label_number(suffix = "K\n(hab)", scale = 1e-3)(n), group = genero),
+                position = position_dodge(width = .7),
+                vjust = 1.5, size = 3.5, colour = "white",
+                fontface = "bold") +
+      ylab("Proporção de\nHabitantes (%)")+
+      scale_y_continuous(labels = scales::percent,
+                         limits = c(0,1))+
+      labs(fill = "Gênero") +
+      theme_bar_plots()
+    
+    #Acessibilidade a empregos por TP
+    dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
+    data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds',
+                                   sigla_muni, sigla_muni))
+    
+    
+    dados_acc <- left_join(dados_hex, data_acess, by = c("id_hex"="origin")) %>% st_as_sf()
+    
+    
+    data_micro_acc <- data_micro2 %>% left_join(dados_acc %>% filter(mode == "transit"), by = c("hex"= "id_hex"))
+    
+    #recorte de renda e cor
+    
+    recorte_rr_acc <- data_micro_acc %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      filter(!renda_class == "Total_u10") %>%
+      group_by(V0606) %>%
+      mutate(
+        quintil_acc = ntile(CMATT60, 5)) %>%
+      ungroup() %>%
+      group_by(V0606, quintil_acc) %>% summarise(opp = mean(CMATT60)) %>% 
+      drop_na(quintil_acc)
+    
+    
+
+    
+    ggplot(recorte_rr_acc,
+           aes(y = opp, x = quintil_acc, fill = V0606)) + 
+      geom_col(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc", "yellow", "blue", "grey70")) +
+      geom_text(aes(label = scales::label_number(suffix = "K", scale = 1e-3)(opp), group = V0606),
+                position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      ylab("Ooportunidades\nAcessíveis")+
+      scale_y_continuous(labels = scales::label_number(suffix = "K", scale = 1e-3))+
+      labs(fill = "Cor") +
+      theme_bar_plots() +
+      theme(
+        legend.position = c(0.1,0.85)
+      )
+    
+    #recorte de genero e cor
+    
+    
+    recorte_cg_acc <- data_micro_acc %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      group_by(V0606, genero) %>% summarise(opp = mean(CMATT60, na.rm = T)) 
+    
+    
+    ggplot(recorte_cg_acc,
+           aes(y = opp, x = genero, fill = V0606)) + 
+      geom_col(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc", "yellow", "blue", "grey70")) +
+      geom_text(aes(label = scales::label_number(suffix = "K", scale = 1e-3)(opp), group = V0606),
+                position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      ylab("Oportunidades\n Acessíveis")+
+      scale_y_continuous(labels = scales::label_number(suffix = "K", scale = 1e-3),
+                         limits = c(0,500000))+
+      labs(fill = "Cor") +
+      theme_bar_plots() +
+      theme(legend.position = c(0.1,0.9))
+    
+    #teste 
+  #quintil de renda
+   
+    
+    recorte_rr_acc_renda <- data_micro_acc %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "outros",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      mutate(
+        quintil_renda = ntile(Rend_pc, 5)) %>%
+      group_by(V0606, quintil_renda) %>% summarise(opp = mean(CMATT15, na.rm = T),
+                                                 pop = n())
+      # drop_na(quintil_acc)
+    
+    teste <- data_micro_acc %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "outros",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      # filter(V0606 %in% "Amarela") 
+      group_by(V0606) %>%
+      mutate(quintil_renda = ntile(Rend_pc, 5)) %>% select(1:10, V0606, CMATT60, quintil_renda)
+    
+    teste2 <- teste %>% group_by(quintil_renda) %>%
+      summarise(media = mean(Rend_pc, na.rm = T),
+                max = max(Rend_pc))
+    
+    
+    
+    
+    ggplot(teste,
+           aes(y = Rend_pc, group = quintil_renda)) + 
+      geom_boxplot(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc", "yellow", "#d96e0a", "grey70")) +
+      geom_text(aes(label = opp, group = V0606),position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      ylab("Oportunidades\nAcessíveis")+
+      scale_y_continuous(labels = scales::label_number(suffix = "M", scale = 1e-6))+
+      labs(fill = "Cor") +
+      theme_bar_plots() +
+      theme(
+        legend.position = c(0.1,0.9)
+      )
+    
+    
+    
+
+    ggplot(recorte_rr_acc_renda,
+           aes(y = opp, x = quintil_renda, fill = V0606)) + 
+      geom_col(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc", "yellow", "#d96e0a", "grey70")) +
+      geom_text(aes(label = opp, group = V0606),position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      ylab("Proporção de\nHabitantes (%)")+
+      scale_y_continuous(labels = scales::label_number(suffix = "M\n(Oportunidades)", scale = 1e-6))+
+      labs(fill = "Cor") +
+      theme_bar_plots() +
+      theme(
+        legend.position = c(0.1,0.9)
+      )
+    
+    
+    #recorte de renda e gênero
+    
+    recorte_rg_acc <- data_micro_acc %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulher", "Homem"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      group_by(genero) %>%
+      mutate(
+        quintil_acc = ntile(CMATT60, 5)) %>%
+      ungroup() %>%
+      group_by(genero, quintil_acc) %>% summarise(opp = mean(CMATT60)) %>% 
+      drop_na(quintil_acc)
+    
+    
+    
+    
+    ggplot(recorte_rg_acc,
+           aes(y = opp, x = quintil_acc, fill = genero)) + 
+      geom_col(position = position_dodge(),
+               width = .7) + 
+      scale_fill_manual(values = c("#33b099", "#5766cc")) +
+      geom_text(aes(label = scales::label_number(suffix = "K", scale = 1e-3)(opp), group = genero),
+                position = position_dodge(width = .7),
+                vjust = -0.5, size = 3.5) +
+      ylab("oportunidades\nAcessíveis")+
+      scale_y_continuous(labels = scales::label_number(suffix = "K", scale = 1e-3))+
+      labs(fill = "Cor") +
+      theme_bar_plots() +
+      theme(
+        legend.position = c(0.1,0.85)
+      )
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     #bikes compartilhadas
     

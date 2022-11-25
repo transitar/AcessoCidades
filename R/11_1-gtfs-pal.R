@@ -8,8 +8,8 @@ source('R/fun/setup.R')
 
 stops <- read_sf('../11 - GTFS/muni_pal/Pontos_Onibus_Out_2018.shp')
 
-mapview(stops)
-head(stops)
+# mapview(stops)
+# head(stops)
 
 stops$stop_id <- seq.int(nrow(stops))
 stops2 <- stops %>% select(stop_id) %>% st_transform(crs = "+proj=longlat + datum=WGS84") %>%

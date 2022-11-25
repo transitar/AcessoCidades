@@ -19,6 +19,39 @@ sigla_muni <- 'poa'; ano <- 2018; source <- 'aop'; source_lazer <- 'osm'
 
 infos_to_hex <- function(sigla_muni, ano) {
   
+  
+  
+  #dados da microssimulação
+  
+  data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+                                 sigla_muni, sigla_muni))
+  #ajeitar o formato
+  grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+                                 sigla_muni, sigla_muni))
+  
+  #checar setores com todos os renda_class_pc == n_col
+  
+  lista_tract <- data_micro %>% group_by(code_tract, renda_class_pc) %>%
+    summarise(n = n()) %>% ungroup() %>%
+    group_by(code_tract) %>% summarise(n_classes = length(code_tract), 
+                                       n_classes_col = length(code_tract[renda_class_pc == "n_col"])) %>%
+    filter(n_classes > n_classes_col) %>% pull(code_tract)
+  
+  data_micro2 <- data_micro %>% filter(code_tract %in% lista_tract)
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   #empregos
   
   #leitura dos dados de empregos
@@ -164,13 +197,9 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   write_rds(hex_total_sf, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds", sigla_muni, sigla_muni))
   
-  #abertura dos dados da microssimulaçço
-  #para os demais, fazer a juntaçço antes da escrita
+
   
-  data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
-                                 sigla_muni, sigla_muni))
-  #ajeitar o formato
-  
+
   
   
 }
