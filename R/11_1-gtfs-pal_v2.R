@@ -382,78 +382,117 @@ dados2 <- dados %>% filter(valor %like% ":") %>%
 
 
 
-shapes_gps <- linhas_gps_info_stops %>% group_by(cod_linha) %>%
-  st_cast("LINESTRING")
+# shapes_gps <- linhas_gps_info_stops %>% group_by(cod_linha) %>%
+#   st_cast("LINESTRING")
+# 
+# library(sp)
+# library(maptools)
+# library(leaflet)
+# points_to_line <- function(data, long, lat, id_field = NULL, sort_field = NULL) {
+#   
+#   # Convert to SpatialPointsDataFrame
+#   coordinates(data) <- c(long, lat)
+#   
+#   # If there is a sort field...
+#   if (!is.null(sort_field)) {
+#     if (!is.null(id_field)) {
+#       data <- data[order(data[[id_field]], data[[sort_field]]), ]
+#     } else {
+#       data <- data[order(data[[sort_field]]), ]
+#     }
+#   }
+#   
+#   # If there is only one path...
+#   if (is.null(id_field)) {
+#     
+#     lines <- SpatialLines(list(Lines(list(Line(data)), "id")))
+#     
+#     return(lines)
+#     
+#     # Now, if we have multiple lines...
+#   } else if (!is.null(id_field)) {  
+#     
+#     # Split into a list by ID field
+#     paths <- sp::split(data, data[[id_field]])
+#     
+#     sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), "line1")))
+#     
+#     # I like for loops, what can I say...
+#     for (p in 2:length(paths)) {
+#       id <- paste0("line", as.character(p))
+#       l <- SpatialLines(list(Lines(list(Line(paths[[p]])), id)))
+#       sp_lines <- spRbind(sp_lines, l)
+#     }
+#     
+#     return(sp_lines)
+#   }
+# }
+# 
+# dat <- linhas_gps_info_stops %>% select(shape_id = cod_linha, route_id, shape_pt_sequence = stop_sequence)
+# 
+# #here
+# 
+# linhas_gps_info_stops %>% filter(cod_linha == "1 LUZIMV") %>% mapview(zcol = "stop_sequence")
+# 
+# 
+# dat$shape_pt_lat <- as.data.frame(st_coordinates(dat))$Y
+# dat$shape_pt_lon <- as.data.frame(st_coordinates(dat))$X
+# 
+# dat <- dat %>% st_drop_geometry()
+# dat2 <- dat %>% select(-route_id)
+# #parei aqui
+# 
+# v_lines <- points_to_line(data = dat2, 
+#                           long = "shape_pt_lon", 
+#                           lat = "shape_pt_lat", 
+#                           id_field = "shape_id", 
+#                           sort_field = "shape_pt_sequence")
+# 
+# leaflet(data = v_lines) %>%
+#   addTiles() %>%
+#   addPolylines()
+# 
+# 
+# shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%
+#   st_transform(4326)
+library(gsubfn)
+shapes2 <- st_read('../11 - GTFS/muni_pal/itinerarios.gpkg') %>%
+  st_transform(4326) %>% 
+  st_zm(drop = T) # %>%
+  # mutate(route_id = separate(Name_1, sep = "\\("), into =  c("linha","sentido"))
 
-library(sp)
-points_to_line <- function(data, long, lat, id_field = NULL, sort_field = NULL) {
+# teste <- shapes2[1,1] %>% st_drop_geometry()
+
+route_id <- separate(shapes2, c("Name_1"), sep = "\\(", into = c("linha","sentido"))[1] %>%
+  st_drop_geometry()
+route_id2 <- str_remove(route_id$linha, pattern = " ")
+route_id2 <- str_remove(route_id2, pattern = " ")
+route_id <- data.frame(route_id = route_id2)
+
+# shapes2 <- shapes2[1:ncol(shapes2)-1]
+sentido <- separate(shapes2, c("Name_1"), sep = "\\(", into = c("linha","sentido"))[2] %>%
+  st_drop_geometry()
+sentido2 <- str_remove(sentido$sentido, pattern = "\\)")
+sentido <- data.frame(sentido = sentido2)
+sentido2 <- substr(sentido$sentido, start = 1L, stop = 1L)
+sentido <- data.frame(sentido = sentido2)
+
+# shapes2 <- shapes2[1:ncol(shapes2)-1]
+# separate(teste, c("Name_1"), sep = "\\(", into = c("linha","sentido"))[1]
+
+# str_split(teste, pattern = "\\(")
+# shapes2$route_id <- strapplyc(shapes2$Name_1, "(.*)(", simplify = T)
+
+shapes2 <- cbind(route_id, sentido, shapes2)
   
-  # Convert to SpatialPointsDataFrame
-  coordinates(data) <- c(long, lat)
-  
-  # If there is a sort field...
-  if (!is.null(sort_field)) {
-    if (!is.null(id_field)) {
-      data <- data[order(data[[id_field]], data[[sort_field]]), ]
-    } else {
-      data <- data[order(data[[sort_field]]), ]
-    }
-  }
-  
-  # If there is only one path...
-  if (is.null(id_field)) {
-    
-    lines <- SpatialLines(list(Lines(list(Line(data)), "id")))
-    
-    return(lines)
-    
-    # Now, if we have multiple lines...
-  } else if (!is.null(id_field)) {  
-    
-    # Split into a list by ID field
-    paths <- sp::split(data, data[[id_field]])
-    
-    sp_lines <- SpatialLines(list(Lines(list(Line(paths[[1]])), "line1")))
-    
-    # I like for loops, what can I say...
-    for (p in 2:length(paths)) {
-      id <- paste0("line", as.character(p))
-      l <- SpatialLines(list(Lines(list(Line(paths[[p]])), id)))
-      sp_lines <- spRbind(sp_lines, l)
-    }
-    
-    return(sp_lines)
-  }
-}
-
-dat <- linhas_gps_info_stops %>% select(shape_id = cod_linha, route_id, shape_pt_sequence = stop_sequence)
-
-dat$shape_pt_lat <- as.data.frame(st_coordinates(dat))$Y
-dat$shape_pt_lon <- as.data.frame(st_coordinates(dat))$X
-
-dat <- dat %>% st_drop_geometry()
-dat2 <- dat %>% select(-route_id)
-#parei aqui
-
-v_lines <- points_to_line(data = dat2, 
-                          long = "shape_pt_lon", 
-                          lat = "shape_pt_lat", 
-                          id_field = "shape_id", 
-                          sort_field = "shape_pt_sequence")
-
-leaflet(data = v_lines) %>%
-  addTiles() %>%
-  addPolylines()
-
-
-shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%
-  st_transform(4326)
-
-shapes2 <- shapes %>% mutate(route_id = substr(Name_1, start = 1L, stop = 3L),
-                             sentido = substr(Name_1, start = 6L, stop = 6L)) %>%
+shapes2 <- shapes2 %>%
   mutate(sentido = toupper(sentido)) %>%
-  mutate(shape_id = paste0('shape', route_id, "-", sentido)) %>%
-  select(-Name_1,-ITINERARIO, -Exten_Km, -route_id, -sentido)
+  mutate(shape_id = paste0('shape', route_id, "-", sentido))
+
+
+shapes_gtfs <- shapes2 %>%
+  select(-Name_1,-ITINERARIO, -Exten_Km, -route_id, -sentido) %>% st_as_sf()
+
 
 #mais segmentos nas linhas
 # teste <- shapes2 %>%
@@ -462,19 +501,20 @@ shapes2 <- shapes %>% mutate(route_id = substr(Name_1, start = 1L, stop = 3L),
 #   mutate(shape_pt_sequence = 1:length(shape_id)) %>%
 #   st_buffer(25)
 
-shapes_segment <- shapes2 %>%
+shapes_segment <- shapes_gtfs %>%
   st_transform(31982) %>% st_segmentize(units::set_units(5, m)) %>%
   st_cast(to = "MULTIPOINT") %>% st_cast("POINT") %>% group_by(shape_id) %>%
   mutate(shape_pt_sequence = 1:length(shape_id)) %>% st_transform(4326)
-shapes_segment <- shapes_segment %>% ungroup() %>%
-  mutate(shape_pt_lat = unlist(map(.$geometry,2)),
-                                            shape_pt_lon = unlist(map(.$geometry,1)),
-                                            shape_dist_traveled = NA) %>%
+shapes_segment$shape_pt_lat <- as.data.frame(st_coordinates(shapes_segment))$Y
+shapes_segment$shape_pt_lon <- as.data.frame(st_coordinates(shapes_segment))$X
+
+shapes_segment_txt <- shapes_segment %>% ungroup() %>%
+  mutate(shape_dist_traveled = NA) %>%
   select(shape_id, shape_pt_lat, shape_pt_lon, shape_pt_sequence, shape_dist_traveled) %>%
   st_drop_geometry()
 
 #Escrita do arquivo sahpes.txt
-write.table(shapes_segment, file = '../11 - GTFS/muni_pal/gtfs_files/shapes.txt',sep = ',', na = "",
+write.table(shapes_segment_txt, file = '../11 - GTFS/muni_pal/gtfs_files/shapes.txt',sep = ',', na = "",
             row.names = F, quote = F)
   
 
@@ -535,10 +575,75 @@ trips_gtfs_salvar <- trips_gtfs %>%
          wheelchair_accessible
          )
 
-write.table(trips_gtfs_salvar, file = '../11 - GTFS/muni_pal/gtfs_files/trips.txt',sep = ',', na = "",
+#aqui faltam as viagens das 5 linhas que estão no GPS e não estão na planilha de partidas
+
+#trips03
+
+trips_so_gps <- trips_03 %>% filter(hora_inicio %like% ":") %>%
+  filter(hora_fim %like% ":") %>% filter(route_id %in% lista_linhas_apenas_gps$route_id)
+
+# route_id <- separate(shapes2, c("Name_1"), sep = "\\(", into = c("linha","sentido"))[1] %>%
+#   st_drop_geometry()
+# route_id2 <- str_remove(route_id$linha, pattern = " ")
+# route_id <- data.frame(route_id = route_id2)
+# 
+# # shapes2 <- shapes2[1:ncol(shapes2)-1]
+# sentido <- separate(shapes2, c("Name_1"), sep = "\\(", into = c("linha","sentido"))[2] %>%
+#   st_drop_geometry()
+# sentido2 <- str_remove(sentido$sentido, pattern = "\\)")
+# sentido <- data.frame(sentido = sentido2)
+
+
+
+trips_gtfs_gps <- trips_so_gps %>%
+  mutate(route_id2 = route_id,
+         service_id = "U",
+         sentido = ifelse(sentido %in% c("I","V"), sentido, "I")) %>%
+  group_by(route_id) %>%
+  mutate(trip_seq = 1:length(route_id)) %>% ungroup() %>%
+  
+  mutate(menor_100 = ifelse(trip_seq/100>1, 0, 1)) %>%
+  
+  mutate(menor_100 = ifelse(menor_100 ==1,
+                            ifelse(trip_seq/10>1, 1,2),menor_100)) %>%
+  mutate(trip_seq = as.character(trip_seq)) %>%
+  
+  mutate(trip_seq = ifelse(menor_100 == 0, trip_seq, ifelse(
+    menor_100 == 1, paste0("0", trip_seq), paste0("00", trip_seq)
+    
+  ))) %>%
+  
+  mutate(trip_seq = ifelse(trip_seq %in% c("0010", "0100"), sub(".", "", trip_seq), trip_seq)) %>%
+  
+  mutate(trip_id = paste0(service_id, route_id2, "-V", trip_seq, "-", sentido),
+         trip_headsign = NA,
+         trip_short_name = NA,
+         direction_id = NA,
+         block_id = NA,
+         shape_id = paste0("shape", route_id2, "-", sentido),
+         wheelchair_accessible = NA)
+
+trips_gtfs_gps_salvar <- trips_gtfs_gps %>%
+  select(route_id=route_id2,
+         service_id,
+         trip_id,
+         trip_headsign,
+         trip_short_name,
+         direction_id,
+         block_id,
+         shape_id,
+         wheelchair_accessible
+  )
+
+trips_gtfs_gps_salvar$trip_id <- str_remove(trips_gtfs_gps_salvar$trip_id, pattern = " ")
+trips_gtfs_gps_salvar$shape_id <- str_remove(trips_gtfs_gps_salvar$shape_id, pattern = " ")
+
+trips_gtfs_all <- rbind(trips_gtfs_salvar, trips_gtfs_gps_salvar)
+
+write.table(trips_gtfs_all, file = '../11 - GTFS/muni_pal/gtfs_files/trips.txt',sep = ',', na = "",
             row.names = F, quote = F)
 
-
+# trips_gtfs_gps_horarios <- trips_gtfs_gps_salvar 
 
 # stop_times.txt ----------------------------------------------------------
 
@@ -546,9 +651,26 @@ write.table(trips_gtfs_salvar, file = '../11 - GTFS/muni_pal/gtfs_files/trips.tx
 #horarios: trips_gtfs
 #routes: routes2
 
+trips_gps_juntar <- trips_gtfs_gps %>% select(route_id,hora_partida = hora_inicio,
+                                       hora_chegada = hora_fim,
+                                       trip_id, shape_id)
+trips_gps_juntar$shape_id <- str_remove(trips_gps_juntar$shape_id, pattern = " ")
+trips_gps_juntar$trip_id <- str_remove(trips_gps_juntar$trip_id, pattern = " ")
+
+#necessário o tempo_viagem
+trips_gps_juntar <- trips_gps_juntar %>%
+  mutate(hora_partida = as.POSIXct(hora_partida, format = "%H:%M"),
+         hora_chegada = as.POSIXct(hora_chegada, format = "%H:%M")) %>%
+  mutate(tempo_viagem = hora_chegada - hora_partida)
+
+trips_gtfs_tabela_juntar <- trips_gtfs %>%
+  select(route_id, hora_partida, hora_chegada, trip_id, shape_id, tempo_viagem)
+
+trips_all_stoptimes <- rbind(trips_gtfs_tabela_juntar,
+                             trips_gps_juntar)
 
 
-stop_times0 <- trips_gtfs %>% group_by(trip_id) %>% left_join(shapes_segment) %>% ungroup()
+stop_times0 <- trips_all_stoptimes %>% group_by(trip_id) %>% left_join(shapes_segment) %>% ungroup()
 
 stop_times0 <- stop_times0 %>% group_by(trip_id) %>%
   mutate(arrival_time = ifelse(shape_pt_sequence == min(shape_pt_sequence),
