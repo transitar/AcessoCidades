@@ -7,7 +7,7 @@ source('./R/fun/setup.R')
 
 
 
-sigla_muni <- "poa"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
+sigla_muni <- "pal"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
 # sigla_muni <- "spo"; ano=2019
 # sigla_muni <- "for"; ano=2019
 # sigla_muni <- "for"; ano=2017
@@ -43,7 +43,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   if (mode_access == "todos") {
     
     
-    ttmatrix <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_all_%s_%s_r5.csv",
+    #mudar pra all
+    ttmatrix <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_transit_%s_%s_r5_pico.csv",
                                  ano, sigla_muni, ano, sigla_muni))
     
     if (modo == "ativo") ttmatrix <- ttmatrix[mode %in% c("bike", "walk")] else ttmatrix
@@ -116,6 +117,9 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                       M004, lazer_tot, paraciclos)]
   }
   
+  # hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
+  #                                     n_jobs)]
+  
   # if (access %in% c("all", "active")) {
   # if (sigla_muni %like% "goi" & ano %in% c(2017, 2018)) {
   #   
@@ -170,7 +174,11 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                   S001, S002, S003, S004,
                                   E001,E002,E003,E004,
                                   M001, M002, M003, M004,
-                                  lazer_tot, paraciclos, n_bikes)] 
+                                  lazer_tot, paraciclos, n_bikes)]
+      # ttmatrix <- ttmatrix[hex_dest, on = c("destination" = "id_hex"),  
+      #                      c("empregos_total") :=
+      #                        list(n_jobs)]
+
       
     } else {
     
@@ -261,6 +269,12 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
         #Bikes Compartilhadas
         "BK"
       )
+      
+      # atividade_cma <- c(
+      #   # emprego
+      #   "TT"
+      # )
+      
     } else {
     
     acess_cma <- "CMA"
@@ -320,6 +334,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                           atividade_sigla == "LZ" ~ "lazer_total",
                                           atividade_sigla == "PR" ~ "paraciclos",
                                           atividade_sigla == "BK" ~ "bikes_compartilhadas"))
+      
+      
       
       
     } else {

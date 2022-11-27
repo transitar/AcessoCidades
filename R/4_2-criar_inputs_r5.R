@@ -3,10 +3,10 @@
 # 2. Scripts em Python
 
 # carregar bibliotecas
-options(java.parameters = '-Xmx7G')
+options(java.parameters = '-Xmx5G')
 source('./R/fun/setup.R')
 
-sigla_muni <- 'poa'
+sigla_muni <- 'pal'
 ano <- 2022
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
@@ -17,6 +17,8 @@ endereco_grade <- grades_muni <- paste0(
     pattern = sigla_muni
   )
 )
+
+endereco_grade <- '../data-raw/censo_2021_info_muni_treated_v2/muni_pal.rds'
 
 gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
   

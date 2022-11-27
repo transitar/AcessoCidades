@@ -34,6 +34,13 @@ stops2 <- stops2 %>% st_drop_geometry()
 write.table(stops2, file = '../11 - GTFS/muni_pal/gtfs_files/stops.txt',sep = ',', na = "",
             row.names = F, quote = F)
 
+
+# fare_attributes.txt -----------------------------------------------------
+
+
+
+
+
 # Itinerários - shapes.txt ------------------------------------------------
 
 shapes <- st_read('../11 - GTFS/muni_pal/Linhas_Onibus_Mar_2020.shp') %>% st_zm(drop = T) %>%

@@ -34,20 +34,22 @@ password <- readline("Give the password : ")
 # password <- "pass"
 
 ano <- 2019
-sigla_muni <- "rma"
+sigla_muni <- "pal"
 # sigla_muni="for"
 
 download_srtm <- function(sigla_muni) {
   # read municipality boundary
   message(paste("rodando", sigla_muni))
   
-  muni_sf <- readr::read_rds(sprintf( "../data-raw/municipios/2019/municipio_%s_2019.rds", sigla_muni))
-  
+  muni_sf <- readr::read_rds(sprintf( "../data-raw/municipios/2019/municipio_%s_2019.rds", sigla_muni)) %>%
+    st_transform(31983)
+  muni_sf <- muni_sf %>% st_buffer(15000) %>% st_transform(4326)
+  # mapview(muni_sf)
   # muni_sf %>% mapview()
   
   # extract bounding box
   bbox <- st_bbox(muni_sf)
-  bbox <- as.integer(bbox) - 1
+  # bbox <- as.integer(bbox)
   
   # identify which tiles are needed to cover the whole study area
   lons <- seq(floor(bbox[1]), ceiling(bbox[3]), by = 1)

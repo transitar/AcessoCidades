@@ -24,7 +24,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'poa'; ano <- 2022; modo <- c("WALK", "TRANSIT")
+sigla_munii <- 'pal'; ano <- 2022; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -63,6 +63,10 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   if (sigla_munii == 'poa') {
     date <- '2022-06-23'
   }
+  if (sigla_munii == 'pal') {
+    date <- '2022-08-11'
+  }
+  
   
   # if (modes == "todos") {
   #   
@@ -85,8 +89,8 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     df <- setup$getTransitServicesByDate(as.character(date))
     df <- jdx::convertToR(df$getDataFrame())
     
-    max_walk_dist <- 30   # minutes
-    max_trip_duration <- 180 # minutes
+    max_walk_dist <- 15   # minutes
+    max_trip_duration <- 60 # minutes
     departure_pico <- paste0(date, " 06:00:00")
     departure_fpico <- paste0(date, " 14:00:00")
     departure_datetime_pico <- as.POSIXct(departure_pico, format = "%Y-%m-%d %H:%M:%S")
@@ -108,7 +112,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                    max_walk_time = max_walk_dist,
                                    max_trip_duration = max_trip_duration,
                                    n_threads = 15,
-                                   output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni)
+                                   # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni),
+                                   progress = TRUE
+                                   # verbose =TRUE
                                    )
                                    # draws_per_minute = 1)
     
@@ -117,7 +123,14 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
     files <- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni), full.names = T)
     
-    ttm_pico <- map_df(.x = files, .f = fread)
+    
+    plan(multicore, workers = 15)
+    tictoc::tic()
+    ttm_pico <- furrr::future_map_dfr(.x = files, .f = fread)
+    tictoc::toc()
+    
+    
+    # ttm_pico <- map_df(.x = files, .f = fread)
     setDT(ttm_pico)
     
     ttm_pico[, mode := "transit"]

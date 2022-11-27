@@ -15,7 +15,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'poa'; ano <- 2018; source <- 'aop'; source_lazer <- 'osm'
+sigla_muni <- 'pal'; ano <- 2018; source <- 'aop'; source_lazer <- 'osm'
 
 infos_to_hex <- function(sigla_muni, ano) {
   

@@ -68,7 +68,7 @@ filtrar_malha_viaria_br(year = 2020)
 # função para extrair a malha viária do município -------------------------
 
 
-muni <- "poa"; year <- 2022
+muni <- "pal"; year <- 2022
 # muni <- "goi"; year <- 2014
 
 extrai_malha_viaria <- function(muni, year) {
@@ -76,7 +76,16 @@ extrai_malha_viaria <- function(muni, year) {
   message(paste("rodando", muni))
   
   topo_file <- sprintf("../data-raw/topodata/2020/muni_%s/topografia_%s.tif", muni, muni)
+  
+  topo_file <- sprintf("../data-raw/topodata/2020/muni_%s/topografia_%s.tif", muni, muni)
+  
   topo_raster <- raster::raster(topo_file)
+  
+  # muni_sf <- readr::read_rds(sprintf( "../data-raw/municipios/2019/municipio_%s_2019.rds", sigla_muni)) %>%
+  #   st_transform(31983)
+  # muni_sf <- muni_sf %>% st_buffer(15000) %>% st_transform(4326)
+  # 
+  # muni_bbox <- st_bbox(muni_sf)
   
   muni_bbox <- raster::extent(topo_raster)
   

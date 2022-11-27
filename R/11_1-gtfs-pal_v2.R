@@ -3,6 +3,7 @@ rm(list = ls())
 gc()
 source('R/fun/setup.R')
 
+sf_use_s2(use_s2 = FALSE)
 
 # calendar.txt ------------------------------------------------------------
 # Primero aquivo do GTFS. Especifica planos planos de operação do sistema.
@@ -21,6 +22,35 @@ calendar <- data.frame(service_id = c("D","S","U"),
                        end_date = 20220831)
 
 write.table(calendar, file = '../11 - GTFS/muni_pal/gtfs_files/calendar.txt',sep = ',', na = "",
+            row.names = F, quote = F)
+
+
+# fare_attributes.txt -----------------------------------------------------
+
+fare_attributes <- data.frame(
+  fare_id = "tarifa",
+  price = 4.80,
+  currency_type = "BRL",
+  payment_method = 0,
+  transfers = 0
+)
+
+write.table(fare_attributes, file = '../11 - GTFS/muni_pal/gtfs_files/fare_attributes.txt',sep = ',', na = "",
+            row.names = F, quote = F)
+
+
+
+# feed_info.txt -----------------------------------------------------------
+
+feed_info <- data.frame(
+  feed_publisher_name = "SETURB",
+  feed_publisher_url = "https://seturb.com.br/",
+  feed_lang = "pt",
+  feed_start_date = "20220801",
+  feed_end_date = "20220831",
+  feed_version = "1.0@20220801"
+)
+write.table(feed_info, file = '../11 - GTFS/muni_pal/gtfs_files/feed_info.txt',sep = ',', na = "",
             row.names = F, quote = F)
 
 # stops.txt ---------------------------------------------------------------
@@ -146,10 +176,10 @@ agency <- data.frame(agency_id = 1,
                      agency_url = "https://seturb.com.br/",
                      agency_timezone = "Brazil/East",
                      agency_lang = "pt",
-                     agency_phone = "63 3225-1248",
+                     agency_phone = "6332251248",
                      agency_fare_url = NA)
 
-write.table(agency, file = '../11 - GTFS/muni_pal/gtfs_files_gps/agency.txt',sep = ',', na = "",
+write.table(agency, file = '../11 - GTFS/muni_pal/gtfs_files/agency.txt',sep = ',', na = "",
             row.names = F, quote = F)
 
 
@@ -195,12 +225,12 @@ linhas_gps_info_stops %>% distinct(route_id) %>% nrow()
 
 #arquivo shapefile com o nome das linhas
 
-shapes <- st_read('../11 - GTFS/muni_pal/itinerarios.gpkg') %>%
+shapes <- st_read('../11 - GTFS/muni_pal/itinerarios2.gpkg') %>%
   st_zm(drop = T) %>%
   st_transform(4326) %>% mutate(route_id = substr(Name_1, start = 1L, stop = 3L),
                                 agency_id = NA,
-                                route_short_name = ITINERARIO,
-                                route_long_name = NA,
+                                route_short_name = substr(Name_1, start = 1L, stop = 3L),
+                                route_long_name = ITINERARIO,
                                 route_desc = NA,
                                 route_type = 3,
                                 route_url = NA,
@@ -276,6 +306,14 @@ routes <- linhas_gps %>%
 #   select(-Name_1,-ITINERARIO, -Exten_Km) %>% st_drop_geometry() %>% distinct(route_id, .keep_all = T)
 # nrow(routes)
 routes_st <- routes %>% st_drop_geometry()
+routes_st$route_id <- str_remove(routes_st$route_id, pattern = " ")
+routes_st$route_short_name <- str_remove(routes_st$route_short_name, pattern = " ")
+nrow(routes_st)
+
+routes_st <- routes_st %>% filter(! route_id %like% "140") %>%
+  filter(! route_id %like% "620")
+
+# routes_st %>% distinct_all() %>% nrow()
 
 write.table(routes_st, file = '../11 - GTFS/muni_pal/gtfs_files/routes.txt',sep = ',', na = "",
             row.names = F, quote = F)
@@ -339,7 +377,11 @@ names_linhas <- substr(names, start = 1L, stop = 3L)
 #tempos de percurso
 
 tempo_iti <- read_excel(arquivo, sheet = "Layout", col_names = T, skip = 5) %>%
-  select(1:4) %>% mutate(tempo_viagem = ymd_hms(`Tempo Percurso`)) %>%
+  select(1:4) %>%
+  mutate(tempo_viagem = as.POSIXct(`Tempo Percurso`,
+                                   origin = "1899-12-31 00:00:00")) %>%
+  
+  # mutate(tempo_viagem = ymd_hms(`Tempo Percurso`)) %>%
   mutate(hora2 = strftime(tempo_viagem, format = "%H:%M:%S")
 )
   
@@ -361,6 +403,15 @@ dados2 <- dados %>% filter(valor %like% ":") %>%
   mutate(valor = str_remove(valor, pattern = " Mir| Cap| Pal")) %>%
   mutate(valor = as.POSIXct(valor, format = "%H:%M")) %>%
   mutate(valor = strftime(valor, format = "%H:%M:%S"))
+
+
+#os tempos de viagem do gps estõ irrealistas (ex: linha 80T ida, possui 84,3 km de itinerário)
+# pórem iniciou uma viagem 19:10 e encerrou 19:22 (420 km/h)
+
+#cálculo da velocidade média do sistema 
+
+#Os temos de percuso estão na planilha de horários (aqui, na variável dados 2)
+#juunção dos tempos de percuso com a extensão dos itinerários
 
 
   # mutate(valor = ymd_hms(valor))
@@ -502,7 +553,7 @@ shapes_gtfs <- shapes2 %>%
 #   st_buffer(25)
 
 shapes_segment <- shapes_gtfs %>%
-  st_transform(31982) %>% st_segmentize(units::set_units(5, m)) %>%
+  st_transform(31982) %>% st_segmentize(units::set_units(25, m)) %>%
   st_cast(to = "MULTIPOINT") %>% st_cast("POINT") %>% group_by(shape_id) %>%
   mutate(shape_pt_sequence = 1:length(shape_id)) %>% st_transform(4326)
 shapes_segment$shape_pt_lat <- as.data.frame(st_coordinates(shapes_segment))$Y
@@ -640,6 +691,20 @@ trips_gtfs_gps_salvar$shape_id <- str_remove(trips_gtfs_gps_salvar$shape_id, pat
 
 trips_gtfs_all <- rbind(trips_gtfs_salvar, trips_gtfs_gps_salvar)
 
+
+trips_gtfs_all$route_id <- str_remove(trips_gtfs_all$route_id, pattern = " ")
+
+
+trips_gtfs_all <- trips_gtfs_all %>% filter(! trip_id %like% "140") %>%
+  filter(! trip_id %like% "620")
+
+
+nrow(trips_gtfs_all)
+trips_gtfs_all %>% distinct(trip_id) %>% nrow()
+
+trips_gtfs_all <- trips_gtfs_all %>% mutate(shape_id = NA)
+
+
 write.table(trips_gtfs_all, file = '../11 - GTFS/muni_pal/gtfs_files/trips.txt',sep = ',', na = "",
             row.names = F, quote = F)
 
@@ -651,17 +716,69 @@ write.table(trips_gtfs_all, file = '../11 - GTFS/muni_pal/gtfs_files/trips.txt',
 #horarios: trips_gtfs
 #routes: routes2
 
+
+shapes_km <- shapes_gtfs %>% st_as_sf() %>%
+  mutate(distancia = st_length(.)) %>%
+  mutate(cod_linha = paste0(substr(shape_id, start = 6L, stop = 8L),
+                            substr(shape_id, start = 10L, stop = 10L)))
+
+
+names_linhas <- data.frame(linha = names) %>%
+  mutate(nlinha = substr(linha, 1L, 3L),
+         sentido = substr(linha, 4L, 4L)) %>%
+  mutate(sentido = case_when(sentido == "I" ~ "I",
+                             sentido == "V" ~ "V",
+                             sentido == "" ~ "I")) %>%
+  mutate(cod_linha = paste0(nlinha, sentido))
+
+shapes_km_tabela <- shapes_km %>%
+  filter(cod_linha %in% names_linhas$cod_linha)
+
+#tempos_percuso tem a extensão em km da tabela, mas difere um pouco da extensão do shape
+tempos_percuso <- tempo_iti %>%
+  mutate(nlinha = substr(Codigo, 1L, 3L),
+         sentido = substr(Codigo, 4L, 4L)) %>%
+  mutate(sentido = case_when(sentido == "I" ~ "I",
+                             sentido == "V" ~ "V",
+                             sentido == "" ~ "I")) %>%
+  mutate(cod_linha = paste0(nlinha, sentido)) %>%
+  select(-nlinha, -sentido, - Codigo)
+
+dados_vm <- left_join(tempos_percuso ,shapes_km_tabela, by = c("cod_linha"="cod_linha")) %>%
+  mutate(tempo_iti = ymd_hms(tempo_viagem)) %>%
+  mutate(tempo_secs = as.numeric(seconds(tempo_iti) - seconds(ymd_hms("1899-12-31 00:00:00")))) %>%
+  mutate(distancia = as.numeric(distancia)) %>%
+  mutate(vm = (distancia/tempo_secs)*3.6)
+
+rurais <- c("670I", "670V", "450I", "450I", "450V", "640I", "640V", "650I", "650V", "630I", "630V")
+vm_rurais <- dados_vm %>% filter(cod_linha %in% rurais)
+vm_rurais <- mean(vm_rurais$vm)
+vm_urbanas <- dados_vm %>% filter(!cod_linha %in% rurais)
+vm_urbanas <- mean(vm_urbanas$vm)
+
+
+
 trips_gps_juntar <- trips_gtfs_gps %>% select(route_id,hora_partida = hora_inicio,
                                        hora_chegada = hora_fim,
                                        trip_id, shape_id)
 trips_gps_juntar$shape_id <- str_remove(trips_gps_juntar$shape_id, pattern = " ")
 trips_gps_juntar$trip_id <- str_remove(trips_gps_juntar$trip_id, pattern = " ")
 
+trips_gps_juntar <- trips_gps_juntar %>%
+  mutate(vm = ifelse(route_id == "80T",
+                     vm_rurais,
+                     vm_urbanas)) %>% left_join(shapes_km, by = "shape_id") %>%
+  mutate(tempo_viagem = (as.numeric(distancia)/1000)/vm) %>%
+  mutate(tempo_viagem = as.difftime(tempo_viagem, units = "hours"))
+
+
 #necessário o tempo_viagem
 trips_gps_juntar <- trips_gps_juntar %>%
-  mutate(hora_partida = as.POSIXct(hora_partida, format = "%H:%M"),
-         hora_chegada = as.POSIXct(hora_chegada, format = "%H:%M")) %>%
-  mutate(tempo_viagem = hora_chegada - hora_partida)
+  mutate(hora_partida = as.POSIXct(hora_partida, format = "%H:%M")) %>%
+  # mutate(hora_chegada = as.POSIXct(hora_chegada, format = "%H:%M")) %>%
+  # mutate(tempo_viagem = hora_chegada - hora_partida) %>%
+  mutate(hora_chegada = hora_partida + tempo_viagem) %>%
+  select(route_id, hora_partida, hora_chegada, trip_id, shape_id, tempo_viagem)
 
 trips_gtfs_tabela_juntar <- trips_gtfs %>%
   select(route_id, hora_partida, hora_chegada, trip_id, shape_id, tempo_viagem)
@@ -695,16 +812,16 @@ stop_times11 <- stop_times0 %>% group_by(trip_id) %>%
 #   mutate(arrival_time3 = cumsum(arrival_time2)) %>%
 #   mutate(arrival_time3 = as.POSIXct(arrival_time3, origin = "1970-01-01"))
 
-teste <- stop_times11 %>% distinct(trip_id)
-teste[1,1]
+# teste <- stop_times11 %>% distinct(trip_id)
+# teste[1,1]
 
 teste0 <- stop_times11 %>%
-  filter(trip_id== "U010-V001-I") %>%
+  filter(trip_id== "U140-V002-I") %>%
   st_as_sf(.,coords = c("shape_pt_lon","shape_pt_lat"), crs = 4326) %>%
   st_transform(31982) %>%
   st_buffer(25)
   
-# mapview(teste0)
+mapview(teste0, zcol = "shape_pt_sequence")
 
 
 
@@ -718,7 +835,7 @@ teste0 <- stop_times11 %>%
 #   filter(shape_id== "shape012-I") %>% st_transform(31982) %>% st_buffer(20)
 
 #dados de PEDs do shape enviado pela prefeitura de Palmas
-paradas0 <- stops2 %>% st_transform(31982)
+paradas0 <-stops_all_sf %>% st_transform(31982)
 
 #Dados de PEDs dos aquivos de monitoramento GPS enviado pela prefeitura de Palmas
 
@@ -726,14 +843,74 @@ paradas0 <- stops2 %>% st_transform(31982)
 
 stop_times_shapes <- stop_times11 %>% drop_na(shape_pt_lat, shape_pt_lon) %>%
   st_as_sf(.,coords = c("shape_pt_lon","shape_pt_lat"), crs = 4326) %>% st_transform(31982) %>%
-  st_buffer(20)
+  st_buffer(25)
 
 # mapview(stop_times_shapes)
 
 stop_times_peds <- st_join(paradas0, stop_times_shapes) %>% drop_na(shape_id) %>% st_as_sf() %>%
+  group_by(trip_id) %>%
   distinct(stop_id, .keep_all = T) %>% arrange(shape_pt_sequence)
 
-mapview(stop_times_peds)
+stop_times_peds2 <- stop_times_peds %>%
+  group_by(trip_id) %>% arrange(shape_pt_sequence)
+
+
+testez <- stop_times_peds %>% filter(trip_id == "U140-V002-I")
+
+
+# mapview(testez, zcol = "shape_pt_sequence")
+
+#estrutura do arquivo stop_times.txt
+
+dia <- day(stop_times_peds2$arrival_time3)
+dia_certo <- min(dia)
+
+stop_times_peds3 <- stop_times_peds2 %>%
+  mutate(dia = day(arrival_time3))
+
+stop_times <- stop_times_peds3 %>%
+  st_drop_geometry() %>%
+  select(trip_id,
+         arrival_time = arrival_time3,
+         departure_time = hora_partida,
+         stop_id,
+         dia) %>%
+  mutate(arrival_time = strftime(arrival_time, format = "%H:%M:%S")) %>%
+  mutate(departure_time = arrival_time) %>%
+  group_by(trip_id) %>%
+  mutate(stop_sequence = 1:length(trip_id),
+         stop_headsign = NA,
+         pickup_type = NA,
+         drop_off_type = NA,
+         shape_dist_traveled = NA) %>%
+  ungroup() %>%
+  arrange(trip_id, stop_sequence) %>%
+  mutate(departure_time = ifelse(dia > dia_certo,
+                                 sub(pattern = "(.{1}).", replacement = "24", x = departure_time),
+                                 departure_time),
+         arrival_time = ifelse(dia > dia_certo,
+                                 sub(pattern = "(.{1}).", replacement = "24", x = arrival_time),
+                                 arrival_time)) %>% select(-dia)
+
+stop_times <- fread('../11 - GTFS/muni_pal/gtfs_files/stop_times.txt')
+
+stop_times_txt <- stop_times %>% filter(! trip_id %like% "140") %>%
+  filter(! trip_id %like% "620")
+
+stop_times %>% distinct(trip_id) %>% nrow()
+
+write.table(stop_times_txt, file = '../11 - GTFS/muni_pal/gtfs_files/stop_times.txt',sep = ',', na = "",
+            row.names = F, quote = F)
+
+
+
+
+gtfs_files <- list.files('../11 - GTFS/muni_pal/gtfs_files/', full.names = T)
+
+zip(zipfile = "../11 - GTFS/muni_pal/gtfs_files/gtfs_pal.zip", files = gtfs_files)
+
+
+
 
 #
 teste3 <- st_join(paradas0, teste0) %>% drop_na(shape_id) %>% st_as_sf() %>%

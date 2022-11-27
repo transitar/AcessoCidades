@@ -11,7 +11,7 @@ library(patchwork)
 width <- 16.5
 height <- 16.5
 
-sigla_muni <- 'poa'
+sigla_muni <- 'pal'
 
 
 graficos <- function(munis = "all"){
@@ -71,12 +71,15 @@ graficos <- function(munis = "all"){
     
     data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds',
                                    sigla_muni, sigla_muni))
+    # data_acess <- acess_cma
     
     
     dados_acc <- left_join(dados_hex, data_acess, by = c("id_hex"="origin")) %>% st_as_sf()
     
     dados_acc_tp <- dados_acc %>%
       filter(mode == "transit")
+    
+    mapview(dados_acc, zcol = "CMATT30")
     # mapview(dados_acc_tp, zcol = "CMATT30")
     
     colors_purple <- c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
@@ -136,6 +139,7 @@ graficos <- function(munis = "all"){
     # width <- 14
     # height <- 10
     # mode1 <- "transit"
+    # mapview(data_acess, zcol = "CMATT60")
     
     fazer_mapa_1530_t <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
       
