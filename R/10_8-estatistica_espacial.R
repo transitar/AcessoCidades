@@ -13,6 +13,8 @@ sigla_muni <- "poa"
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
+faz_lisa <- function(sigla_muni){
+
 setor_muni <- read_rds(sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',sigla_muni)) %>% 
   mutate(area = st_area(.)) %>% 
   select(code_tract,area) %>% 
@@ -819,261 +821,290 @@ ggsave(map_lisa_resp_hm,
        dpi = 300,
        width = width, height = height, units = "cm" )
 
+
+# Histograma H-M ----------------------------------------------------------
+
+dados_histograma_hm <- resp_dom_all %>%
+  gather(variavel, valor, 2:3)
+
+hist_resp_dif_hm <- ggplot(resp_dom_all, aes(x = dif_hm)) +
+  geom_histogram(aes(y = (..count..)/sum(..count..)),
+                 alpha = 1,
+                 position= "identity",
+                 fill = "#d96e0a") + 
+  scale_y_continuous(labels = scales::percent)+
+  xlab("Diferença de responsáveis\ndo gênero masculino e\nfeminino no hexágono") +
+  ylab('Porcentagem de hexagonos') +
+  # geom_text(mean(dif_brancos_pretos, na.rm = T))+
+  theme_minimal() +
+  theme(axis.title = element_text(size = rel(1.5)),
+        axis.text = element_text(size = rel(1.3))
+  )
+ggsave(hist_resp_dif_hm,
+       device = "png",
+       filename =  sprintf('../data/map_plots_population/muni_%s/6-hist_renda_%s.png',
+                           sigla_muni,
+                           sigla_muni),
+       dpi = 300,
+       width = 10, height = height, units = "cm" )
+
+
+
 #Mapa lisa da diferenca de renda per capita do responsavel por genero
 
 
 #lisa de renda per capta
 
-map_lisa_resp_rpc_hm <- ggplot()+
-  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-  coord_equal() +
-  scale_fill_identity()+
-  # nova escala
-  new_scale_fill() +
-  geom_sf(data = st_transform(renda_resp_sem_na, 3857), aes(fill = cluster_rpc_mw), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
-  # geom_sf(data = simplepolys %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "#8E8E8E"),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = .7,
-  #         alpha= .1)  +
-  
-  geom_sf(data = assentamentos,
-          aes(colour = "white"),
-          fill = NA,
-          size = 1.3)+
-  
-  scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
-                                  blue = ""), guide = "legend") +
-  labs(color = "")+
-  
-  scale_fill_manual(values = c('Not significant' = 'grey70',
-                               'High-High' = '#CC3003',
-                               'Low-Low' = '#21367D',
-                               'Low-High' = '#5766cc',
-                               'High-Low' = '#33b099'
-  ),
-  labels = c('Not significant' = 'Não Significativo',
-             'High-High' = '> Diferença percentual entre a renda per capita\ndo responsável do gênero masculino e do\nresponsável do gênero feminino',
-             'Low-Low' = '< Diferença percentual entre a renda per capita\ndo responsável do gênero masculino e do\nresponsável do gênero feminino',
-             'Low-High' = 'Hexágono de menor diferênça próximo\nde hexágono de maior diferença',
-             'High-Low' = 'Hexágono de menor diferênça próximo\nde hexágono de maior diferença'
-             # 'Low-High' = 'Baixo-Alto'
-  )) +
-  
-  # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
-  #                      type = "div",
-  #                      palette = "GnBu",
-  #                      direction = 1,
-  #                      breaks = seq(0,10,2),
-  #                      labels = c("0","2", "4", "6","8", ">10"),
-  #                      limits = c(0,10)) +
-  
-  
-  # scale_fill_gradientn(
-#   name = "Renda Media",
-#   colors = colors_acc ,
-#   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-#   # values = NULL,
-#   space = "Lab",
-#   na.value = NA,
-#   # guide = "colourbar",
-#   aesthetics = "fill",
-#   # colors
-# ) +
-
-# scale_fill_continuous(palette = "Blues",
-#                   aesthetics = "fill")+
-# viridis::scale_fill_viridis(option = "cividis"
+# map_lisa_resp_rpc_hm <- ggplot()+
+#   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+#   coord_equal() +
+#   scale_fill_identity()+
+#   # nova escala
+#   new_scale_fill() +
+#   geom_sf(data = st_transform(renda_resp_sem_na, 3857), aes(fill = cluster_rpc_mw), colour = NA, alpha=1, size = 0)+
+#   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+#   # geom_sf(data = simplepolys %>% st_transform(3857),
+#   #         # aes(size = 2),
+#   #         aes(color = "#8E8E8E"),
+#   #         fill = NA,
+#   #         # stroke = 2,
+#   #         # size = 2,
+#   #         linewidth = .7,
+#   #         alpha= .1)  +
+#   
+#   geom_sf(data = assentamentos,
+#           aes(colour = "white"),
+#           fill = NA,
+#           size = 1.3)+
+#   
+#   scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
+#                                   blue = ""), guide = "legend") +
+#   labs(color = "")+
+#   
+#   scale_fill_manual(values = c('Not significant' = 'grey70',
+#                                'High-High' = '#CC3003',
+#                                'Low-Low' = '#21367D',
+#                                'Low-High' = '#5766cc',
+#                                'High-Low' = '#33b099'
+#   ),
+#   labels = c('Not significant' = 'Não Significativo',
+#              'High-High' = '> Diferença percentual entre a renda per capita\ndo responsável do gênero masculino e do\nresponsável do gênero feminino',
+#              'Low-Low' = '< Diferença percentual entre a renda per capita\ndo responsável do gênero masculino e do\nresponsável do gênero feminino',
+#              'Low-High' = 'Hexágono de menor diferênça próximo\nde hexágono de maior diferença',
+#              'High-Low' = 'Hexágono de menor diferênça próximo\nde hexágono de maior diferença'
+#              # 'Low-High' = 'Baixo-Alto'
+#   )) +
+#   
+#   # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
+#   #                      type = "div",
+#   #                      palette = "GnBu",
+#   #                      direction = 1,
+#   #                      breaks = seq(0,10,2),
+#   #                      labels = c("0","2", "4", "6","8", ">10"),
+#   #                      limits = c(0,10)) +
+#   
+#   
+#   # scale_fill_gradientn(
+# #   name = "Renda Media",
+# #   colors = colors_acc ,
+# #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+# #   # values = NULL,
+# #   space = "Lab",
+# #   na.value = NA,
+# #   # guide = "colourbar",
+# #   aesthetics = "fill",
+# #   # colors
+# # ) +
 # 
-# #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
-# # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
-# #                               scale = ifelse(sigla_op== "TT",1e-3,1))
-# #                      limits = c(0,500000))+
-# # , limits = c(0, 0.72)
-# # , breaks = c(0.001, 0.35, 0.7)
-# # , labels = c(0, "35", "70%")
-# ) +
-
-# scale_color_manual(values = 'transparent')+
-# facet_wrap(~ind, ncol = 2)+
-tema()+
-  labs(fill = "Agrupamento") +
-  theme(legend.title = element_text(size=rel(0.9), hjust = 0),
-        axis.ticks.length = unit(0,"pt"),
-        legend.margin = margin(t = 0),
-        legend.position = c(0.30, 0.2),
-        legend.direction = "vertical",
-        legend.box = "vertical",
-        legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
-        # legend.background = element_rect(fill = "white", color = NA)
-        # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
-        #       # plot.background = element_rect(fill = "#eff0f0",
-        #       #                                 colour = NA)
-        # legend.background = element_rect(fill = "white",
-        #                                  colour = NA)
-        #       
-  )
-# map_lisa_renda
-# map_pop_density
-
-suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
-
-ggsave(map_lisa_resp_rpc_hm,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/7-lisa_diff_renda_pc_responsavel_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = width, height = height, units = "cm" )
-
-
-hist_renda <- ggplot(renda, aes(x = renda)) +
-  geom_histogram(aes(y = (..count..)/sum(..count..)),
-                 fill = '#d96e0a') + 
-  scale_y_continuous(labels = scales::percent)+
-  xlab("Renda per capita\n(sálarios mínimos)") +
-  ylab('Porcentagem de hexagonos')+
-  # geom_text(mean(dif_brancos_pretos, na.rm = T))+
-  theme_minimal() +
-  theme(axis.title = element_text(size = rel(1.5)),
-        axis.text = element_text(size = rel(1.3))
-  )
-ggsave(hist_renda,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/5-hist_renda_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = 10, height = height, units = "cm" )
-
-
-#Lisa da diferença de renda da pessoa responsavel do sexo masculino e do sexo feminino
-
-map_lisa_resp_rp_hm <- ggplot()+
-  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-  coord_equal() +
-  scale_fill_identity()+
-  # nova escala
-  new_scale_fill() +
-  geom_sf(data = st_transform(resp_dom_all %>% filter(cluster_rp_mw != "Low-High"), 3857), aes(fill = cluster_rp_mw), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
-  # geom_sf(data = simplepolys %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "#8E8E8E"),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = .7,
-  #         alpha= .1)  +
-  
-  geom_sf(data = assentamentos,
-          aes(colour = "white"),
-          fill = NA,
-          size = 1.3)+
-  
-  scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
-                                  blue = ""), guide = "legend") +
-  labs(color = "")+
-  
-  scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#CC3003',
-                               'Low-Low' = '#21367D'
-                               # 'Low-High' = '#D96E0A'
-  ),
-  labels = c('Not significant' = 'Não Significativo',
-             'High-High' = 'Maiores diferenças\nde renda da pessoa\nresponsável entre os\n
-             gênero masculino e\n do gênero feminino',
-             'Low-Low' = 'Maiores diferenças\nde renda da pessoa\nresponsável entre os\n
-             gênero feminino e\n do gênero masculino'
-             # 'Low-High' = 'Baixo-Alto'
-  )) +
-  
-  # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
-  #                      type = "div",
-  #                      palette = "GnBu",
-  #                      direction = 1,
-  #                      breaks = seq(0,10,2),
-  #                      labels = c("0","2", "4", "6","8", ">10"),
-  #                      limits = c(0,10)) +
-  
-  
-  # scale_fill_gradientn(
-#   name = "Renda Media",
-#   colors = colors_acc ,
-#   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-#   # values = NULL,
-#   space = "Lab",
-#   na.value = NA,
-#   # guide = "colourbar",
-#   aesthetics = "fill",
-#   # colors
-# ) +
-
-# scale_fill_continuous(palette = "Blues",
-#                   aesthetics = "fill")+
-# viridis::scale_fill_viridis(option = "cividis"
+# # scale_fill_continuous(palette = "Blues",
+# #                   aesthetics = "fill")+
+# # viridis::scale_fill_viridis(option = "cividis"
+# # 
+# # #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
+# # # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+# # #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+# # #                      limits = c(0,500000))+
+# # # , limits = c(0, 0.72)
+# # # , breaks = c(0.001, 0.35, 0.7)
+# # # , labels = c(0, "35", "70%")
+# # ) +
 # 
-# #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
-# # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
-# #                               scale = ifelse(sigla_op== "TT",1e-3,1))
-# #                      limits = c(0,500000))+
-# # , limits = c(0, 0.72)
-# # , breaks = c(0.001, 0.35, 0.7)
-# # , labels = c(0, "35", "70%")
-# ) +
-
-# scale_color_manual(values = 'transparent')+
-# facet_wrap(~ind, ncol = 2)+
-tema()+
-  labs(fill = "Agrupamento") +
-  theme(legend.title = element_text(size=rel(0.9), hjust = 0),
-        axis.ticks.length = unit(0,"pt"),
-        legend.margin = margin(t = 0),
-        legend.position = c(0.22, 0.2),
-        legend.direction = "vertical",
-        legend.box = "vertical",
-        legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
-        # legend.background = element_rect(fill = "white", color = NA)
-        # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
-        #       # plot.background = element_rect(fill = "#eff0f0",
-        #       #                                 colour = NA)
-        # legend.background = element_rect(fill = "white",
-        #                                  colour = NA)
-        #       
-  )
-# map_lisa_renda
-# map_pop_density
-
-suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
-
-ggsave(map_lisa_renda,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/5-lisa_renda_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = width, height = height, units = "cm" )
-
-
-hist_renda <- ggplot(renda, aes(x = renda)) +
-  geom_histogram(aes(y = (..count..)/sum(..count..)),
-                 fill = '#d96e0a') + 
-  scale_y_continuous(labels = scales::percent)+
-  xlab("Renda per capita\n(sálarios mínimos)") +
-  ylab('Porcentagem de hexagonos')+
-  # geom_text(mean(dif_brancos_pretos, na.rm = T))+
-  theme_minimal() +
-  theme(axis.title = element_text(size = rel(1.5)),
-        axis.text = element_text(size = rel(1.3))
-  )
-ggsave(hist_renda,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/5-hist_renda_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = 10, height = height, units = "cm" )
-
+# # scale_color_manual(values = 'transparent')+
+# # facet_wrap(~ind, ncol = 2)+
+# tema()+
+#   labs(fill = "Agrupamento") +
+#   theme(legend.title = element_text(size=rel(0.9), hjust = 0),
+#         axis.ticks.length = unit(0,"pt"),
+#         legend.margin = margin(t = 0),
+#         legend.position = c(0.30, 0.2),
+#         legend.direction = "vertical",
+#         legend.box = "vertical",
+#         legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+#         # legend.background = element_rect(fill = "white", color = NA)
+#         # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+#         #       # plot.background = element_rect(fill = "#eff0f0",
+#         #       #                                 colour = NA)
+#         # legend.background = element_rect(fill = "white",
+#         #                                  colour = NA)
+#         #       
+#   )
+# # map_lisa_renda
+# # map_pop_density
+# 
+# suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+# 
+# ggsave(map_lisa_resp_rpc_hm,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/7-lisa_diff_renda_pc_responsavel_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = width, height = height, units = "cm" )
+# 
+# 
+# hist_renda <- ggplot(renda, aes(x = renda)) +
+#   geom_histogram(aes(y = (..count..)/sum(..count..)),
+#                  fill = '#d96e0a') + 
+#   scale_y_continuous(labels = scales::percent)+
+#   xlab("Renda per capita\n(sálarios mínimos)") +
+#   ylab('Porcentagem de hexagonos')+
+#   # geom_text(mean(dif_brancos_pretos, na.rm = T))+
+#   theme_minimal() +
+#   theme(axis.title = element_text(size = rel(1.5)),
+#         axis.text = element_text(size = rel(1.3))
+#   )
+# ggsave(hist_renda,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/5-hist_renda_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = 10, height = height, units = "cm" )
+# 
+# 
+# #Lisa da diferença de renda da pessoa responsavel do sexo masculino e do sexo feminino
+# 
+# map_lisa_resp_rp_hm <- ggplot()+
+#   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+#   coord_equal() +
+#   scale_fill_identity()+
+#   # nova escala
+#   new_scale_fill() +
+#   geom_sf(data = st_transform(renda_resp_sem_na, 3857), aes(fill = cluster_rp_mw), colour = NA, alpha=1, size = 0)+
+#   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+#   # geom_sf(data = simplepolys %>% st_transform(3857),
+#   #         # aes(size = 2),
+#   #         aes(color = "#8E8E8E"),
+#   #         fill = NA,
+#   #         # stroke = 2,
+#   #         # size = 2,
+#   #         linewidth = .7,
+#   #         alpha= .1)  +
+#   
+#   geom_sf(data = assentamentos,
+#           aes(colour = "white"),
+#           fill = NA,
+#           size = 1.3)+
+#   
+#   scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
+#                                   blue = ""), guide = "legend") +
+#   labs(color = "")+
+#   
+#   scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#CC3003',
+#                                'Low-Low' = '#21367D'
+#                                # 'Low-High' = '#D96E0A'
+#   ),
+#   labels = c('Not significant' = 'Não Significativo',
+#              'High-High' = 'Maiores diferenças\nde renda da pessoa\nresponsável entre os\n
+#              gênero masculino e\n do gênero feminino',
+#              'Low-Low' = 'Maiores diferenças\nde renda da pessoa\nresponsável entre os\n
+#              gênero feminino e\n do gênero masculino'
+#              # 'Low-High' = 'Baixo-Alto'
+#   )) +
+#   
+#   # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
+#   #                      type = "div",
+#   #                      palette = "GnBu",
+#   #                      direction = 1,
+#   #                      breaks = seq(0,10,2),
+#   #                      labels = c("0","2", "4", "6","8", ">10"),
+#   #                      limits = c(0,10)) +
+#   
+#   
+#   # scale_fill_gradientn(
+# #   name = "Renda Media",
+# #   colors = colors_acc ,
+# #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+# #   # values = NULL,
+# #   space = "Lab",
+# #   na.value = NA,
+# #   # guide = "colourbar",
+# #   aesthetics = "fill",
+# #   # colors
+# # ) +
+# 
+# # scale_fill_continuous(palette = "Blues",
+# #                   aesthetics = "fill")+
+# # viridis::scale_fill_viridis(option = "cividis"
+# # 
+# # #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
+# # # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+# # #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+# # #                      limits = c(0,500000))+
+# # # , limits = c(0, 0.72)
+# # # , breaks = c(0.001, 0.35, 0.7)
+# # # , labels = c(0, "35", "70%")
+# # ) +
+# 
+# # scale_color_manual(values = 'transparent')+
+# # facet_wrap(~ind, ncol = 2)+
+# tema()+
+#   labs(fill = "Agrupamento") +
+#   theme(legend.title = element_text(size=rel(0.9), hjust = 0),
+#         axis.ticks.length = unit(0,"pt"),
+#         legend.margin = margin(t = 0),
+#         legend.position = c(0.22, 0.2),
+#         legend.direction = "vertical",
+#         legend.box = "vertical",
+#         legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+#         # legend.background = element_rect(fill = "white", color = NA)
+#         # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+#         #       # plot.background = element_rect(fill = "#eff0f0",
+#         #       #                                 colour = NA)
+#         # legend.background = element_rect(fill = "white",
+#         #                                  colour = NA)
+#         #       
+#   )
+# # map_lisa_renda
+# # map_pop_density
+# 
+# suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+# 
+# ggsave(map_lisa_renda,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/5-lisa_renda_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = width, height = height, units = "cm" )
+# 
+# 
+# hist_renda <- ggplot(renda, aes(x = renda)) +
+#   geom_histogram(aes(y = (..count..)/sum(..count..)),
+#                  fill = '#d96e0a') + 
+#   scale_y_continuous(labels = scales::percent)+
+#   xlab("Renda per capita\n(sálarios mínimos)") +
+#   ylab('Porcentagem de hexagonos')+
+#   # geom_text(mean(dif_brancos_pretos, na.rm = T))+
+#   theme_minimal() +
+#   theme(axis.title = element_text(size = rel(1.5)),
+#         axis.text = element_text(size = rel(1.3))
+#   )
+# ggsave(hist_renda,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/5-hist_renda_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = 10, height = height, units = "cm" )
+}
