@@ -29,7 +29,7 @@ consolida_basico <- function(caminho) {
   df <- ler_basico %>% 
     select(1:21) %>% 
     mutate_at(c(1:21), as.character) %>% 
-    select(Cod_setor,Cod_UF,Cod_municipio)
+    select(Cod_setor,Cod_UF,Cod_municipio, Situacao_setor, Tipo_setor)
   # mutate_at(c(22:33), ~ str_replace(., ",", ".")) %>% 
   # mutate_at(c(22:33), as.numeric)
   
@@ -61,7 +61,7 @@ caminhos_s_basico <-  data.frame(caminhos = list.files(path = lista.diretorios,p
   filter(str_detect(caminhos,pattern = 'Basico') == FALSE) %>% 
   unlist()
 
-caminho <- caminhos_s_basico[1]
+caminho <- caminhos_s_basico[28]
 
 rm(caminho)
 
@@ -94,7 +94,7 @@ length(caminhos_s_basico)
 
 # 3 - dados para cada municipio de interesse  -----------------------------
 
-sigla_muni <- "con"
+sigla_muni <- "poa"
 
 salvar_dados_censo_municipio <- function(munis = "all"){
   
@@ -117,7 +117,14 @@ salvar_dados_censo_municipio <- function(munis = "all"){
     
     df_final <- reduce(lista.dfs2, left_join, by = 'Cod_setor')
     
-    write_rds(x = df_final,file = sprintf('../../data-raw/censo_2021_info_muni/muni_%s.rds',sigla_muni))
+    
+    
+    df_final2 <- tabela_basico %>%
+      filter(Cod_setor %in% lista_setores_censitarios) %>%
+      mutate(Cod_setor = as.character(Cod_setor)) %>%
+      left_join(df_final %>% mutate(Cod_setor = as.character(Cod_setor)), by = "Cod_setor")
+    
+    write_rds(x = df_final2,file = sprintf('../data-raw/censo_2021_info_muni/muni_%s.rds',sigla_muni))
     
   }
   
@@ -135,6 +142,7 @@ salvar_dados_censo_municipio <- function(munis = "all"){
   
 }
 
+#rodar depois para os outros munic[ipios]
 salvar_dados_censo_municipio(munis = "all")
 
 

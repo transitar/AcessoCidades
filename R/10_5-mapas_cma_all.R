@@ -1,15 +1,16 @@
 source('./R/fun/setup.R')
 library(patchwork)
 
-width <- 14
-height <- 10
+width <- 15
+height <- 5
 
 sigla_muni <- 'poa'
-mode1 <- "bike"
-oportunidade <- "bikes_compartilhadas"
-titulo_leg <- "Bicicletas Compartilhadas"
-sigla_op <- "BK"
-time <- c(15,30,45,60)
+mode1 <- "transit"
+oportunidade <- "transporte_publico"
+titulo_leg <- "Empregos"
+sigla_op <- "TT"
+time <- 60
+# time <- c(15,30,45,60)
 type_acc <- "CMA"
 
 #não funciona ainda para tmi
@@ -26,7 +27,7 @@ theme_for_TMI <- function(base_size) {
       legend.key.width=unit(1,"line"),
       legend.key.height = unit(0.4,"cm"),
       legend.text=element_text(size=rel(0.4)),
-      legend.title=element_text(size=rel(0.6)),
+      legend.title=element_text(size=rel(0.5)),
       plot.title = element_text(hjust = 0, vjust = 4, size = rel(0.6)),
       strip.text = element_text(size = rel(0.6))
       # legend.key.width=unit(0.5,"cm")
@@ -41,12 +42,13 @@ theme_for_CMA_1map <- function(base_size) {
     
     theme(
       legend.position = "bottom",
-      plot.margin=unit(c(2,0,0,0),"mm"),
+      plot.margin=unit(c(0,0,0,0),"mm"),
       legend.key.width=unit(1,"line"),
       legend.key.height = unit(0.4,"cm"),
-      legend.text=element_text(size=rel(0.6)),
-      legend.title=element_text(size=rel(0.9)),
-      strip.text = element_text(size=rel(1.3))
+      legend.text=element_text(size=rel(0.5), angle = 0, vjust = 0),
+      legend.title=element_text(size=rel(0.6)),
+      strip.text = element_blank()
+      # strip.text = element_text(size=rel(0.9))
       # plot.title = element_text(size = rel(1.5)),
       
       
@@ -82,11 +84,11 @@ theme_for_CMA_4maps <- function(base_size) {
     theme(
       legend.position = "bottom",
       plot.margin=unit(c(2,0,0,0),"mm"),
-      legend.key.width=unit(2,"line"),
-      legend.key.height = unit(0.5,"cm"),
-      legend.text=element_text(size=rel(0.9)),
-      legend.title=element_text(size=rel(1.2)),
-      strip.text = element_text(size=rel(1.4))
+      legend.key.width=unit(1,"line"),
+      legend.key.height = unit(0.25,"cm"),
+      legend.text=element_text(size=rel(0.5)),
+      legend.title=element_text(size=rel(0.7)),
+      strip.text = element_text(size=rel(0.9))
       # plot.title = element_text(hjust = 0, vjust = 4),
       
       
@@ -117,7 +119,7 @@ mapas_cma <- function(sigla_muni,
   
   data_contorno <- read_rds(path_contorno)
   
-  maptiles <- read_rds(path_maptiles)
+  map_tiles <- read_rds(path_maptiles)
   
   if (type_acc == "CMA"){
     
@@ -143,12 +145,29 @@ mapas_cma <- function(sigla_muni,
   
     
     # abrir acess
-    acess <- dados_acc %>% filter(sigla_muni == sigla_munii)
+    acess <- dados_acc #%>% filter(sigla_muni == sigla_munii)
+    
+    acess <- acess %>%
+      mutate(across(.cols = matches("CMATT"),
+                    ~ .x/empregos_tot))
+    
+    dados_hex <- readr::read_rds(sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds",
+                                         sigla_muni, sigla_muni))
+    empregos_tot <- sum(dados_hex$n_jobs)
+    
     cols <- which(names(acess) %in% paste0(type_acc, sigla_op, time))
     acess <- acess %>% filter(mode == mode1) %>%
       select(sigla_muni, cols)
     acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op, time)))
     acess <- acess2
+    
+
+    
+    acess <- acess %>%
+      mutate(across(.cols = matches("CMATT"),
+                    ~ .x/empregos_tot))
+    
+    
 
     # ajustar levels
     #modificar aqui para compatibilizar com tmi
@@ -173,7 +192,18 @@ mapas_cma <- function(sigla_muni,
       
     } else if (type_acc == "TMI") {
       tema <- theme_for_tmi
-      }
+    }
+    
+    assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
+                                      sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
+      mutate(title = "Assentamentos Precários")
+    
+    area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
+                                       sigla_muni)) %>% filter(Classes == 24)
+    # mapview(area_urbanizada)
+    
+    # st_write(acess, "../teste_poa_acc.gpkg")
+    # options(scipen = 1000000000)
     # fazer plots
     #adicionar if com escala viridis para o tmi
     plot3 <- ggplot()+
@@ -182,17 +212,180 @@ mapas_cma <- function(sigla_muni,
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
-      geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.7, size = 0)+
-      viridis::scale_fill_viridis(option = "B"
-                                  # , limits = c(0, 0.72)
-                                  # , breaks = c(0.001, 0.35, 0.7)
+      
+      # geom_sf(data = area_urbanizada %>% st_transform(3857),
+      #         aes(colour = "black"),
+      #         fill = "grey50",
+      #         size = 1.3,
+      #         colour = NA)  +
+      
+      geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6, size = 0)+
+      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+      # geom_sf(data = assentamentos,
+      #         aes(colour = "white"),
+      #         fill = NA,
+      #         size = 1.3)+
+ 
+      # scale_color_identity(labels = c(white = "",
+      #                                 blue = ""), guide = "legend") +
+      # labs(colour = "Assentamentos\nPrecários")+
+      
+      # scale_fill_gradientn(
+      #   name = "Nº de Empregos",
+      #   colors = colors_purple ,
+      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #   # values = NULL,
+      #   space = "Lab",
+      #   na.value = NA,
+      #   # guide = "colourbar",
+      #   aesthetics = "fill",
+      #   # colors
+      # ) +
+      
+      # scale_fill_continuous(palette = "Blues",
+      #                   aesthetics = "fill")+
+      viridis::scale_fill_viridis(option = "B",
+                                  
+                                  labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
+                                  # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+                                  #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+      #                      limits = c(0,500000))+
+      # , limits = c(0, 0.72)
+      # , breaks = c(0.001, 0.35, 0.7)
                                   # , labels = c(0, "35", "70%")
       ) +
-      scale_color_manual(values = 'transparent')+
-      facet_wrap(~ind, ncol = 2)+
+      
+      # scale_color_manual(values = 'transparent')+
+      # facet_wrap(~ind, ncol = 2)+
       tema+
-      labs(fill = sprintf("%s\nacessíveis", titulo_leg)) +
-      theme(plot.title = element_text(hjust = 0.5, size = rel(1)))
+      labs(fill = sprintf("%s   \nacessíveis  ", titulo_leg)) +
+      theme(strip.text = element_blank(),
+            legend.title = element_text(size=rel(0.6), hjust = -2),
+            axis.ticks.length = unit(0,"pt")
+      # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+      #       # plot.background = element_rect(fill = "#eff0f0",
+      #       #                                 colour = NA)
+    # legend.background = element_rect(fill = "white",
+    #                                  colour = NA)
+    #       
+                                             )
+    
+    map_urbanizado <- ggplot()+
+      geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      
+      geom_sf(data = area_urbanizada %>% st_transform(3857),
+              aes(fill = "#5766cc"),
+              # fill = "#5766cc",
+              size = 1.3,
+              colour = NA) +
+      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+      scale_fill_identity(labels = c("#5766cc" = ""), guide = "legend") +
+                                      labs(fill = "Área Urbanizada")+
+      tema
+      # labs(fill = sprintf("%s\nacessíveis", titulo_leg)) +
+      # theme(plot.title = element_text(hjust = 0.5, size = rel(1))
+      #       # plot.background = element_rect(fill = "#eff0f0",
+      #       #                                 colour = NA)
+      #       # legend.background = element_rect(fill = "white",
+      #       #                                  colour = NA)
+      #       
+      # )
+    
+    
+    map_precarios <- ggplot()+
+      geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      
+      geom_sf(data = assentamentos %>% st_transform(3857),
+              aes(fill = "#d96e0a"),
+              # fill = "#5766cc",
+              size = 1.3,
+              colour = NA) +
+      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+      scale_fill_identity(labels = c("#d96e0a" = ""), guide = "legend") +
+      labs(fill = "Assentamentos Precários")+
+      tema +
+      # labs(fill = sprintf("%s\nacessíveis", titulo_leg)) +
+      theme(plot.title = element_blank(),
+            strip.text = element_blank())
+            # plot.background = element_rect(fill = "#eff0f0",
+            #                                 colour = NA)
+            # legend.background = element_rect(fill = "white",
+            #                                  colour = NA))
+            
+    library(elementalist)
+    
+    h <- wrap_plots(plot3, map_urbanizado, map_precarios, ncol = 3) &
+      # plot_layout(#ncol = 5,
+      #             # widths = c(4, -0.5 , 4 , -0.5, 4 ),
+      #             # heights = c(20,2),
+      #             guides = "collect") &
+      theme(legend.position = c(0.5,0.1),
+            legend.direction = "horizontal",
+            legend.key.width = unit(1, "line"),
+            legend.key.height = unit(0.3, "cm"),
+            # panel.spacing = ,
+            # legend.margin = margin(t=-70),
+            # strip.background = element_blank(),
+            # legend.box.margin = margin(t=-100),
+            legend.box.background = element_blank()
+            # legend.box.background = element_rect(fill = "white", colour = "black")
+              
+              # = element_rect(fill = "white", colour = "black",) #,  margin(t=-10, unit = "mm"))
+            ) &
+      plot_annotation(theme = theme(plot.background = element_rect_round(color  = '#5766cc',
+                                                                         size = 1.2,
+                                                                         linetype = "dashed",
+                                                                         radius = unit(0.10, "snpc"))))
+    # png("mtcars.png",res = 300)
+    # print(h)
+    # dev.off()
+    # h <- plot3 +
+    # plot_spacer()+
+    # map_urbanizado +
+    # plot_spacer() +
+    # map_precarios +
+    # plot_layout(ncol = 5,
+    #             widths = c(4, -0.5 , 4 , -0.5, 4 ),
+    #             heights = c(20,2),
+    #             guides = "collect") & theme(legend.position = "bottom",
+    #                                         legend.margin = margin(t=-70),
+    #                                         strip.background = element_blank(),
+    #                                         # legend.key.width = 0.6,
+    #                                         # legend.title = element_text(size = rel(0.4)),
+    #                                         # plot.margin = grid::unit(c(0,0,0,0), "mm"),
+    #                                         # plot.title = element_text(margin = margin(c(0,0,-100,0))),
+    #                                         # scale_x_continuous(expand(c(0,0))),
+    #                                         # scale_y_continuous(expand(c(0,0))),
+    #                                         # legend.title = element_text(size=rel(0.6))
+    #                                         ) &
+    #   plot_annotation(theme = theme(plot.background = element_rect_round(color  = 'blue',
+    #                                                                      size = 2,
+    #                                                                      linetype = "dashed")))
+    #   # plot_annotation(theme = theme(plot.margin = grid::unit(c(0,0,10,0), "mm")))
+      
+    
+    # h1 <- h & theme(
+    #   panel.background = element_rect_round(fill = NA,
+    #                                  color = "black",
+    #                                  linetype = "dashed")
+    # )
+    
+    # plot3 +
+    #   # plot_spacer()+
+    #   map_urbanizado +
+    #   # plot_spacer() +
+    #   map_precarios +
+    #   plot_layout(ncol = 3,
+    #               widths = c(4, 4 , 4 ))
+    
     
     if (mode1 == "bike"){
       modo <- "bicicleta"
@@ -202,16 +395,18 @@ mapas_cma <- function(sigla_muni,
       modo <- "caminhada"
     }
     
-    suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/%s/%s/%s/', sigla_munii, modo, type_acc ,oportunidade)))
+    
+    suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/%s/%s/%s/', sigla_muni, modo, type_acc ,oportunidade)))
     
     
-    ggsave(plot3, 
+    ggsave(h, 
            file= sprintf("../data/map_plots_acc/muni_%s/%s/%s/%s/%s_%s_%s_%s.png",
-                         sigla_munii, modo, type_acc , oportunidade, sigla_munii, type_acc , sigla_op, paste(time, collapse = '')), 
+                         sigla_muni, modo, type_acc , oportunidade, sigla_muni, type_acc , sigla_op, paste(time, collapse = '')), 
            dpi = dpi_mapa, width = width, height = height, units = "cm")
     
   
-  
+  width <- 18
+  height <- 10
   
 }
   

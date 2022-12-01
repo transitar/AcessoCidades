@@ -1,21 +1,26 @@
 #criação de graphs no r5r
 
 options(java.parameters = '-Xmx4G')
-system("java -version")
+# system("java -version")
 library(r5r)
 library(gtfstools)
 
 gtfs <- gtfstools::read_gtfs('../11 - GTFS/muni_pal/gtfs_files/gtfs_pal.zip')
-latest_validator <- gtfstools::download_validator(tempdir())
-latest_validator
-head(gtfs$trips[, .(trip_id, trip_headsign, shape_id)])
-
-
-rurais <- c("670", "450", "640", "650", "630", "80T", "1LUZIM", "20L", "10L")
+# latest_validator <- gtfstools::download_validator(tempdir())
+# latest_validator
+# head(gtfs$trips[, .(trip_id, trip_headsign, shape_id)])
+#palmas linhas problemáticas: 640, 650, 630, 80T, 
+rurais <- c("450","640","650","630", "80T", "20L", "1LUZIM", "10L")
+# rurais <- c("670", "450", "640", "650", "630", "80T", "1LUZIM", "20L", "10L")
 # rurais <- c("80T", "1LUZIM", "20L", "10L")
+# teste2 <- filter_by_route_id(gtfs, "450")
+# teste2$trips
+# smaller_gtfs <- filter_by_time_of_day(gtfs, from = "05:00:00", to = "23:59:00")
+# smaller_gtfs$trips]
+# filter_by_trip_id(teste2, "U450-V029-V")
 
 teste <- filter_by_route_id(gtfs = gtfs,rurais, keep = FALSE)
-write_gtfs(teste, "teste_gtfs_pal.zip")
+write_gtfs(teste, "../r5r/network/2022/muni_pal/gtfs_pal.zip")
 
 
 

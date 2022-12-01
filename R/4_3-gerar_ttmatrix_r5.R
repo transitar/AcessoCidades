@@ -4,7 +4,7 @@
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-Xmx5G')
+options(java.parameters = '-Xmx6G')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -24,7 +24,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'pal'; ano <- 2022; modo <- c("WALK", "TRANSIT")
+sigla_munii <- 'dou'; ano <- 2022; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -89,8 +89,8 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     df <- setup$getTransitServicesByDate(as.character(date))
     df <- jdx::convertToR(df$getDataFrame())
     
-    max_walk_dist <- 15   # minutes
-    max_trip_duration <- 60 # minutes
+    max_walk_dist <- 30   # minutes
+    max_trip_duration <- 180 # minutes
     departure_pico <- paste0(date, " 06:00:00")
     departure_fpico <- paste0(date, " 14:00:00")
     departure_datetime_pico <- as.POSIXct(departure_pico, format = "%Y-%m-%d %H:%M:%S")
@@ -108,7 +108,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                    destinations = points,
                                    mode = c("WALK", "TRANSIT"),
                                    departure_datetime = departure_datetime_pico,
-                                   time_window = 120,
+                                   time_window = 180,
                                    max_walk_time = max_walk_dist,
                                    max_trip_duration = max_trip_duration,
                                    n_threads = 15,
@@ -209,7 +209,8 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  mode = "WALK",
                                  max_trip_duration = max_trip_duration_walk,
                                  n_threads = 15,
-                                 output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni))
+                                 progress = T)
+                                 # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni))
   time_ttmatrix_walk <- Sys.time() - a
   
   files_walk<- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni),
@@ -253,7 +254,8 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  mode = "BICYCLE",
                                  max_trip_duration = max_trip_duration_bike,
                                  n_threads = 15,
-                                 output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni))
+                                 progress = T)
+                                 # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni))
   time_ttmatrix_bike <- Sys.time() - a
   print(paste0("Routing Bike took:", time_ttmatrix_bike))
   

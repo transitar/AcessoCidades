@@ -10,7 +10,7 @@ library(aopdata)
 
 sigla_muni <- 'poa'
 ano <- 2019
-estado <- 'RS'
+estado <- 'TO'
 
 create_diretorios <- function(sigla_muni){
   

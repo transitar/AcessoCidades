@@ -1,10 +1,10 @@
 #baixa parques, praças e bibliotecas da base do OSM
-
+rm(list =ls())
 source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'poa'
+sigla_muni <- 'dou'
 
 create_diretorios <- function(sigla_muni){
   
@@ -21,7 +21,7 @@ lazer_osm <- function(munis = 'all'){
   salva_lazer_osm <- function(sigla_muni, width = 16.5, height = 16.5){
     
     
-    message(paste0('rodando',sigla_muni))
+    message(paste0('rodando ',sigla_muni))
     
     muni_path <- sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds', sigla_muni)
     muni_shape <- read_rds(muni_path)
@@ -129,13 +129,13 @@ lazer_osm <- function(munis = 'all'){
                                                           name) %>% mutate(type = "dog_park")
     
     lazer2 <- rbind(q_leisure_park_sf2,
-                    q_leisure_golf_sf2,
-                    q_leisure_garden_sf2,
+                    # q_leisure_golf_sf2,
+                    # q_leisure_garden_sf2,
                     q_leisure_nature_sf2,
                     q_leisure_pitch_sf2,
-                    q_leisure_playground_sf2,
-                    q_leisure_stadium_sf2,
-                    q_leisure_dog_sf2)
+                    q_leisure_playground_sf2)
+                    # q_leisure_stadium_sf2)
+                    # q_leisure_dog_sf2)
     
     lazer_final <- lazer2 %>% st_filter(muni_shape)
     

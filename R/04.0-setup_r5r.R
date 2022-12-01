@@ -8,7 +8,7 @@ source('./R/fun/setup.R')
 
 # create folders
 
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 ano <- 2022
 
 #criação dos diretório de rede dos municípios
@@ -27,7 +27,7 @@ gtfs_files <- read_excel("../data-raw/gtfs_names/gtfs_files.xlsx", sheet = "gtfs
 gtfs_files <- gtfs_files %>%
   mutate(gtfs_path = sprintf("../data-raw/gtfs/muni_%s/%s/%s.zip", sigla_muni, ano, gtfs))
 
-sigla_muni1 <- "pal"; ano1 <- 2022
+sigla_muni1 <- "con"; ano1 <- 2022
 # sigla_muni1 <- "rec"; ano1 <- 2019
 # sigla_muni1 <- "spo"; ano1 <- 2019
 copy_gtfs <- function(sigla_muni1, ano1) {
@@ -60,7 +60,7 @@ walk(munis_list$munis_modo[ano_modo == 2022 & modo == "todos"]$abrev_muni, copy_
 # walk(munis_list$munis_modo[ano_modo == 2019 & modo == "todos"]$abrev_muni, copy_gtfs, ano1 = 2019)
 
 #stopped here
-sigla_muni1 <- 'pal'
+sigla_muni1 <- 'dou'
 ano1 <- 2022
 # copy other r5 files ----------------------------
 copy_r5_files <- function(sigla_muni1, ano1){

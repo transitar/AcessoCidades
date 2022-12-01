@@ -6,7 +6,7 @@
 options(java.parameters = '-Xmx5G')
 source('./R/fun/setup.R')
 
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 ano <- 2022
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
@@ -18,7 +18,7 @@ endereco_grade <- grades_muni <- paste0(
   )
 )
 
-endereco_grade <- '../data-raw/censo_2021_info_muni_treated_v2/muni_pal.rds'
+# endereco_grade <- '../data-raw/censo_2021_info_muni_treated_v2/muni_pal.rds'
 
 gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
   
