@@ -68,7 +68,7 @@ graficos <- function(munis = "all"){
     
     #remocão dos habitantes de cor amarela e indígena
     levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
-    data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+    # data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
     
     data_micro2 <- data_micro2 %>%
       # mutate(total = "total") %>% 
@@ -196,9 +196,14 @@ graficos <- function(munis = "all"){
       # facet_wrap(~ind, ncol = 2)+
       tema()+
       labs(fill = "Densidade Populacional") +
-      theme(legend.title = element_text(size=rel(0.8), hjust = 1),
+      theme(legend.title = element_text(size=rel(0.9), hjust = 0),
             axis.ticks.length = unit(0,"pt"),
-            legend.margin = margin(t = -20)
+            legend.margin = margin(t = 0),
+            legend.position = c(0.18, 0.2),
+            legend.direction = "vertical",
+            legend.box = "vertical",
+            legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+            # legend.title=element_text(size=rel(0.6), hjust = 0)
             # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
             #       # plot.background = element_rect(fill = "#eff0f0",
             #       #                                 colour = NA)
@@ -318,7 +323,8 @@ graficos <- function(munis = "all"){
     renda <- dados_simulacao %>%
       group_by(hex) %>%
       summarise(renda = mean(Rend_pc, na.rm =T)) %>% left_join(data_mhex, by = c("hex" = "id_hex")) %>%
-      st_as_sf() %>% drop_na(h3_resolution)
+      st_as_sf() %>% drop_na(h3_resolution) %>%
+      mutate(renda = ifelse(renda>10, 10, renda))
     
     grid_micro <- read_rds(sprintf("../data/microssimulacao/muni_%s/grid_muni_%s.rds",
                                    sigla_muni, sigla_muni))
@@ -333,29 +339,29 @@ graficos <- function(munis = "all"){
       geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "#D7ECFF"),
+              aes(color = "#8E8E8E"),
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 1,
-              alpha= 1)  +
+              linewidth = .7,
+              alpha= .1)  +
       
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
       #         size = 1.3)+
       
-      scale_color_identity(labels = c("#D7ECFF" = "",
+      scale_color_identity(labels = c("#8E8E8E" = "",
                                       blue = ""), guide = "legend") +
       labs(color = "Área urbanizada\n(Mapbiomas 2021)")+
       
-      scale_fill_distiller("Renda per capita (R$)",
+      scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
                            type = "div",
                            palette = "GnBu",
                            direction = 1,
-                           breaks = seq(0,20,5),
-                           labels = c("0","5", "10", "15", ">20"),
-                           limits = c(0,20))
+                           breaks = seq(0,10,2),
+                           labels = c("0","2", "4", "6","8", ">10"),
+                           limits = c(0,10)) +
 
       
       # scale_fill_gradientn(
@@ -387,9 +393,14 @@ graficos <- function(munis = "all"){
     # facet_wrap(~ind, ncol = 2)+
     tema()+
       labs(fill = "Renda Media") +
-      theme(legend.title = element_text(size=rel(0.8), hjust = 1),
+      theme(legend.title = element_text(size=rel(0.9), hjust = 0),
             axis.ticks.length = unit(0,"pt"),
-            legend.margin = margin(t = -20)
+            legend.margin = margin(t = 0),
+            legend.position = c(0.18, 0.2),
+            legend.direction = "vertical",
+            legend.box = "vertical",
+            legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+            # legend.background = element_rect(fill = "white", color = NA)
             # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
             #       # plot.background = element_rect(fill = "#eff0f0",
             #       #                                 colour = NA)
@@ -397,14 +408,14 @@ graficos <- function(munis = "all"){
             #                                  colour = NA)
             #       
       )
-    
+    # map_renda
     # map_pop_density
     
     suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
     
-    ggsave(map_pop_density,
+    ggsave(map_renda,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_%s.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
@@ -412,6 +423,8 @@ graficos <- function(munis = "all"){
     
     
     
+    
+    #Mapa 3 - Recortes
     
     
     

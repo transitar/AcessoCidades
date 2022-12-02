@@ -101,9 +101,10 @@ graficos <- function(munis = "all"){
       
       
       # facet_wrap(~dado, labeller = labeller_grupos) +
-      scale_fill_manual(name = "Tipo",
-                        values = cores_ciclo,
-                        breaks = c('CICLOVIA', 'CICLOFAIXA', 'COMPARTILHADO'),
+      scale_color_manual(name = "Tipo",
+                        values = c("Ciclovia" = '#33b099', 'Ciclofaixa' = '#5766cc',
+                                   'Compartilhado' = '#d96e0a'),
+                        breaks = c('Ciclovia', 'Ciclofaixa', 'Compartilhado'),
                         labels = c('Ciclovia', 'Ciclofaixa', 'Compartilhado')
                         ) +
       # tema_populacao()
@@ -134,32 +135,28 @@ graficos <- function(munis = "all"){
            dpi = 300,
            width = width, height = height, units = "cm" )
     
-    
-    
-
-# Mapa - Buffer Ciclovias -------------------------------------------------
-
-    dados_ciclovias_buffer <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
-      st_buffer(300) %>% st_union() %>% st_as_sf()
-    dados_ciclovias_buffer2 <- dados_ciclovias_buffer %>% as.data.frame()
-    # mapview(dados_ciclovias_buffer)
-    
-    
-    
-    map_ciclovias_buffer <- ggplot() +
+    map_ciclovias_zoom <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
       # theme_map() +
-      geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),fill = '#21367d',
-              color = 'grey70',alpha = .7, size = 0.1) +
-  
+      geom_sf(data = st_transform(dados_ciclovias,3857),aes(color = Tipo), alpha = 1) +
+      
       # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
       
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = NA, size = .1) +
-
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+      
+      
+      
+      # facet_wrap(~dado, labeller = labeller_grupos) +
+      scale_color_manual(name = "Tipo",
+                         values = c("Ciclovia" = '#33b099', 'Ciclofaixa' = '#5766cc',
+                                    'Compartilhado' = '#d96e0a'),
+                         breaks = c('Ciclovia', 'Ciclofaixa', 'Compartilhado'),
+                         labels = c('Ciclovia', 'Ciclofaixa', 'Compartilhado')
+      ) +
       # tema_populacao()
       theme(legend.position = "bottom",
             strip.text.x = element_text(size=rel(1.2)),
@@ -179,7 +176,111 @@ graficos <- function(munis = "all"){
             legend.title=element_text(size=rel(1),                                   ),
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10)
-      )
+      ) +
+      coord_sf(ylim = c(-3503224,-3516303), xlim = c(-5707898,-5692457), expand = FALSE)
+    
+    ggsave(map_ciclovias_zoom,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_zoom_%s.png", sigla_muni, sigla_muni),
+           dpi = 300,
+           width = width, height = height, units = "cm" )
+
+# Mapa - Buffer Ciclovias -------------------------------------------------
+
+    dados_ciclovias_buffer <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
+      st_buffer(300) %>% st_union() %>% st_as_sf()
+    dados_ciclovias_buffer2 <- dados_ciclovias_buffer %>% as.data.frame()
+    # mapview(dados_ciclovias_buffer)
+    
+    area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
+                                       sigla_muni)) %>% filter(Classes == 24) %>%
+      st_make_valid() %>%
+      st_union()
+    
+    sigla_municipio <- sigla_muni
+    decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                               sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+    
+    simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+      st_make_valid() %>%
+      st_transform(decisao_muni$epsg) %>%
+      st_buffer(2) %>%
+      st_union() 
+    
+    assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
+                                      sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
+      mutate(title = "Assentamentos Precários")
+    
+    
+    
+    map_ciclovias_buffer <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      
+      # theme_map() +
+
+
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              # aes(color = "#21367d"),
+              aes(fill = '#CFF0FF'),
+              # fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.3,
+              alpha= 0.7)  +
+      geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
+              color = NA,alpha = .7, linewidth = 1) +
+      geom_sf(data = assentamentos,
+              aes(fill = "#d96e0a"),
+              # fill = "#d96e0a",
+              size = 1.3,
+              color = NA,
+              show.legend = "polygon",
+              alpha = 0.8)+
+      # scale_fill_manual(values = '#d96e0a',
+      #                   label = "Aglomerados\nSubnormais") +
+      labs(fill = '') +
+      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+      # geom_sf(data = assentamentos,
+      #         aes(colour = "white"),
+      #         fill = NA,
+      #         size = 1.3)+
+      scale_fill_manual(values = c('#33b099'='#33b099',"#d96e0a" ="#d96e0a", '#CFF0FF' = "#CFF0FF"),
+                        labels = c('#33b099'="Cobertura de 300m","#d96e0a"="Aglomerados\nSubnormais",
+                                   '#CFF0FF'="Área urbanizada\n(Mapbiomas 2021)")
+      ) +
+      
+      # scale_color_identity(labels = c("#21367d" = "",
+      #                                 blue = ""), guide = "legend") +
+      labs(color = "Área urbanizada\n(Mapbiomas 2021)")+
+      # tema_populacao()
+      theme(
+            strip.text.x = element_text(size=rel(1.2)),
+            strip.background = element_blank(),
+            panel.background = element_rect(fill = NA, colour = NA),
+            legend.background = element_blank(),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.ticks = element_blank(), 
+            panel.grid = element_blank(),
+            plot.margin=unit(c(2,0,0,0),"mm"),
+            legend.key.width=unit(2,"line"),
+            legend.key.height = unit(.5,"cm"),
+            legend.text=element_text("Tipo", size=rel(1)),
+            legend.title=element_text(size=rel(1),                                   ),
+            plot.title = element_text(hjust = 0, vjust = 4),
+            strip.text = element_text(size = 10),
+            legend.position = c(0.25, 0.18),
+            legend.spacing.y = unit(0.2, 'cm')
+            # legend.margin = margin(t = -80)
+      ) +
+      guides(fill = guide_legend(byrow = TRUE))
     # width = 16; height = 16
     # map_empregos
     ggsave(map_ciclovias_buffer,
@@ -263,6 +364,10 @@ graficos <- function(munis = "all"){
     data_micro_ciclo <- data_micro2 %>% filter(hex %in% id_hex_intersects)
     
     
+    
+
+    
+    
 
     
 
@@ -310,20 +415,26 @@ graficos <- function(munis = "all"){
       
     
 
-# Acesso à infraestrutura Cicloviária 2 - Recorte de Raça e Cor -----------
+# Acesso à infraestrutura Cicloviária 2 - Recorte de Raça e Cor  e Cleveland-----------
 
+    
+    
+    
+    
+    
+    
     recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
       # mutate(total = "total") %>% 
       mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
-             cor = case_when(cor == "pard_am_ing" ~ "Pardos",
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
                              cor == "pretos" ~ "Pretos",
                              cor == "brancos" ~ "Brancos")) %>%
       mutate(
-             quintil_renda = ntile(Rend_pc, 5)) %>%
-      group_by(V0606, quintil_renda, genero, teste) %>% summarise(n = n()) %>% 
-      ungroup() %>% group_by(V0606, quintil_renda, genero) %>% 
+             quintil_renda = ntile(Rend_pc, 4)) %>%
+      group_by(cor, quintil_renda, genero, teste) %>% summarise(n = n()) %>% 
+      ungroup() %>% group_by(cor, quintil_renda, genero) %>% 
       summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
-      mutate(class = paste(genero, V0606))%>%
+      mutate(class = paste(genero, cor))%>%
       mutate(id = paste(class, quintil_renda))
 
       
@@ -338,7 +449,7 @@ graficos <- function(munis = "all"){
     bora <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
       # mutate(total = "total") %>% 
       mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
-             cor = case_when(cor == "pard_am_ing" ~ "Pardos",
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
                              cor == "pretos" ~ "Pretos",
                              cor == "brancos" ~ "Brancos")) %>%
       mutate(
@@ -358,12 +469,83 @@ graficos <- function(munis = "all"){
     vamo <- left_join(recorte_rr, bora2, by = "id") %>%
       mutate(prop_teste = n.x / total_quintil)
     
-    ggplot(recorte_rr, aes(prop, quintil_renda)) +
-      geom_point(aes(color = class, size = n))
+    # ggplot(recorte_rr, aes(prop, quintil_renda)) +
+    #   geom_point(aes(color = class, size = n))
+    
+    
+
+# Cleveland Plot de acesso a infra cicloviaria ----------------------------
+
+    
+    plot_cleveland_ciclo <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
+      geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
+      geom_point(aes(color = class, size= n), shape = 1, stroke = 1.5) +
+      guides(fill=guide_legend(title="Gênero e cor")) +
+      scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
+      )+
+      scale_size(range=c(0,12),
+                 # breaks=c(1,4,8,10,2),
+                 # labels=c("1","4","8","10","25+"),
+                 name = "Habitantes",
+                 guide="legend")
+    p_c_ciclo <- plot_cleveland_ciclo + scale_color_manual(name = "Gênero e Cor",
+                             values = c("Homens Brancos"="#5766cc",
+                                        "Homens Pretos"="#21367d",
+                                        "Mulheres Brancos" = "#33b099",
+                                        "Mulheres Pretos"="#0f805e"),
+                             labels = c("Homens Brancos",
+                                        "Homens Pretos",
+                                        "Mulheres Brancas",
+                                        "Mulheres Pretas"))+
+      # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
+      #                    limits = c(0,5), # baixa complexidade car                   
+      #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
+      scale_y_discrete(expand = c(0.4,0.4)) +
+      labs(title = "Proporção da população com acesso à infraestrutura cicloviária")+  
+      #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
+      # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
+      # theme_minimal() +
+      xlab("% de habitantes do recorte") +
+      ylab("Quartil de renda per capta") +
+      scale_x_continuous(labels = scales::percent,
+                         limits = c(0.2,0.6),
+                         breaks = seq(0.2,0.6, 0.05)) +
+      scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
+      theme(#axis.title = element_blank(),
+        panel.grid.minor = element_line(),
+        legend.background = element_blank(),
+        panel.background = element_blank(),
+        legend.direction = "vertical",
+        legend.position = "bottom",
+        text = element_text(family = "sans",
+                            # face = "bold",
+                            size = 14),
+        
+        plot.title = element_text(size = 12, margin = margin(b=10)),
+        plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
+        plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 8),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 10))
+ 
+    
+    
+    #escrita do gráfico
+    
+    ggsave(p_c_ciclo,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_cleveland_%s.png", sigla_muni, sigla_muni),
+           dpi = 400,
+           width = 15, height = 10, units = "cm" )
     
     
     
-    ggplot(recorte_rr,
+    
+    
+    
+    
+     ggplot(recorte_rr,
            aes(y = prop, x = quintil_renda, fill = cor)) + 
       geom_col(position = position_dodge(),
                width = .8) + 
@@ -799,7 +981,7 @@ graficos <- function(munis = "all"){
       
       
       # facet_wrap(~dado, labeller = labeller_grupos) +
-      scale_fill_manual(name = "Tipo",
+      scale_color_manual(name = "Tipo",
                         values = cores_paraciclos
       ) +
       # tema_populacao()
@@ -831,6 +1013,57 @@ graficos <- function(munis = "all"){
            width = width, height = height, units = "cm" )
     
     
+    
+    
+    
+    
+    
+    
+    map_paraciclos_zoom <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      # theme_map() +
+      geom_sf(data = st_transform(paraciclos,3857),aes(color = Tipo), alpha = 1, size = .8) +
+      
+      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+      
+      
+      
+      # facet_wrap(~dado, labeller = labeller_grupos) +
+      scale_color_manual(name = "Tipo",
+                        values = cores_paraciclos
+      ) +
+      # tema_populacao()
+      theme(legend.position = "bottom",
+            strip.text.x = element_text(size=rel(1.2)),
+            strip.background = element_rect(
+              color = NA,
+              fill = "#eff0f0"
+            ),
+            panel.background = element_rect(fill = NA, colour = NA),
+            axis.text = element_blank(),
+            axis.title = element_blank(),
+            axis.ticks = element_blank(), 
+            panel.grid = element_blank(),
+            plot.margin=unit(c(2,0,0,0),"mm"),
+            legend.key.width=unit(2,"line"),
+            legend.key.height = unit(.5,"cm"),
+            legend.text=element_text("Tipo", size=rel(1)),
+            legend.title=element_text(size=rel(1),                                   ),
+            plot.title = element_text(hjust = 0, vjust = 4),
+            strip.text = element_text(size = 10)
+      )  +
+      coord_sf(ylim = c(-3503224,-3516303), xlim = c(-5707898,-5692457), expand = FALSE)
+    ggsave(map_paraciclos_zoom,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/3-paraciclos_zoom_%s.png", sigla_muni, sigla_muni),
+           dpi = 300,
+           width = width, height = height, units = "cm" )
     
     
   }
