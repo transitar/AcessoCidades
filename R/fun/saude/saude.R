@@ -10,7 +10,7 @@ library(aopdata)
 
 sigla_muni <- 'poa'
 ano <- 2019
-estado <- 'TO'
+estado <- 'RS'
 
 create_diretorios <- function(sigla_muni){
   
@@ -38,6 +38,14 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
   hex <- dados_aop_poa %>% left_join(hex, by = "id_hex") %>% st_as_sf()
   hex <- hex %>% select(id_hex, S001, S002, S003, S004) #%>%
     # drop_na(h3_resolution)
+  # sum(dados_aop_poa$S001)
+  # sum(dados_aop_poa$S002)+ sum(dados_aop_poa$S003)+sum(dados_aop_poa$S004)
+  # 
+  # sum(dados_aop_poa$M001)
+  # sum(dados_aop_poa$M002)+sum(dados_aop_poa$M003)+sum(dados_aop_poa$M004)
+  # 
+  # sum(dados_aop_poa$E001)
+  # sum(dados_aop_poa$E002)+sum(dados_aop_poa$E003)+sum(dados_aop_poa$E004)
   
   readr::write_rds(hex, sprintf('../data/saude/aop/muni_%s_saude_aop/muni_%s.rds', sigla_muni, sigla_muni))
   

@@ -160,6 +160,26 @@ graficos <- function(munis = "all"){
     
     # Mapa - Buffer PEDS -------------------------------------------------
     
+    
+    area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
+                                       sigla_muni)) %>% filter(Classes == 24) %>%
+      st_make_valid() %>%
+      st_union()
+    
+    sigla_municipio <- sigla_muni
+    decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                               sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+    
+    simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+      st_make_valid() %>%
+      st_transform(decisao_muni$epsg) %>%
+      st_buffer(2) %>%
+      st_union() 
+    
+    assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
+                                      sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
+      mutate(title = "Assentamentos Precários")
+    
     # dados_peds_buffer_300
 
     map_peds300_buffer <- ggplot() +
@@ -544,6 +564,11 @@ graficos <- function(munis = "all"){
            dpi = 400,
            width = 15, height = 10, units = "cm" )
     
+
+# Aglomerados Subnormais nao atendidos ------------------------------------
+
+    
+    
     aglomerados_natend500 <- assentamentos %>% st_transform(decisao_muni$epsg) %>%
       st_difference(dados_peds_buffer_500) %>% st_as_sf() %>%
       mutate(area_ntad = st_area(.))
@@ -558,6 +583,12 @@ graficos <- function(munis = "all"){
              pop_ntad = as.numeric(SUM_EDOC*area_prop))
     mapview(aglomerados_natend500, zcol = "pop_ntad")
     
+    write_sf(aglomerados_natend500,
+             sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s_assentamentos_ntad.gpkg',
+                     sigla_muni, sigla_muni))
+    write.xlsx(aglomerados_natend500 %>% st_drop_geometry(),
+             sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s_assentamentos_ntad.xlsx',
+                     sigla_muni, sigla_muni))
     
     # aglomerados_natend500 <- assentamentos %>% st_transform(decisao_muni$epsg) %>%
     #   st_join(dados_peds_buffer_500 %>% mutate(teste = 1)) %>% st_as_sf() %>%
