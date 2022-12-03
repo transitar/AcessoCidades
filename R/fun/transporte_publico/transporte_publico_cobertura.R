@@ -325,7 +325,8 @@ graficos <- function(munis = "all"){
         legend.margin = margin(-0.45,0,0,0, unit="cm")
         # legend.margin = margin(t = -80)
       ) +
-      guides(fill = guide_legend(byrow = TRUE))
+      guides(fill = guide_legend(byrow = TRUE, order = 2),
+             color = guide_legend(order = 1))
     # width = 16; height = 16
     # map_empregos
     ggsave(map_peds500_buffer,
@@ -428,16 +429,16 @@ graficos <- function(munis = "all"){
     #intersect com hex
     
     #aqui esta usando os dados os dados civlovirarios. verificar
-    
+    # mapview(dados_hex_intersect_300)
     dados_hex_intersect_300 <- dados_hex %>%
       st_as_sf() %>%
       st_transform(decisao_muni$epsg) %>%
       st_intersection(dados_peds_buffer_300)
-    dados_hex_intersect_300 <- dados_hex_intersect %>%
+    dados_hex_intersect_300 <- dados_hex_intersect_300 %>%
       mutate(area = st_area(.))
     
-    mapview(dados_hex_intersect_300)
-    id_hex_intersects <- dados_hex_intersect_300$id_hex %>% unique()
+    # mapview(dados_hex_intersect_300)
+    id_hex_intersects_bus <- dados_hex_intersect_300$id_hex %>% unique()
     
     #dados da microssimulação
     
@@ -461,11 +462,11 @@ graficos <- function(munis = "all"){
     levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
     data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
     
-    data_micro_bus <- data_micro2 %>% filter(hex %in% id_hex_intersects)
-    mapview(data_micro_bus)
+    data_micro_bus <- data_micro2 %>% filter(hex %in% id_hex_intersects_bus)
+    # mapview(data_micro_bus)
     #recorte nos dados da microssimulacao
     
-    recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
+    recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects_bus), "OK","N"))  %>% 
       # mutate(total = "total") %>% 
       mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
              cor = case_when(cor == "pard_am_ing" ~ "Pretos",
@@ -492,7 +493,7 @@ graficos <- function(munis = "all"){
                  # labels=c("1","4","8","10","25+"),
                  name = "Habitantes",
                  guide="legend")
-    p_b300_ciclo <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
+    p_b300_bus <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
                                                            values = c("Homens Brancos"="#5766cc",
                                                                       "Homens Pretos"="#21367d",
                                                                       "Mulheres Brancos" = "#33b099",
@@ -512,8 +513,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capta") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.2,0.6),
-                         breaks = seq(0.2,0.6, 0.05)) +
+                         limits = c(0.60,1),
+                         breaks = seq(0.60,1, 0.05)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -537,193 +538,188 @@ graficos <- function(munis = "all"){
     
     #escrita do gráfico
     
-    ggsave(p_c_ciclo,
+    ggsave(p_b300_bus,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_cleveland_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s.png", sigla_muni, sigla_muni),
            dpi = 400,
            width = 15, height = 10, units = "cm" )
     
+    aglomerados_natend500 <- assentamentos %>% st_transform(decisao_muni$epsg) %>%
+      st_difference(dados_peds_buffer_500) %>% st_as_sf() %>%
+      mutate(area_ntad = st_area(.))
+    
+    assentamentos_area <- assentamentos %>%
+      mutate(area_total = st_area(.)) %>%
+      select(NM_AGSN, area_total)
+    
+    aglomerados_natend500 <- aglomerados_natend500 %>%
+      left_join(assentamentos_area %>% st_drop_geometry(), by = "NM_AGSN") %>%
+      mutate(area_prop = area_ntad/area_total,
+             pop_ntad = as.numeric(SUM_EDOC*area_prop))
+    mapview(aglomerados_natend500, zcol = "pop_ntad")
     
     
-    
-    dados_hex_intersect_500 <- dados_hex %>%
-      st_as_sf() %>%
-      st_transform(decisao_muni$epsg) %>%
-      st_intersection(dados_peds_buffer_500)
-    dados_hex_intersect_500 <- dados_hex_intersect_500 %>%
-      mutate(area = st_area(.))
-    
-    dados_hex_intersect_n300 <- dados_hex %>%
-      st_as_sf() %>%
-      st_transform(decisao_muni$epsg) %>%
-      st_intersection(area_natend300)
-    dados_hex_intersect_n300 <- dados_hex_intersect_n300 %>%
-      mutate(area = st_area(.))
-    
-    # mapview(dados_hex_intersect_n500)
-    
-    dados_hex_intersect_n500 <- dados_hex %>%
-      st_as_sf() %>%
-      st_transform(decisao_muni$epsg) %>%
-      st_intersection(area_natend500)
-    dados_hex_intersect_n300 <- dados_hex_intersect_n300 %>%
-      mutate(area = st_area(.))
+    # aglomerados_natend500 <- assentamentos %>% st_transform(decisao_muni$epsg) %>%
+    #   st_join(dados_peds_buffer_500 %>% mutate(teste = 1)) %>% st_as_sf() %>%
+    #   filter(is.na(teste)==T)
     
     
+
+# Mapa dos Aglomerados Nao Atendidos --------------------------------------
+
+library(units)
     
+    get_image_dimensions(path_maptiles)
     
+    require(jpeg)
+    img <- read_rds(path_maptiles) 
     
+    ratio <- (max(img$y)-min(img$y))/(max(img$x)-min(img$x))
     
-    
-    
-    
-    
-    
-    
-    
-    
-    #bikes compartilhadas
-    if (decisao_muni$bike_comp == 1){
-    if (decisao_muni$fonte_bikecomp == "muni"){
-      
-      dados_bikecomp <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                        sigla_muni, sigla_muni),
-                                layer = "bike_comp"
-      )
-    }
-    }
-    # mapview(dados_bikecomp)
-    
-    dados_bikecomp <- dados_bikecomp %>% st_transform(decisao_muni$epsg) %>%
-      mutate(Tipo = "Bikepoa")
-    
-    
-    #mapa
-    cores_bikecomp <- c('#d96e0a')
-    
-    map_bikecomp <- ggplot() +
+    map_aglomerados_ntad <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
-      # theme_map() +
-      geom_sf(data = st_transform(dados_bikecomp,3857),aes(color = Tipo), alpha = 1, size = .8) +
+      
+      # geom_sf(data = simplepolys %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         # aes(color = "#21367d"),
+      #         aes(color = 'black'),
+      #         # fill = NA,
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.3,
+      #         alpha= 0.8)  +
+      # # theme_map() +
+      geom_sf(data = st_transform(aglomerados_natend500, 3857),
+              aes(fill = pop_ntad),
+              # fill = '#33b099',
+              # fill = NA,
+              color = "black",
+              alpha = .5,
+              linewidth = 0.5) +
+      
+      # geom_sf(data = assentamentos,
+      #         aes(fill = "#d96e0a"),
+      #         # fill = "#d96e0a",
+      #         size = 1.3,
+      #         color = NA,
+      #         show.legend = "polygon",
+      #         alpha = 0.8)+
       
       # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
       
+      labs(fill = '') +
+      labs(color = "") +
+      
+      # scale_fill_manual(values = c('#33b099'='#33b099',
+      #                              "#d96e0a" ="#d96e0a"
+      #                              # '#CFF0FF' = "#CFF0FF"
+      # ),
+      # labels = c('#33b099'="Cobertura de 300m",
+      #            "#d96e0a"="Aglomerados\nSubnormais"
+      #            # '#CFF0FF'="Área urbanizada\n(Mapbiomas 2021)"
+      # )
+      # ) +
+      # scale_color_identity(labels = c("black" = "Área urbanizada\n(Mapbiomas 2021)",
+      #                                 blue = ""), guide = "legend") +
+    scale_fill_gradientn(
+      name = "População",
+      colors = colors_blue,
+      # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      # values = NULL,
+      space = "Lab",
+      na.value = NA,
+      # guide = "colourbar",
+      aesthetics = "fill",
+      # colors
+    ) +
+      # geom_sf_label(data = st_transform(aglomerados_natend500, 3857),
+      #               aes(label = NM_AGSN)
+      #               )+
+    
       
       
-      # facet_wrap(~dado, labeller = labeller_grupos) +
-      scale_fill_manual(name = "Tipo",
-                        values = cores_bikecomp
-      ) +
       # tema_populacao()
-      theme(legend.position = "bottom",
-            strip.text.x = element_text(size=rel(1.2)),
-            strip.background = element_rect(
-              color = NA,
-              fill = "#eff0f0"
-            ),
-            panel.background = element_rect(fill = NA, colour = NA),
-            axis.text = element_blank(),
-            axis.title = element_blank(),
-            axis.ticks = element_blank(), 
-            panel.grid = element_blank(),
-            plot.margin=unit(c(2,0,0,0),"mm"),
-            legend.key.width=unit(2,"line"),
-            legend.key.height = unit(.5,"cm"),
-            legend.text=element_text("Tipo", size=rel(1)),
-            legend.title=element_text(size=rel(1),                                   ),
-            plot.title = element_text(hjust = 0, vjust = 4),
-            strip.text = element_text(size = 10)
-      )
+      theme(
+        strip.text.x = element_text(size=rel(1.2)),
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = NA, colour = NA),
+        legend.background = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(), 
+        panel.grid = element_blank(),
+        plot.margin=unit(c(2,0,0,0),"mm"),
+        legend.key.width=unit(2,"line"),
+        legend.key.height = unit(.5,"cm"),
+        legend.text=element_text("Tipo", size=rel(1)),
+        legend.title=element_text(size=rel(1),                                   ),
+        plot.title = element_text(hjust = 0, vjust = 4),
+        strip.text = element_text(size = 10),
+        legend.position = c(0.18, 0.15),
+        legend.spacing.y = unit(0.05, 'cm'),
+        legend.margin = margin(-0.45,0,0,0, unit="cm")
+        # legend.margin = margin(t = -80)
+      ) +
+      guides(fill = guide_legend(byrow = TRUE))
     # width = 16; height = 16
     # map_empregos
-    ggsave(map_bikecomp,
+    ggsave(map_aglomerados_ntad,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/2-bikes_compartilhadas_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
+           filename =  sprintf("../data/map_plots_transports/muni_%s/12-aglomerados_ntad_500m_tp_%s.png", sigla_muni, sigla_muni),
+           dpi = 400,
            width = width, height = height, units = "cm" )
-    
-    # Paraciclos --------------------------------------------------------------
-    
-    
-    #map paraciclos
+        
     
     
-    if (decisao_muni$fonte_paraciclos == "muni_e_osm"){
-      
-      dados_paraciclos_muni <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                               sigla_muni, sigla_muni),
-                                       layer = "paraciclos"
-      ) %>% mutate(Tipo = "Público", id=1) %>% st_transform(decisao_muni$epsg) %>%
-        select(name = Name, id, Tipo) %>% st_zm(drop = T)
-      
-      dados_paraciclos_osm <- read_sf(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
-                                              sigla_muni, sigla_muni),
-                                      layer = "paraciclos") %>% st_transform(decisao_muni$epsg) %>%
-        select(name, id = osm_id, Tipo)
-      paraciclos <- rbind(dados_paraciclos_muni, dados_paraciclos_osm) 
-      
-    }
-    # mapview(dados_bikecomp)
-    
-    paraciclos <- paraciclos %>% st_transform(decisao_muni$epsg)
     
     
-    #mapa
-    cores_paraciclos <- c('#33b099', '#d96e0a')
     
-    map_paraciclos <- ggplot() +
-      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-      coord_equal() +
-      scale_fill_identity()+
-      # nova escala
-      new_scale_fill() +
-      # theme_map() +
-      geom_sf(data = st_transform(paraciclos,3857),aes(color = Tipo), alpha = 1, size = .8) +
-      
-      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
-      
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
-      
-      
-      
-      # facet_wrap(~dado, labeller = labeller_grupos) +
-      scale_fill_manual(name = "Tipo",
-                        values = cores_paraciclos
-      ) +
-      # tema_populacao()
-      theme(legend.position = "bottom",
-            strip.text.x = element_text(size=rel(1.2)),
-            strip.background = element_rect(
-              color = NA,
-              fill = "#eff0f0"
-            ),
-            panel.background = element_rect(fill = NA, colour = NA),
-            axis.text = element_blank(),
-            axis.title = element_blank(),
-            axis.ticks = element_blank(), 
-            panel.grid = element_blank(),
-            plot.margin=unit(c(2,0,0,0),"mm"),
-            legend.key.width=unit(2,"line"),
-            legend.key.height = unit(.5,"cm"),
-            legend.text=element_text("Tipo", size=rel(1)),
-            legend.title=element_text(size=rel(1),                                   ),
-            plot.title = element_text(hjust = 0, vjust = 4),
-            strip.text = element_text(size = 10)
-      )
-    # width = 16; height = 16
-    # map_empregos
-    ggsave(map_paraciclos,
-           device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/3-paraciclos_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
-           width = width, height = height, units = "cm" )
+    # mapview(aglomerados_natend500)
     
+    
+    # dados_hex_intersect_500 <- dados_hex %>%
+    #   st_as_sf() %>%
+    #   st_transform(decisao_muni$epsg) %>%
+    #   st_intersection(dados_peds_buffer_500)
+    # dados_hex_intersect_500 <- dados_hex_intersect_500 %>%
+    #   mutate(area = st_area(.))
+    # 
+    # dados_hex_intersect_n300 <- dados_hex %>%
+    #   st_as_sf() %>%
+    #   st_transform(decisao_muni$epsg) %>%
+    #   st_intersection(area_natend300)
+    # dados_hex_intersect_n300 <- dados_hex_intersect_n300 %>%
+    #   mutate(area = st_area(.))
+    # 
+    # # mapview(dados_hex_intersect_n500)
+    # 
+    # dados_hex_intersect_n500 <- dados_hex %>%
+    #   st_as_sf() %>%
+    #   st_transform(decisao_muni$epsg) %>%
+    #   st_intersection(area_natend500)
+    # dados_hex_intersect_n300 <- dados_hex_intersect_n300 %>%
+    #   mutate(area = st_area(.))
+    # 
+    # 
+    # 
+    # 
+    # 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
     
     
     

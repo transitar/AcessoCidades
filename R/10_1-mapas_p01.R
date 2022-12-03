@@ -105,6 +105,9 @@ graficos <- function(munis = "all"){
       summarise(pop_total = n()) %>% left_join(data_mhex, by = c("hex" = "id_hex")) %>%
       st_as_sf()
     
+    st_write(pop_counts,sprintf("../data/microssimulacao/muni_%s/population_counts_%s.gpkg",
+                                sigla_muni, sigla_muni))
+    
     # st_write(pop_counts, 'pop_poa.shp')
     
     area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
@@ -320,6 +323,15 @@ graficos <- function(munis = "all"){
     
     #Mapa 2 - Renda
     
+    renda_escrita <- dados_simulacao %>%
+      group_by(hex) %>%
+      summarise(renda = mean(Rend_pc, na.rm =T)) %>% left_join(data_mhex, by = c("hex" = "id_hex")) %>%
+      st_as_sf() %>% drop_na(h3_resolution)
+      # mutate(renda = ifelse(renda>10, 10, renda))
+    
+    st_write(renda_escrita,sprintf("../data/microssimulacao/muni_%s/renda_%s.gpkg",
+                                sigla_muni, sigla_muni))
+    
     renda <- dados_simulacao %>%
       group_by(hex) %>%
       summarise(renda = mean(Rend_pc, na.rm =T)) %>% left_join(data_mhex, by = c("hex" = "id_hex")) %>%
@@ -427,6 +439,11 @@ graficos <- function(munis = "all"){
     #Mapa 3 - Recortes
     
     
+    
+    
+
+# Mapas de recorte.Antigo. Isolar -----------------------------------------
+
     
     
     

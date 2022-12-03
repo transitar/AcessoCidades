@@ -49,6 +49,26 @@ suppressMessages(library(rlist))
 suppressMessages(library(pipeR))
 suppressMessages(library(xlsx))
 
+#cores
+
+colors_purple <- c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
+
+colors_orange <- c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
+
+colors_green <- c("#dbede7", "#79b9a6", "#56a68e", "#0f805e", "#0b5e45", "#094d39", "#073b2c")
+
+# colors_blue <- c("#eff1f6", "#8d97bd", "#6b79a9", "#344889", "#21367d", "#1d306e", "#19295f")
+
+# colors_blue <- c("#DAE5EF", "#b5cadf", "#6a94be", "#3d73aa", "#25619f", "#054a91", "#05376d")
+colors_blue <- c("#ecfaff", "#ade7ff", "#73d6ff", "#38c4ff", "#0cb7ff", "#0ba0e0", "#0989c0", "#066891")
+
+colors_acc <- c("#090e20","#111B3F", "#21367D",
+                "#37366E", "#4C355F", "#773340",
+                "#A23222",
+                "#BB4115", "#D34F07", "#E4753A",
+                "#EB9432", "#F5C226", "#FAD920",
+                "#FDE63A", "#FFF354")
+
 
 munis_list <- list(
   
