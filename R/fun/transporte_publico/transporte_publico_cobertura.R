@@ -908,7 +908,7 @@ graficos <- function(munis = "all"){
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
       geom_point(aes(color = class, size= n), shape = 1, stroke = 1.5) +
       guides(fill=guide_legend(title="Gênero e cor")) +
-      scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
+      scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
       )+
       scale_size(range=c(0,12),
                  # breaks=c(1,4,8,10,2),
@@ -916,10 +916,10 @@ graficos <- function(munis = "all"){
                  name = "Habitantes",
                  guide="legend")
     p_b300_bus <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
-                                                           values = c("Homens Brancos"="#5766cc",
-                                                                      "Homens Pretos"="#21367d",
-                                                                      "Mulheres Brancos" = "#33b099",
-                                                                      "Mulheres Pretos"="#0f805e"),
+                                                           values = c("Homens Brancos"="#ADBEF0",
+                                                                      "Homens Pretos"="#174DE8",
+                                                                      "Mulheres Brancos" = "#EBB814",
+                                                                      "Mulheres Pretos"="#B39229"),
                                                            labels = c("Homens Brancos",
                                                                       "Homens Pretos",
                                                                       "Mulheres Brancas",
