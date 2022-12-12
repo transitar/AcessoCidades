@@ -615,30 +615,42 @@ graficos <- function(munis = "all"){
       st_transform(decisao_muni$epsg) %>%
       st_intersection(dados_ciclovias_buffer)
     dados_hex_intersect <- dados_hex_intersect %>%
-      mutate(area = st_area(.))
+      mutate(area = st_area(.)) %>%
+      mutate(area2 = as.numeric(area)) %>%
+      filter(area2 > 60000.0)
+    
+    # mapview(dados_hex_intersect)
     
     id_hex_intersects <- dados_hex_intersect$id_hex %>% unique()
-    
+    # mapview(dados_hex_in)
     #dados da microssimulação
     
     data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
-                                   sigla_muni, sigla_muni))
+                                   sigla_muni, sigla_muni)) %>%  mutate(V0606 = case_when(V0606 == 1 ~ "Brancos",
+                                                                                          V0606 == 2 ~ "Pretos",
+                                                                                          V0606 == 3 ~ "Amarelos",
+                                                                                          V0606 == 4 ~ "Pardos",
+                                                                                          V0606 == 5 ~ "Indígenas"))
     #ajeitar o formato
     grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
                                    sigla_muni, sigla_muni))
     
     #checar setores com todos os renda_class_pc == n_col
     
-    lista_tract <- data_micro %>% group_by(code_tract, renda_class_pc) %>%
-      summarise(n = n()) %>% ungroup() %>%
-      group_by(code_tract) %>% summarise(n_classes = length(code_tract), 
-                                         n_classes_col = length(code_tract[renda_class_pc == "n_col"])) %>%
-      filter(n_classes > n_classes_col) %>% pull(code_tract)
+    # lista_tract <- data_micro %>% group_by(code_tract, renda_class_pc) %>%
+    #   summarise(n = n()) %>% ungroup() %>%
+    #   group_by(code_tract) %>% summarise(n_classes = length(code_tract), 
+    #                                      n_classes_col = length(code_tract[renda_class_pc == "n_col"])) %>%
+    #   filter(n_classes > n_classes_col) %>% pull(code_tract)
     
-    data_micro2 <- data_micro %>% filter(code_tract %in% lista_tract) %>% select(1:12, V0606, hex) %>%
+    
+    
+    # data_micro2 <- data_micro %>% filter(code_tract %in% lista_tract) %>% select(1:12, V0606, hex) %>%
+    #   mutate(V0606 = as.factor(V0606))
+    
+    data_micro2 <- data_micro %>% select(1:12, V0606, hex) %>%
       mutate(V0606 = as.factor(V0606))
     
-
     
     
     #tema dos mapas de barras
@@ -675,7 +687,14 @@ graficos <- function(munis = "all"){
     
     
     #remocão dos habitantes de cor amarela e indígena
-    levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
+    # levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
+    
+    # data_micro2 <- data_micro2 %>% mutate(V0606 = case_when(V0606 == 1 ~ "Brancos",
+    #                                                         V0606 == 2 ~ "Pretos",
+    #                                                         V0606 == 3 ~ "Amarelos",
+    #                                                         V0606 == 4 ~ "Pardos",
+    #                                                         V0606 == 5 ~ "Pardos"))
+    
     data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
     
     
@@ -716,15 +735,16 @@ graficos <- function(munis = "all"){
 
 # Acesso à infraestrutura Cicloviária 1 - Recorte de cor e gênero --------------------------------------
 
-    # recorte_cg <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
-    #   # mutate(total = "total") %>% 
+    # recorte_cg <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>%
+    #   # mutate(total = "total") %>%
     #   mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
-    #                                      cor = case_when(cor == "pard_am_ing" ~ "Pardos",
+    #                                      cor = case_when(cor == "pard_am_ing" ~ "Pretos",
     #                                                      cor == "pretos" ~ "Pretos",
     #                                                      cor == "brancos" ~ "Brancos")) %>%
-    #   group_by(V0606, genero, teste) %>% summarise(n = n()) %>% 
-    #   ungroup() %>% group_by(V0606, genero) %>% 
-    #   summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"])
+    #   filter(teste == "OK")
+    #   # group_by(V0606, genero, teste) %>% summarise(n = n()) %>%
+    #   # ungroup() %>% group_by(V0606, genero) %>%
+    #   # summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"])
     # 
     # 
     # 
@@ -732,13 +752,21 @@ graficos <- function(munis = "all"){
     # 
     # 
     # ggplot(recorte_cg,
-    #        aes(y = prop, x = genero, fill = V0606)) + 
+    #        aes(y = prop, x = genero, fill = V0606)) +
     #   geom_col(position = position_dodge(),
-    #            width = .6) + 
+    #            width = .6)
+    # 
+    # ggplot(recorte_cg)+
+    #   geom_boxplot(aes(Rend_pc)) +
+    #   facet_wrap(~V0606)
+    # 
+    # 
+    # 
+    # +
     #   scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "blue", "grey70")) +
     #   geom_text(aes(label = scales::percent(prop), group = cor),position = position_dodge(width = .6),
     #             vjust = -0.5, size = 4.5) +
-    #   
+    # 
     #   geom_text(aes(label = scales::label_number(suffix = "K\n(hab)",
     #                                              decimal.mark = "," ,
     #                                              scale = 1e-3)(n),
@@ -775,17 +803,21 @@ graficos <- function(munis = "all"){
                              cor == "brancos" ~ "Brancos")) %>%
       mutate(
              quintil_renda = ntile(Rend_pc, 4)) %>%
+        # quintil_renda = case_when(Rend_pc < 7.1 ~ 1,
+        #                           Rend_pc < 60 ~ 2,
+        #                           Rend_pc < 398 ~ 3,
+        #                           Rend_pc >399 ~ 4)) %>%
       group_by(cor, quintil_renda, genero, teste) %>% summarise(n = n()) %>% 
       ungroup() %>% group_by(cor, quintil_renda, genero) %>% 
       summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
       mutate(class = paste(genero, cor))%>%
       mutate(id = paste(class, quintil_renda))
-    
-    
+    # library(BAMMtools)
+    # aaa <- BAMMtools::getJenksBreaks(data_micro2$Rend_pc, 4, subset = NULL)
     #teswte na renda per capita
     
-    # recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
-    #   # mutate(total = "total") %>% 
+    # recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>%
+    #   # mutate(total = "total") %>%
     #   mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
     #          cor = case_when(cor == "pard_am_ing" ~ "Pardos",
     #                          cor == "pretos" ~ "Pretos",
@@ -796,8 +828,8 @@ graficos <- function(munis = "all"){
     #                               Rend_pc < 8640/1200 ~ "Classe C",
     #                               Rend_pc < 11261/1200 ~ "Classe B",
     #                               Rend_pc > 11262/1200 ~ "Classe A")) %>%
-    #   group_by(cor, quintil_renda, genero, teste) %>% summarise(n = n()) %>% 
-    #   ungroup() %>% group_by(cor, quintil_renda, genero) %>% 
+    #   group_by(cor, quintil_renda, genero, teste) %>% summarise(n = n()) %>%
+    #   ungroup() %>% group_by(cor, quintil_renda, genero) %>%
     #   summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
     #   mutate(class = paste(genero, cor))%>%
     #   mutate(id = paste(class, quintil_renda))
@@ -862,7 +894,8 @@ graficos <- function(munis = "all"){
     
     # ggplot(recorte_rr, aes(prop, quintil_renda)) +
     #   geom_point(aes(color = class, size = n))
-    
+    # aa <- data_micro %>% group_by(V0606) %>%
+    #   summarise(prop = (n()/ nrow(data_micro))*100)
     
 
 # Cleveland Plot de acesso a infra cicloviaria ----------------------------
@@ -880,7 +913,7 @@ graficos <- function(munis = "all"){
       #            name = "Habitantes",
       #            guide="legend") +
       scale_size_continuous( range = c(0,10),
-                             limits = c(1,16000),
+                             limits = c(1,12000),
                              breaks = c(0,1000,5000,10000),
                              name = "Habitantes",
                              guide = "legend")
@@ -906,8 +939,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.6,0.90),
-                         breaks = seq(0.6,0.90, 0.05)) +
+                         limits = c(0.5,0.7),
+                         breaks = seq(0.5,0.70, 0.05)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -919,13 +952,13 @@ graficos <- function(munis = "all"){
                             # face = "bold",
                             size = 20),
         
-        plot.title = element_text(size = 25, margin = margin(b=10), family = "encode_sans_bold"),
+        plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
         plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
-        plot.caption = element_text(size = 18, margin = margin(t=10), color = "grey70", hjust = 0),
-        legend.title = element_text(size = 20, family = "encode_sans_bold"),
-        legend.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.title = element_text(size = 18, family = "encode_sans_bold"))
+        plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+        legend.title = element_text(size = 35, family = "encode_sans_bold"),
+        legend.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.title = element_text(size = 35, family = "encode_sans_bold"))
  
     
     
@@ -937,7 +970,12 @@ graficos <- function(munis = "all"){
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
-  
+    # ggsave(p_c_ciclo,
+    #        device = "png",
+    #        filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_TESTE_%s.png", sigla_muni, sigla_muni),
+    #        dpi = 300,
+    #        width = 15, height = 10, units = "cm" )
+    
     
     
     
@@ -952,7 +990,7 @@ graficos <- function(munis = "all"){
     dados_hex_intersect_ntad300 <- dados_hex_intersect_ntad300 %>%
       mutate(area = st_area(.)) %>%
       mutate(area2 = as.numeric(area)) %>%
-      filter(area2 > 120000.0)
+      filter(area2 < 60000.0)
     
     
     # mapview(dados_hex_intersect_ntad300)
@@ -981,7 +1019,7 @@ graficos <- function(munis = "all"){
       scale_fill_manual(values = c("grey70", "#FFB578", "black", "#cc3003"),
       )+
       scale_size_continuous( range = c(0,10),
-                             limits = c(1,5000),
+                             limits = c(1,7500),
                              breaks = c(0,500,1000,5000),
                              name = "Habitantes",
                              guide = "legend")
@@ -1005,8 +1043,8 @@ graficos <- function(munis = "all"){
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(1000,5000),
-                         breaks = seq(0,5000, 500)) +
+                         limits = c(2000,7500),
+                         breaks = seq(0,7500, 500)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1018,18 +1056,18 @@ graficos <- function(munis = "all"){
                             # face = "bold",
                             size = 20),
         
-        plot.title = element_text(size = 20, margin = margin(b=10), family = "encode_sans_bold"),
+        plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
         plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
-        plot.caption = element_text(size = 18, margin = margin(t=10), color = "grey70", hjust = 0),
-        legend.title = element_text(size = 20, family = "encode_sans_bold"),
-        legend.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.title = element_text(size = 18, family = "encode_sans_bold"))
+        plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+        legend.title = element_text(size = 35, family = "encode_sans_bold"),
+        legend.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.title = element_text(size = 35, family = "encode_sans_bold"))
     
     ggsave(p_b300_bike_ntad,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/13-linhasbus_300_cleveland_nao_atendidos%s.png", sigla_muni, sigla_muni),
-           dpi = 200,
+           dpi = 300,
            width = 15, height = 10, units = "cm" )
     
     

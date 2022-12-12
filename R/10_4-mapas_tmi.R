@@ -543,6 +543,86 @@ graficos_tmi <- function(munis = "all"){
     
     rm(list = ls(pattern = "temp"))
     
+    fazer_mapa_15_s <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMIST, TMISB, TMISM, TMISA) %>%
+        gather(ind, valor, TMIST:TMISA)
+      
+      
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >15, 15, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMIST", "TMISB", "TMISM", "TMISA"), 
+                            labels = c("Eq. de saúde totais", "Eq. de saúde nível 1",
+                                       "Eq. de saúde nível 2", "Eq. de saúde nível 3")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 2)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/saude/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/saude/0_%s_tmi_saude_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/saude/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/saude/0_%s_tmi_saude_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/saude/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/saude/0_%s_tmi_saude_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp13 %<-% fazer_mapa_15_s('poa', mode1 = 'bike')
+    temp14 %<-% fazer_mapa_15_s('poa', mode1 = 'transit')
+    temp15 %<-% fazer_mapa_15_s('poa', mode1 = 'walk')
+    
     
     # Escolas ------------------------------------------------------
     
@@ -945,6 +1025,86 @@ graficos_tmi <- function(munis = "all"){
     temp3 %<-% fazer_mapa_30_se('poa', mode1 = 'walk')
     rm(list = ls(pattern = "temp"))
     
+    fazer_mapa_15_se <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMIET, TMIEI, TMIEF, TMIEM) %>%
+        gather(ind, valor, TMIET:TMIEM)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >15, 15, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMIET", "TMIEI", "TMIEF", "TMIEM"), 
+                            labels = c("Eq. de educacao totais", "Eq. de educacao nível 1",
+                                       "Eq. de educacao nível 2", "Eq. de educacao nível 3")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 2)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/educacao/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/educacao/0_%s_tmi_educacao_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/educacao/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/educacao/0_%s_tmi_educacao_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/educacao/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/educacao/0_%s_tmi_educacao_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_15_se('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_15_se('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_15_se('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    
 
 # Lazer -------------------------------------------------------------------
 
@@ -1026,6 +1186,395 @@ graficos_tmi <- function(munis = "all"){
     temp3 %<-% fazer_mapa_30_lz('poa', mode1 = 'walk')
     rm(list = ls(pattern = "temp"))
     
+    fazer_mapa_15_lz <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMILZ) %>%
+        gather(ind, valor, TMILZ)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >15, 15, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMILZ"), 
+                            labels = c("Eq. de lazer")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/2_%s_tmi_lazer_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/2_%s_tmi_lazer_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/2_%s_tmi_lazer_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_15_lz('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_15_lz('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_15_lz('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    fazer_mapa_60_lz <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMILZ) %>%
+        gather(ind, valor, TMILZ)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >60, 60, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMILZ"), 
+                            labels = c("Eq. de lazer")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/3_%s_tmi_lazer_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/3_%s_tmi_lazer_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/3_%s_tmi_lazer_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_60_lz('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_60_lz('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_60_lz('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    fazer_mapa_90_lz <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMILZ) %>%
+        gather(ind, valor, TMILZ)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >90, 90, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMILZ"), 
+                            labels = c("Eq. de lazer")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/4_%s_tmi_lazer_max90.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/4_%s_tmi_lazer_max90.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/4_%s_tmi_lazer_max90.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_90_lz('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_90_lz('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_90_lz('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    fazer_mapa_120_lz <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMILZ) %>%
+        gather(ind, valor, TMILZ)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >120, 120, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMILZ"), 
+                            labels = c("Eq. de lazer")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/5_%s_tmi_lazer_max120.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/5_%s_tmi_lazer_max120.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/5_%s_tmi_lazer_max120.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_120_lz('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_120_lz('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_120_lz('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    fazer_mapa_180_lz <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMILZ) %>%
+        gather(ind, valor, TMILZ)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >180, 180, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMILZ"), 
+                            labels = c("Eq. de lazer")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/lazer/6_%s_tmi_lazer_max180.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/lazer/6_%s_tmi_lazer_max180.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/lazer/6_%s_tmi_lazer_max180.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_180_lz('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_180_lz('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_180_lz('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
 
 # Paraciclos --------------------------------------------------------------
 
@@ -1107,6 +1656,161 @@ graficos_tmi <- function(munis = "all"){
     temp3 %<-% fazer_mapa_30_pr('poa', mode1 = 'walk')
     rm(list = ls(pattern = "temp"))
     
+    fazer_mapa_15_pr <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMIPR) %>%
+        gather(ind, valor, TMIPR)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >15, 15, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMIPR"), 
+                            labels = c("Paraciclos")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/paraciclos/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/paraciclos/0_%s_tmi_paraciclos_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/paraciclos/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/paraciclos/0_%s_tmi_paraciclos_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/paraciclos/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/paraciclos/0_%s_tmi_paraciclos_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_15_pr('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_15_pr('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_15_pr('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    fazer_mapa_60_pr <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMIPR) %>%
+        gather(ind, valor, TMIPR)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >60, 60, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMIPR"), 
+                            labels = c("Paraciclos")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/paraciclos/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/paraciclos/2_%s_tmi_paraciclos_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/paraciclos/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/paraciclos/2_%s_tmi_paraciclos_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/paraciclos/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/paraciclos/2_%s_tmi_paraciclos_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_60_pr('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_60_pr('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_60_pr('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
     
 
 # Bikes Compartilhadas ----------------------------------------------------
@@ -1191,6 +1895,162 @@ graficos_tmi <- function(munis = "all"){
     temp3 %<-% fazer_mapa_30_bk('poa', mode1 = 'walk')
     rm(list = ls(pattern = "temp"))
     
+    fazer_mapa_15_bk <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMIBK) %>%
+        gather(ind, valor, TMIBK)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >15, 15, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMIBK"), 
+                            labels = c("Bicicletas Compartilhadas")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/bikes_compartilhadas/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/bikes_compartilhadas/0_%s_tmi_bikes_compartilhadas_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/bikes_compartilhadas/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/bikes_compartilhadas/0_%s_tmi_bikes_compartilhadas_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/bikes_compartilhadas/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/paraciclos/0_%s_tmi_bikes_compartilhadas_max15.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_15_bk('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_15_bk('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_15_bk('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
+    fazer_mapa_60_bk <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {
+      
+      # abrir acess
+      acess <- dados_acc_maps %>% filter(sigla_muni == sigla_munii) %>%
+        filter(mode == mode1) %>%
+        select(sigla_muni, TMIBK) %>%
+        gather(ind, valor, TMIBK)
+      
+      # abrir tiles
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+      
+      map_tiles <- read_rds(path_maptiles)
+      
+      # ajustar levels
+      acess <- acess %>%
+        mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
+        mutate(valor = ifelse(valor >60, 60, valor)) %>%
+        mutate(ind = factor(ind, 
+                            levels = c("TMIBK"), 
+                            labels = c("Bicicletas Compartilhadas")))
+      
+      
+      # fazer plots
+      plot3 <- ggplot()+
+        geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+        coord_equal() +
+        scale_fill_identity()+
+        # nova escala
+        new_scale_fill() +
+        geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6)+
+        viridis::scale_fill_viridis(option = "D",
+                                    direction = -1
+                                    # , limits = c(0, 0.72)
+                                    # , breaks = c(0.001, 0.35, 0.7)
+                                    # , labels = c(0, "35", "70%")
+        ) +
+        scale_colour_manual(values = 'transparent') +
+        facet_wrap(~ind, ncol = 1)+
+        theme_for_TMI()+
+        labs(fill = "Tempo Mínimo\n de Acesso")
+      
+      # create dir
+      if (mode1 == "bike"){
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/bicicleta/tmi/bikes_compartilhadas/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/bicicleta/tmi/bikes_compartilhadas/2_%s_tmi_bikes_compartilhadas_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 600, width = width, height = height, units = "cm")
+      } else if (mode1 == "transit") {
+        
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/transporte_publico/tmi/bikes_compartilhadas/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/transporte_publico/tmi/bikes_compartilhadas/2_%s_tmi_bikes_compartilhadas_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      } else if (mode1 == "walk") {
+        suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/caminhada/tmi/bikes_compartilhadas/', sigla_munii)))
+        
+        
+        ggsave(plot3, 
+               file= sprintf("../data/map_plots_acc/muni_%s/caminhada/tmi/paraciclos/2_%s_tmi_bikes_compartilhadas_max60.png",
+                             sigla_munii, sigla_munii), 
+               dpi = 300, width = width, height = height, units = "cm")
+        
+      }
+      
+      
+    }
+    temp1 %<-% fazer_mapa_60_bk('poa', mode1 = 'bike')
+    temp2 %<-% fazer_mapa_60_bk('poa', mode1 = 'transit')
+    temp3 %<-% fazer_mapa_60_bk('poa', mode1 = 'walk')
+    rm(list = ls(pattern = "temp"))
+    
     }
  
     # Modelo com escala personalizada -----------------------------------------
@@ -1258,6 +2118,11 @@ graficos_tmi <- function(munis = "all"){
     
   }
   
+  
+  
+  
+  
+  
   # 2. Aplica funcao ------------------------------------------
   if (munis == "all") {
     
@@ -1272,5 +2137,5 @@ graficos_tmi <- function(munis = "all"){
   
 }
 
-graficos(munis = "all")   
-graficos(munis = 'con')
+# graficos(munis = "all")   
+# graficos(munis = 'con')

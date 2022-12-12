@@ -24,12 +24,6 @@ font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fo
 sigla_muni <- 'pal'
 
 
-
-width <- 16.5
-height <- 16.5
-
-sigla_muni <- 'pal'
-
 #gráficos de ciclovias
 
 graficos <- function(munis = "all"){
@@ -307,7 +301,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -634,7 +628,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp_buffer,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/6-linhas_tp_buffer_300m_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
 
@@ -740,7 +734,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp_buffer_500,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/7-linhas_tp_buffer_500m_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -943,7 +937,7 @@ graficos <- function(munis = "all"){
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
       )+
-      scale_size(range=c(0,12),
+      scale_size(range=c(0,10),
                  # breaks=c(1,4,8,10,2),
                  # labels=c("1","4","8","10","25+"),
                  name = "Habitantes",
@@ -961,7 +955,7 @@ graficos <- function(munis = "all"){
       #                    limits = c(0,5), # baixa complexidade car                   
       #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
       scale_y_discrete(expand = c(0.4,0.4)) +
-      labs(title = "Proporção da população com acesso à infraestrutura de Transporte público")+  
+      labs(title = "População com acesso à infraestrutura de transporte público")+  
       #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
       # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
       # theme_minimal() +
@@ -969,7 +963,7 @@ graficos <- function(munis = "all"){
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
                          limits = c(0.85,0.95),
-                         breaks = seq(0.85,0.95, 0.01)) +
+                         breaks = seq(0.85,0.95, 0.025)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -981,13 +975,13 @@ graficos <- function(munis = "all"){
                             # face = "bold",
                             size = 20),
         
-        plot.title = element_text(size = 25, margin = margin(b=10), family = "encode_sans_bold"),
+        plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
         plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
-        plot.caption = element_text(size = 18, margin = margin(t=10), color = "grey70", hjust = 0),
-        legend.title = element_text(size = 20, family = "encode_sans_bold"),
-        legend.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.title = element_text(size = 18, family = "encode_sans_bold"))
+        plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+        legend.title = element_text(size = 35, family = "encode_sans_bold"),
+        legend.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.title = element_text(size = 35, family = "encode_sans_bold"))
     
     
     
@@ -996,7 +990,7 @@ graficos <- function(munis = "all"){
     ggsave(p_b300_bus,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s.png", sigla_muni, sigla_muni),
-           dpi = 200,
+           dpi = 300,
            width = 15, height = 10, units = "cm" )
     
     
@@ -1094,7 +1088,7 @@ graficos <- function(munis = "all"){
       #                    limits = c(0,5), # baixa complexidade car                   
       #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
       scale_y_discrete(expand = c(0.4,0.4)) +
-      labs(title = "Proporção da população sem acesso à infraestrutura de Transporte público")+  
+      labs(title = "População sem acesso à infraestrutura de Transporte público")+  
       #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
       # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
       # theme_minimal() +
@@ -1114,18 +1108,18 @@ graficos <- function(munis = "all"){
                             # face = "bold",
                             size = 20),
         
-        plot.title = element_text(size = 20, margin = margin(b=10), family = "encode_sans_bold"),
+        plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
         plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
-        plot.caption = element_text(size = 18, margin = margin(t=10), color = "grey70", hjust = 0),
-        legend.title = element_text(size = 20, family = "encode_sans_bold"),
-        legend.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.title = element_text(size = 18, family = "encode_sans_bold"))
+        plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+        legend.title = element_text(size = 35, family = "encode_sans_bold"),
+        legend.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.title = element_text(size = 35, family = "encode_sans_bold"))
     
     ggsave(p_b300_bus_ntad,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/12-linhasbus_300_cleveland_nao_atendidos%s.png", sigla_muni, sigla_muni),
-           dpi = 200,
+           dpi = 300,
            width = 15, height = 10, units = "cm" )
     
     # %>% 
@@ -1251,7 +1245,7 @@ graficos <- function(munis = "all"){
               alpha=1,
               size = 0)+
       
-      geom_sf(data = st_transform(aglomerados_natend500, 3857),
+      geom_sf(data = st_transform(aglomerados_natend300, 3857),
               aes(color = '#0f805e'),
               # color = '#0f805e',
               # color = NA,
@@ -1394,7 +1388,7 @@ graficos <- function(munis = "all"){
     ggsave(map_aglomerados_ntad,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/14-linhas_tp_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
+           dpi = 200,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -1719,7 +1713,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
 
       
-      geom_sf(data = st_transform(aglomerados_natend500, 3857),
+      geom_sf(data = st_transform(aglomerados_natend300, 3857),
               aes(color = '#0f805e'),
               # color = '#0f805e',
               # color = NA,
@@ -1867,7 +1861,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     ggsave(map_frequencias2,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
+           dpi = 250,
            width = width, height = height, units = "cm" )
     
     

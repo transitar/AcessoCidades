@@ -1,7 +1,7 @@
 #download de dados cicloviários do osm
 source('./R/fun/setup.R')
 
-sigla_muni = "poa"
+sigla_muni = "pal"
 
 create_diretorios <- function(sigla_muni){
   

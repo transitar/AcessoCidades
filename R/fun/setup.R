@@ -48,6 +48,7 @@ suppressMessages(library(ggthemes))
 suppressMessages(library(rlist))
 suppressMessages(library(pipeR))
 suppressMessages(library(xlsx))
+suppressMessages(library(ggspatial))
 
 #cores
 
@@ -68,6 +69,22 @@ colors_acc <- c("#090e20","#111B3F", "#21367D",
                 "#BB4115", "#D34F07", "#E4753A",
                 "#EB9432", "#F5C226", "#FAD920",
                 "#FDE63A", "#FFF354")
+
+aproxima_muni <- function(sigla_muni) {
+  
+  if (sigla_muni == "pal") {
+    coord_sf(ylim = c(-1130754,-1166246), xlim = c(-5403046,-5358070), expand = FALSE)
+  }
+  
+}
+
+aproxima_muni_zoom <- function(sigla_muni) {
+  
+  if (sigla_muni == "pal") {
+    coord_sf(ylim = c(-1130754,-1166246), xlim = c(-5398510,-5358070), expand = FALSE)
+  }
+  
+}
 
 
 munis_list <- list(

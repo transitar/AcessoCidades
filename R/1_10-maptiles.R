@@ -21,7 +21,7 @@ Sys.setenv(MAPBOX_API_KEY = my_api$V1)
 
 Sys.getenv("MAPBOX_API_KEY")
 
-sigla_muni = 'slz'
+sigla_muni = 'PAL'
 ano = 2019
 
 # 2.1) Baixar e salvar os maps tiles de todos os municipios ---------------------
@@ -41,7 +41,7 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
   
   temp_sf <- read_rds(muni_folder_path_shape) 
   
-  temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(5000)
+  temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(15000)
   
   # mapview(temp_sf)
   
@@ -55,7 +55,8 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
     # download tile based on custom template (style)
   
     tile_for <- cc_location(temp_sf2,
-                            type = "styles/v1/jlucasao/clal64hz7000414qjw5rxkv7r/tiles",
+                            type = "styles/v1/jlucasao/clbdnab24000014qpo8d3yl6g/tiles"
+                            # type = "styles/v1/jlucasao/clal64hz7000414qjw5rxkv7r/tiles",
                             # type = "styles/v1/jlucasao/cl8xeo1n4001515peioq6rk7f/tiles",
                             # mapbox://styles/jlucasao/cl8boo6f6002c14mdxm7dr32r
                             # mapbox://styles/v1/jlucasao/cl8boo6f6002c14mdxm7dr32r

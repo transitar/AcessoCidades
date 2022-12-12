@@ -11,13 +11,13 @@ educacao_filter <- function(ano, download = FALSE) {
   # a <- fread("../../data-raw/censo_escolar/2017/MATRICULA_CO.CSV", nrow = 10)
   
   # 1) Abrir e juntar dados de matriculas ------------------------------------
-  matriculas <- lapply(list.files(sprintf("../../data-raw/censo_escolar/%s", ano), 
-                                  pattern = "MATRICULA", full.names = TRUE),
-                       fread, select = c("CO_ENTIDADE", "TP_DEPENDENCIA", "TP_ETAPA_ENSINO", 
-                                         "IN_REGULAR", "IN_PROFISSIONALIZANTE",
-                                         "QT_MAT_BAS", "QT_MAT_INF", "QT_MAT_FUND",
-                                         "QT_MAT_MED", "QT_MAT_PROF")) %>% 
-    rbindlist()
+  # matriculas <- lapply(list.files(sprintf("../../data-raw/censo_escolar/%s", ano), 
+  #                                 pattern = "MATRICULA", full.names = TRUE),
+  #                      fread, select = c("CO_ENTIDADE", "TP_DEPENDENCIA", "TP_ETAPA_ENSINO", 
+  #                                        "IN_REGULAR", "IN_PROFISSIONALIZANTE",
+  #                                        "QT_MAT_BAS", "QT_MAT_INF", "QT_MAT_FUND",
+  #                                        "QT_MAT_MED", "QT_MAT_PROF")) %>% 
+  #   rbindlist()
   
   matriculas <- fread(sprintf('../data-raw/censo_escolar/%s/dados/microdados_ed_basica_%s.csv',
                               ano, ano)) %>%
@@ -38,66 +38,66 @@ educacao_filter <- function(ano, download = FALSE) {
   
   # categorias a serem escolhidas e re-categorizadas
   # checar arquivo Dicionário de Dados da Educaç╞o Básica 2017.excel na mesma pasta
-  matriculas[,
-             mat_tipo := fcase(
-               TP_ETAPA_ENSINO == 1 , "mat_infantil"   , # - Educação Infantil - Creche
-               TP_ETAPA_ENSINO == 2 , "mat_fundamental"   , # - Educação Infantil - Pré-escola
-               TP_ETAPA_ENSINO == 4 , "mat_medio" # - Ensino Fundamental de 8 anos - 1ª Série
-               # TP_ETAPA_ENSINO == 5 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 2ª Série
-               # TP_ETAPA_ENSINO == 6 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 3ª Série
-               # TP_ETAPA_ENSINO == 7 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 4ª Série
-               # TP_ETAPA_ENSINO == 8 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 5ª Série
-               # TP_ETAPA_ENSINO == 9 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 6ª Série
-               # TP_ETAPA_ENSINO == 10, "mat_fundamental", # - Ensino Fundamental de 8 anos - 7ª Série
-               # TP_ETAPA_ENSINO == 11, "mat_fundamental", # - Ensino Fundamental de 8 anos - 8ª Série
-               # TP_ETAPA_ENSINO == 14, "mat_fundamental", # - Ensino Fundamental de 9 anos - 1º Ano
-               # TP_ETAPA_ENSINO == 15, "mat_fundamental", # - Ensino Fundamental de 9 anos - 2º Ano
-               # TP_ETAPA_ENSINO == 16, "mat_fundamental", # - Ensino Fundamental de 9 anos - 3º Ano
-               # TP_ETAPA_ENSINO == 17, "mat_fundamental", # - Ensino Fundamental de 9 anos - 4º Ano
-               # TP_ETAPA_ENSINO == 18, "mat_fundamental", # - Ensino Fundamental de 9 anos - 5º Ano
-               # TP_ETAPA_ENSINO == 19, "mat_fundamental", # - Ensino Fundamental de 9 anos - 6º Ano
-               # TP_ETAPA_ENSINO == 20, "mat_fundamental", # - Ensino Fundamental de 9 anos - 7º Ano
-               # TP_ETAPA_ENSINO == 21, "mat_fundamental", # - Ensino Fundamental de 9 anos - 8º Ano
-               # TP_ETAPA_ENSINO == 41, "mat_fundamental", # - Ensino Fundamental de 9 anos - 9º Ano
-               # TP_ETAPA_ENSINO == 25, "mat_medio"      , # - Ensino Médio - 1ª Série
-               # TP_ETAPA_ENSINO == 26, "mat_medio"      , # - Ensino Médio - 2ª Série
-               # TP_ETAPA_ENSINO == 27, "mat_medio"      , # - Ensino Médio - 3ª Série
-               # TP_ETAPA_ENSINO == 28, "mat_medio"      , # - Ensino Médio - 4ª Série
-               # TP_ETAPA_ENSINO == 29, "mat_medio"      , # - Ensino Médio - Não Seriada
-               # TP_ETAPA_ENSINO == 30, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 1ª Série
-               # TP_ETAPA_ENSINO == 31, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 2ª Série
-               # TP_ETAPA_ENSINO == 32, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 3ª Série
-               # TP_ETAPA_ENSINO == 33, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 4ª Série
-               # TP_ETAPA_ENSINO == 34, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) Não Seriada
-               # TP_ETAPA_ENSINO == 35, "mat_medio"      , # - Ensino Médio - Normal/Magistério 1ª Série
-               # TP_ETAPA_ENSINO == 36, "mat_medio"      , # - Ensino Médio - Normal/Magistério 2ª Série
-               # TP_ETAPA_ENSINO == 37, "mat_medio"      , # - Ensino Médio - Normal/Magistério 3ª Série
-               # TP_ETAPA_ENSINO == 38, "mat_medio"      , # - Ensino Médio - Normal/Magistério 4ª Série
-               # TP_ETAPA_ENSINO == 39, "mat_medio"      , # - Curso Técnico - Concomitante
-               # TP_ETAPA_ENSINO == 40, "mat_medio"      , # - Curso Técnico - Subsequente
-               # TP_ETAPA_ENSINO == 68, NA_character_    , # - Curso FIC Concomitante
-               # TP_ETAPA_ENSINO == 65, NA_character_    , # - EJA - Ensino Fundamental - Projovem Urbano
-               # TP_ETAPA_ENSINO == 67, NA_character_    , # - Curso FIC integrado na modalidade EJA  - Nível Médio
-               # TP_ETAPA_ENSINO == 69, NA_character_    , # - EJA - Ensino Fundamental -  Anos iniciais
-               # TP_ETAPA_ENSINO == 70, NA_character_    , # - EJA - Ensino Fundamental -  Anos finais
-               # TP_ETAPA_ENSINO == 71, NA_character_    , # - EJA - Ensino Médio
-               # TP_ETAPA_ENSINO == 72, NA_character_    , # - EJA - Ensino Fundamental  - Anos iniciais e Anos finais4
-               # TP_ETAPA_ENSINO == 73, NA_character_    , # - Curso FIC integrado na modalidade EJA - Nível Fundamental (EJA integrada à Educação Profissional de Nível Fundamental)
-               # TP_ETAPA_ENSINO == 74, NA_character_    # - Curso Técnico Integrado na Modalidade EJA (EJA integrada à Educação Profissional de Nível Médio)
-             )]
+  # matriculas[,
+  #            mat_tipo := fcase(
+  #              TP_ETAPA_ENSINO == 1 , "mat_infantil"   , # - Educação Infantil - Creche
+  #              TP_ETAPA_ENSINO == 2 , "mat_fundamental"   , # - Educação Infantil - Pré-escola
+  #              TP_ETAPA_ENSINO == 4 , "mat_medio" # - Ensino Fundamental de 8 anos - 1ª Série
+  #              # TP_ETAPA_ENSINO == 5 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 2ª Série
+  #              # TP_ETAPA_ENSINO == 6 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 3ª Série
+  #              # TP_ETAPA_ENSINO == 7 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 4ª Série
+  #              # TP_ETAPA_ENSINO == 8 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 5ª Série
+  #              # TP_ETAPA_ENSINO == 9 , "mat_fundamental", # - Ensino Fundamental de 8 anos - 6ª Série
+  #              # TP_ETAPA_ENSINO == 10, "mat_fundamental", # - Ensino Fundamental de 8 anos - 7ª Série
+  #              # TP_ETAPA_ENSINO == 11, "mat_fundamental", # - Ensino Fundamental de 8 anos - 8ª Série
+  #              # TP_ETAPA_ENSINO == 14, "mat_fundamental", # - Ensino Fundamental de 9 anos - 1º Ano
+  #              # TP_ETAPA_ENSINO == 15, "mat_fundamental", # - Ensino Fundamental de 9 anos - 2º Ano
+  #              # TP_ETAPA_ENSINO == 16, "mat_fundamental", # - Ensino Fundamental de 9 anos - 3º Ano
+  #              # TP_ETAPA_ENSINO == 17, "mat_fundamental", # - Ensino Fundamental de 9 anos - 4º Ano
+  #              # TP_ETAPA_ENSINO == 18, "mat_fundamental", # - Ensino Fundamental de 9 anos - 5º Ano
+  #              # TP_ETAPA_ENSINO == 19, "mat_fundamental", # - Ensino Fundamental de 9 anos - 6º Ano
+  #              # TP_ETAPA_ENSINO == 20, "mat_fundamental", # - Ensino Fundamental de 9 anos - 7º Ano
+  #              # TP_ETAPA_ENSINO == 21, "mat_fundamental", # - Ensino Fundamental de 9 anos - 8º Ano
+  #              # TP_ETAPA_ENSINO == 41, "mat_fundamental", # - Ensino Fundamental de 9 anos - 9º Ano
+  #              # TP_ETAPA_ENSINO == 25, "mat_medio"      , # - Ensino Médio - 1ª Série
+  #              # TP_ETAPA_ENSINO == 26, "mat_medio"      , # - Ensino Médio - 2ª Série
+  #              # TP_ETAPA_ENSINO == 27, "mat_medio"      , # - Ensino Médio - 3ª Série
+  #              # TP_ETAPA_ENSINO == 28, "mat_medio"      , # - Ensino Médio - 4ª Série
+  #              # TP_ETAPA_ENSINO == 29, "mat_medio"      , # - Ensino Médio - Não Seriada
+  #              # TP_ETAPA_ENSINO == 30, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 1ª Série
+  #              # TP_ETAPA_ENSINO == 31, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 2ª Série
+  #              # TP_ETAPA_ENSINO == 32, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 3ª Série
+  #              # TP_ETAPA_ENSINO == 33, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) 4ª Série
+  #              # TP_ETAPA_ENSINO == 34, "mat_medio"      , # - Curso Técnico Integrado (Ensino Médio Integrado) Não Seriada
+  #              # TP_ETAPA_ENSINO == 35, "mat_medio"      , # - Ensino Médio - Normal/Magistério 1ª Série
+  #              # TP_ETAPA_ENSINO == 36, "mat_medio"      , # - Ensino Médio - Normal/Magistério 2ª Série
+  #              # TP_ETAPA_ENSINO == 37, "mat_medio"      , # - Ensino Médio - Normal/Magistério 3ª Série
+  #              # TP_ETAPA_ENSINO == 38, "mat_medio"      , # - Ensino Médio - Normal/Magistério 4ª Série
+  #              # TP_ETAPA_ENSINO == 39, "mat_medio"      , # - Curso Técnico - Concomitante
+  #              # TP_ETAPA_ENSINO == 40, "mat_medio"      , # - Curso Técnico - Subsequente
+  #              # TP_ETAPA_ENSINO == 68, NA_character_    , # - Curso FIC Concomitante
+  #              # TP_ETAPA_ENSINO == 65, NA_character_    , # - EJA - Ensino Fundamental - Projovem Urbano
+  #              # TP_ETAPA_ENSINO == 67, NA_character_    , # - Curso FIC integrado na modalidade EJA  - Nível Médio
+  #              # TP_ETAPA_ENSINO == 69, NA_character_    , # - EJA - Ensino Fundamental -  Anos iniciais
+  #              # TP_ETAPA_ENSINO == 70, NA_character_    , # - EJA - Ensino Fundamental -  Anos finais
+  #              # TP_ETAPA_ENSINO == 71, NA_character_    , # - EJA - Ensino Médio
+  #              # TP_ETAPA_ENSINO == 72, NA_character_    , # - EJA - Ensino Fundamental  - Anos iniciais e Anos finais4
+  #              # TP_ETAPA_ENSINO == 73, NA_character_    , # - Curso FIC integrado na modalidade EJA - Nível Fundamental (EJA integrada à Educação Profissional de Nível Fundamental)
+  #              # TP_ETAPA_ENSINO == 74, NA_character_    # - Curso Técnico Integrado na Modalidade EJA (EJA integrada à Educação Profissional de Nível Médio)
+  #            )]
   
   # table(matriculas$mat_tipo, useNA = "always")
   
   # tirar NAs
-  matriculas <- matriculas[!is.na(mat_tipo)]
-  # agrupar por escola e tipo de matricula
-  matriculas_group <- matriculas[, .(.N), by = .(CO_ENTIDADE, mat_tipo)]
-  
-  # transformar para formato largo
-  matriculas_group_wide <- tidyr::pivot_wider(matriculas_group,
-                                              names_from = mat_tipo,
-                                              values_from = N,
-                                              values_fill = 0)
+  # matriculas <- matriculas[!is.na(mat_tipo)]
+  # # agrupar por escola e tipo de matricula
+  # matriculas_group <- matriculas[, .(.N), by = .(CO_ENTIDADE, mat_tipo)]
+  # 
+  # # transformar para formato largo
+  # matriculas_group_wide <- tidyr::pivot_wider(matriculas_group,
+  #                                             names_from = mat_tipo,
+  #                                             values_from = N,
+  #                                             values_fill = 0)
   
   
   # 2) Ler escolas do ano do censo escolar ---------------------------------------------------------
@@ -131,7 +131,9 @@ educacao_filter <- function(ano, download = FALSE) {
   # }
   
   # colunas de interesse: 
-  colunas <- c(c("CO_ENTIDADE", "NO_ENTIDADE", "CO_MUNICIPIO",
+  colunas <- c(c("CO_ENTIDADE", "NO_ENTIDADE","NO_MUNICIPIO", "NO_UF","CO_MUNICIPIO",
+                 "DS_ENDERECO", "NU_ENDERECO", "DS_COMPLEMENTO",
+                 "NO_BAIRRO", "CO_CEP",
                  # "IN_COMUM_CRECHE", "IN_COMUM_PRE", 
                  # "IN_COMUM_FUND_AI", "IN_COMUM_FUND_AF", 
                  # "IN_COMUM_MEDIO_MEDIO", "IN_COMUM_MEDIO_NORMAL",
@@ -150,11 +152,11 @@ educacao_filter <- function(ano, download = FALSE) {
   escolas <- fread(sprintf("../data-raw/censo_escolar/%s/dados/microdados_ed_basica_%s.csv", ano, ano),
                    select = colunas)
   # rename funcionarios variable
-  if (ano != 2019) {
-    
-    colnames(escolas)[ncol(escolas)] <- "NU_FUNCIONARIOS"
-    
-  }
+  # if (ano != 2019) {
+  #   
+  #   colnames(escolas)[ncol(escolas)] <- "NU_FUNCIONARIOS"
+  #   
+  # }
   
   # format columns
   escolas <- janitor::clean_names(escolas)
@@ -181,50 +183,127 @@ educacao_filter <- function(ano, download = FALSE) {
   escolas_fim$in_local_func_prisional_socio <- NULL
   
   
+  
+  
+  
   # 3) trazer matriculas -------------------------------------------------------
   
   # usando inner_join para manter apenas escolas com matriculas que nao sejam EJA
-  escolas_fim_mat <- inner_join(
-    escolas_fim, 
-    matriculas_group_wide,
-    by = c("co_entidade" = "CO_ENTIDADE"),
-    sort = FALSE
-  )
   
-  sum(is.na(escolas_fim_mat$mat_infatil))
-  sum(is.na(escolas_fim_mat$mat_fundamental))
-  sum(is.na(escolas_fim_mat$mat_medio))
+  escolas_fim_matriculas <- left_join(escolas_fim, matriculas, by = c("co_entidade"="CO_ENTIDADE"))
+  
+  #coluna com o endereço completo
+  
+  escolas_fim_mat_end <- escolas_fim_matriculas %>% 
+    mutate(adress = paste(ds_endereco, nu_endereco, ds_complemento, no_bairro, co_cep),
+           city = no_municipio,
+           state = no_uf,
+           country = "Brasil")
+  
+  create_diretorios <- function(sigla_muni){
+    
+    dir.create(sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/",ano, sigla_muni, ano), recursive = TRUE)
+    
+  }
+  
+  walk(munis_list$munis_df$abrev_muni, create_diretorios)
+  
+  sigla_munii <- "pal"
+  escolas_censo_muni <- function(sigla_munii){
+    
+    escolas_muni <- escolas_fim_mat_end %>%
+      filter(co_municipio == munis_list$munis_metro$code_muni[which(munis_list$munis_metro$abrev_muni==sigla_munii)])
+    
+    write.csv(escolas_muni, sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_sem_geocode_%s.csv",
+                                    ano,
+                                    sigla_muni,
+                                    ano,
+                                    sigla_muni,
+                                    ano))
+    
+    # Geocoding a csv column of "addresses" in R
+    
+    #load ggmap
+    library(ggmap)
+    register_google(key = 'AIzaSyAvvXrD3sI8PVxKiZyP16hFxGKrYfP2vLY')
+
+    # Initialize the data frame
+    escolas_to_geocode <- escolas_muni %>% mutate(addresses = paste(adress, city, state, country)) %>%
+      mutate(addresses = stringi::stri_enc_toutf8(addresses))
+    escolas_to_geocode$addresses <- gsub('[^[:alnum:] ]','',escolas_to_geocode$addresses)
+    
+    escolas_to_geocode_lat_lon <- geocode(escolas_to_geocode$addresses)
+    escolas_geocoded <- cbind(escolas_to_geocode, escolas_to_geocode_lat_lon)
+    escolas_geocoded_sf <- st_as_sf(escolas_geocoded, coords = c("lon", "lat"), crs = 4326)
+    # mapview(escolas_geocoded_sf)
+    
+    # Loop through the addresses to get the latitude and longitude of each address and add it to the
+    # origAddress data frame in new columns lat and lon
+    # Write a CSV file containing origAddress to the working directory
+    write_rds(escolas_geocoded_sf, sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_geocode_%s.rds",
+                                    ano,
+                                    sigla_muni,
+                                    ano,
+                                    sigla_muni,
+                                    ano))
+
+    
+    
+    
+  }
+  
+  # for (i in munis_list$munis_df$abrev_muni){
+  #   escolas_censo_muni(i)
+  # }
+  # walk(munis_list$munis_df$abrev_muni, escolas_censo_muni)
+  
+  
+  
+  
+  
+  
+  # escolas_fim_mat <- inner_join(
+  #   escolas_fim, 
+  #   matriculas_group_wide,
+  #   by = c("co_entidade" = "CO_ENTIDADE"),
+  #   sort = FALSE
+  # )
+  
+  # sum(is.na(escolas_fim_mat$mat_infatil))
+  # sum(is.na(escolas_fim_mat$mat_fundamental))
+  # sum(is.na(escolas_fim_mat$mat_medio))
   
   
   # 4) Selecionar variaveis e salvar ---------------
   # after 2019, variable 'nu_funcionarios' was descontinued
-  if (ano %in% c(2017, 2018)) {
-    
-    escolas_fim_mat <- escolas_fim_mat %>%
-      mutate(ano = ano) %>%
-      select(co_entidade, ano, code_muni = co_municipio, no_entidade, 
-             mat_infantil, mat_fundamental, mat_medio, 
-             nu_funcionarios
-      )
-    
-    
-  } else {
-    
-    
-    escolas_fim_mat <- escolas_fim_mat %>%
-      mutate(ano = ano) %>%
-      select(co_entidade, ano,  code_muni = co_municipio, no_entidade, 
-             mat_infantil, mat_fundamental, mat_medio
-      )
-    
-  }
+  # if (ano %in% c(2017, 2018)) {
+  #   
+  #   escolas_fim_mat <- escolas_fim_mat %>%
+  #     mutate(ano = ano) %>%
+  #     select(co_entidade, ano, code_muni = co_municipio, no_entidade, 
+  #            mat_infantil, mat_fundamental, mat_medio, 
+  #            nu_funcionarios
+  #     )
+  #   
+  #   
+  # } else {
+  #   
+  #   
+  #   escolas_fim_mat <- escolas_fim_mat %>%
+  #     mutate(ano = ano) %>%
+  #     select(co_entidade, ano,  code_muni = co_municipio, no_entidade, 
+  #            mat_infantil, mat_fundamental, mat_medio
+  #     )
+  #   
+  # }
   
-  message("Total de matriculas nivel mat_infantil: ", sum(escolas_fim_mat$mat_infantil, na.rm = TRUE))
-  message("Total de matriculas nivel mat_fundamental: ", sum(escolas_fim_mat$mat_fundamental, na.rm = TRUE))
-  message("Total de matriculas nivel mat_medio: ", sum(escolas_fim_mat$mat_medio, na.rm = TRUE))
+  # message("Total de matriculas nivel mat_infantil: ", sum(escolas_fim_mat$mat_infantil, na.rm = TRUE))
+  # message("Total de matriculas nivel mat_fundamental: ", sum(escolas_fim_mat$mat_fundamental, na.rm = TRUE))
+  # message("Total de matriculas nivel mat_medio: ", sum(escolas_fim_mat$mat_medio, na.rm = TRUE))
   
-  # 4) salvar ---------------------------
-  write_rds(escolas_fim_mat, sprintf("../../data/acesso_oport/educacao/%s/educacao_%s_filter.rds", ano, ano), compress = 'gz')
+  # 4) salvar escolas todos os munis
+  
+  write_csv(escolas_fim_mat_end, '../data-raw/censo_escolar/2021/escolas_filtradas_sem_geocode.csv')
   
   
 }

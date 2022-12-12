@@ -11,7 +11,7 @@ library(patchwork)
 width <- 16.5
 height <- 16.5
 
-sigla_muni <- 'pal'
+sigla_muni <- 'poa'
 
 
 graficos <- function(munis = "all"){
@@ -79,7 +79,7 @@ graficos <- function(munis = "all"){
     dados_acc_tp <- dados_acc %>%
       filter(mode == "transit")
     
-    mapview(dados_acc, zcol = "CMATT30")
+    # mapview(dados_acc, zcol = "CMATT30")
     # mapview(dados_acc_tp, zcol = "CMATT30")
     
     colors_purple <- c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
@@ -212,9 +212,9 @@ graficos <- function(munis = "all"){
       
       
     }
-    fazer_mapa_1530_t('poa', mode1 = 'bike')
-    fazer_mapa_1530_t('poa', mode1 = 'transit')
-    fazer_mapa_1530_t('poa', mode1 = 'walk')
+    temp1 %<-% fazer_mapa_1530_t('poa', mode1 = 'bike')
+    temp1 %<-% fazer_mapa_1530_t('poa', mode1 = 'transit')
+    temp1 %<-% fazer_mapa_1530_t('poa', mode1 = 'walk')
     
 
     fazer_mapa_4560_t <- function(sigla_munii, mode1, cols = 2, width = 14, height = 10) {

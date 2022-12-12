@@ -35,6 +35,14 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # status message
   message('Woking on city ', sigla_muni, ' at year ', ano,  '\n')
   
+  dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+                                      sigla_muni, sigla_muni))
+  hex_com_pop <- dados_simulacao %>% group_by(hex) %>%
+    summarise(n = n()) %>% filter(n>0) %>% pull(hex)
+  
+  # hex_origens <- hex_orig %>%
+  #   filter(if_all(n_jobs:lazer_tot, ~ !.x  %in% 0))
+  
   # identifficar modo(s) de transportes
   modo <- munis_list$munis_modo[abrev_muni == sigla_muni & ano_modo == ano]$modo
   
@@ -44,8 +52,13 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     
     
     #mudar pra all
-    ttmatrix <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_transit_%s_%s_r5_pico.csv",
+    ttmatrix <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_all_%s_%s_r5.csv",
                                  ano, sigla_muni, ano, sigla_muni))
+    
+    ttmatrix2 <- ttmatrix %>%
+      filter(origin %in% hex_com_pop)
+    
+    ttmatrix <- ttmatrix2
     
     if (modo == "ativo") ttmatrix <- ttmatrix[mode %in% c("bike", "walk")] else ttmatrix
     
@@ -110,11 +123,19 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     
   } else {
   
-  hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
-                                      n_jobs, S001, S002, S003,  
-                                      S004, E001, E002, E003,
-                                      E004, M001, M002, M003,
-                                      M004, lazer_tot, paraciclos)]
+  # hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
+  #                                     n_jobs, S001, S002, S003,  
+  #                                     S004, E001, E002, E003,
+  #                                     E004, M001, M002, M003,
+  #                                     M004, lazer_tot, paraciclos)]
+    
+    hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
+                                        n_jobs, S001, S002, S003,  
+                                        S004, E001, E002, E003,
+                                        E004, M001, M002, M003,
+                                        M004, lazer_tot)]
+    
+    
   }
   
   # hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
@@ -183,16 +204,29 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     } else {
     
     # Join2 -  Merge dados de destino na matrix de tempo de viagem
-    ttmatrix <- ttmatrix[hex_dest, on = c("destination" = "id_hex"),  
-                         c("empregos_total", "saude_total","saude_baixa","saude_media",
-                           "saude_alta", "edu_total", "edu_infantil", "edu_fundamental",
-                           "edu_medio","mat_total","mat_infantil","mat_fundamental",
-                           "mat_medio", "lazer_total", "paraciclos") :=
-                           list(n_jobs,
-                                S001, S002, S003, S004,
-                                E001,E002,E003,E004,
-                                M001, M002, M003, M004,
-                                lazer_tot, paraciclos)] 
+      ttmatrix <- ttmatrix[hex_dest, on = c("destination" = "id_hex"),  
+                           c("empregos_total", "saude_total","saude_baixa","saude_media",
+                             "saude_alta", "edu_total", "edu_infantil", "edu_fundamental",
+                             "edu_medio","mat_total","mat_infantil","mat_fundamental",
+                             "mat_medio", "lazer_total") :=
+                             list(n_jobs,
+                                  S001, S002, S003, S004,
+                                  E001,E002,E003,E004,
+                                  M001, M002, M003, M004,
+                                  lazer_tot)] 
+      
+      
+      
+    # ttmatrix <- ttmatrix[hex_dest, on = c("destination" = "id_hex"),  
+    #                      c("empregos_total", "saude_total","saude_baixa","saude_media",
+    #                        "saude_alta", "edu_total", "edu_infantil", "edu_fundamental",
+    #                        "edu_medio","mat_total","mat_infantil","mat_fundamental",
+    #                        "mat_medio", "lazer_total", "paraciclos") :=
+    #                        list(n_jobs,
+    #                             S001, S002, S003, S004,
+    #                             E001,E002,E003,E004,
+    #                             M001, M002, M003, M004,
+    #                             lazer_tot, paraciclos)] 
     
     }
     
@@ -278,6 +312,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     } else {
     
     acess_cma <- "CMA"
+    
+    
     atividade_cma <- c(
       # emprego
       "TT",
@@ -288,10 +324,24 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       # educacao - matriculas
       "MT", "MI", "MF", "MM",
       # lazer
-      "LZ",
-      # paraciclos
-      "PR"
+      "LZ"
+
     )
+    
+    # atividade_cma <- c(
+    #   # emprego
+    #   "TT",
+    #   # saude
+    #   "ST", "SB", "SM", "SA", 
+    #   # educacao - escolas
+    #   "ET", "EI", "EF", "EM",
+    #   # educacao - matriculas
+    #   "MT", "MI", "MF", "MM",
+    #   # lazer
+    #   "LZ",
+    #   # paraciclos
+    #   "PR"
+    # )
     
     }
     # criar dummy para tt
@@ -340,40 +390,81 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       
     } else {
     
-    grid_cma <- expand.grid(acess_cma, atividade_cma, tt, stringsAsFactors = FALSE) %>%
-      rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
-      # adicionar colunas de time threshold  para cada um dos modos
-      mutate(tt_tp = case_when(
-        tt_sigla == 1 ~ 15,
-        tt_sigla == 2 ~ 30,
-        tt_sigla == 3 ~ 45,
-        tt_sigla == 4 ~ 60,
-        tt_sigla == 5 ~ 75
-      )) %>%
-      mutate(tt_ativo = case_when(
-        tt_sigla == 1 ~ 15,
-        tt_sigla == 2 ~ 30,
-        tt_sigla == 3 ~ 45,
-        tt_sigla == 4 ~ 60,
-        tt_sigla == 5 ~ 75
-      )) %>%
-      mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
-      mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
-      mutate(atividade_nome = case_when(atividade_sigla == "TT" ~ "empregos_total",
-                                        atividade_sigla == "ST" ~ "saude_total",
-                                        atividade_sigla == "SB" ~ "saude_baixa",
-                                        atividade_sigla == "SM" ~ "saude_media",
-                                        atividade_sigla == "SA" ~ "saude_alta",
-                                        atividade_sigla == "ET" ~ "edu_total",
-                                        atividade_sigla == "EF" ~ "edu_fundamental",
-                                        atividade_sigla == "EM" ~ "edu_medio",
-                                        atividade_sigla == "EI" ~ "edu_infantil",
-                                        atividade_sigla == "MT" ~ "mat_total",
-                                        atividade_sigla == "MF" ~ "mat_fundamental",
-                                        atividade_sigla == "MM" ~ "mat_medio",
-                                        atividade_sigla == "MI" ~ "mat_infantil",
-                                        atividade_sigla == "LZ" ~ "lazer_total",
-                                        atividade_sigla == "PR" ~ "paraciclos"))
+      
+      grid_cma <- expand.grid(acess_cma, atividade_cma, tt, stringsAsFactors = FALSE) %>%
+        rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
+        # adicionar colunas de time threshold  para cada um dos modos
+        mutate(tt_tp = case_when(
+          tt_sigla == 1 ~ 15,
+          tt_sigla == 2 ~ 30,
+          tt_sigla == 3 ~ 45,
+          tt_sigla == 4 ~ 60,
+          tt_sigla == 5 ~ 75
+        )) %>%
+        mutate(tt_ativo = case_when(
+          tt_sigla == 1 ~ 15,
+          tt_sigla == 2 ~ 30,
+          tt_sigla == 3 ~ 45,
+          tt_sigla == 4 ~ 60,
+          tt_sigla == 5 ~ 75
+        )) %>%
+        mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
+        mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
+        mutate(atividade_nome = case_when(atividade_sigla == "TT" ~ "empregos_total",
+                                          atividade_sigla == "ST" ~ "saude_total",
+                                          atividade_sigla == "SB" ~ "saude_baixa",
+                                          atividade_sigla == "SM" ~ "saude_media",
+                                          atividade_sigla == "SA" ~ "saude_alta",
+                                          atividade_sigla == "ET" ~ "edu_total",
+                                          atividade_sigla == "EF" ~ "edu_fundamental",
+                                          atividade_sigla == "EM" ~ "edu_medio",
+                                          atividade_sigla == "EI" ~ "edu_infantil",
+                                          atividade_sigla == "MT" ~ "mat_total",
+                                          atividade_sigla == "MF" ~ "mat_fundamental",
+                                          atividade_sigla == "MM" ~ "mat_medio",
+                                          atividade_sigla == "MI" ~ "mat_infantil",
+                                          atividade_sigla == "LZ" ~ "lazer_total"))
+      
+      
+      
+      
+      
+      
+      
+    # grid_cma <- expand.grid(acess_cma, atividade_cma, tt, stringsAsFactors = FALSE) %>%
+    #   rename(acess_sigla = Var1, atividade_sigla = Var2, tt_sigla = Var3) %>%
+    #   # adicionar colunas de time threshold  para cada um dos modos
+    #   mutate(tt_tp = case_when(
+    #     tt_sigla == 1 ~ 15,
+    #     tt_sigla == 2 ~ 30,
+    #     tt_sigla == 3 ~ 45,
+    #     tt_sigla == 4 ~ 60,
+    #     tt_sigla == 5 ~ 75
+    #   )) %>%
+    #   mutate(tt_ativo = case_when(
+    #     tt_sigla == 1 ~ 15,
+    #     tt_sigla == 2 ~ 30,
+    #     tt_sigla == 3 ~ 45,
+    #     tt_sigla == 4 ~ 60,
+    #     tt_sigla == 5 ~ 75
+    #   )) %>%
+    #   mutate(junto_tp = paste0(acess_sigla, atividade_sigla, tt_tp)) %>%
+    #   mutate(junto_ativo = paste0(acess_sigla, atividade_sigla, tt_ativo)) %>%
+    #   mutate(atividade_nome = case_when(atividade_sigla == "TT" ~ "empregos_total",
+    #                                     atividade_sigla == "ST" ~ "saude_total",
+    #                                     atividade_sigla == "SB" ~ "saude_baixa",
+    #                                     atividade_sigla == "SM" ~ "saude_media",
+    #                                     atividade_sigla == "SA" ~ "saude_alta",
+    #                                     atividade_sigla == "ET" ~ "edu_total",
+    #                                     atividade_sigla == "EF" ~ "edu_fundamental",
+    #                                     atividade_sigla == "EM" ~ "edu_medio",
+    #                                     atividade_sigla == "EI" ~ "edu_infantil",
+    #                                     atividade_sigla == "MT" ~ "mat_total",
+    #                                     atividade_sigla == "MF" ~ "mat_fundamental",
+    #                                     atividade_sigla == "MM" ~ "mat_medio",
+    #                                     atividade_sigla == "MI" ~ "mat_infantil",
+    #                                     atividade_sigla == "LZ" ~ "lazer_total",
+    #                                     atividade_sigla == "PR" ~ "paraciclos"))
     
     }
     # gerar o codigo
@@ -879,7 +970,8 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     
     
     acess_tmi <- "TMI"
-    atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ", "PR")
+    atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ")
+    # atividade_tmi <- c("ST", "SB", "SM", "SA", "ET", "EI", "EF", "EM", "LZ", "PR")
     
     grid_tmi <- expand.grid(acess_tmi, atividade_tmi, stringsAsFactors = FALSE) %>%
       rename(acess_sigla = Var1, atividade_sigla = Var2) %>%
@@ -893,8 +985,23 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                                         atividade_sigla == "EF" ~ "edu_fundamental",
                                         atividade_sigla == "EM" ~ "edu_medio",
                                         atividade_sigla == "EI" ~ "edu_infantil",
-                                        atividade_sigla == "LZ" ~ "lazer_total",
-                                        atividade_sigla == "PR" ~ "paraciclos"))
+                                        atividade_sigla == "LZ" ~ "lazer_total"))
+    
+    
+    # grid_tmi <- expand.grid(acess_tmi, atividade_tmi, stringsAsFactors = FALSE) %>%
+    #   rename(acess_sigla = Var1, atividade_sigla = Var2) %>%
+    #   mutate(junto = paste0(acess_sigla, atividade_sigla)) %>%
+    #   mutate(atividade_nome = case_when(atividade_sigla == "ST" ~ "saude_total",
+    #                                     atividade_sigla == "SB" ~ "saude_baixa",
+    #                                     atividade_sigla == "SM" ~ "saude_media",
+    #                                     atividade_sigla == "SA" ~ "saude_alta",
+    #                                     atividade_sigla == "ET" ~ "edu_total",
+    #                                     atividade_sigla == "EI" ~ "edu_infantil",
+    #                                     atividade_sigla == "EF" ~ "edu_fundamental",
+    #                                     atividade_sigla == "EM" ~ "edu_medio",
+    #                                     atividade_sigla == "EI" ~ "edu_infantil",
+    #                                     atividade_sigla == "LZ" ~ "lazer_total",
+    #                                     atividade_sigla == "PR" ~ "paraciclos"))
     
     }
     # gerar o codigo
@@ -1031,10 +1138,13 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
         tictoc::toc()
       } else {
       
-      ttmatrix <- ttmatrix %>% mutate(lazer_total = as.integer(lazer_total),
-                                      paraciclos = as.integer(paraciclos))
+        ttmatrix <- ttmatrix %>% mutate(lazer_total = as.integer(lazer_total))
+        
+      # ttmatrix <- ttmatrix %>% mutate(lazer_total = as.integer(lazer_total),
+      #                                 paraciclos = as.integer(paraciclos))
       #demora muito
       tictoc::tic()
+      
       acess_tmi <- ttmatrix %>% group_by(origin, mode) %>%
         mutate(TMIST = min(travel_time_p50[which(saude_total >=1 )]),
                TMISB = min(travel_time_p50[which(saude_baixa >= 1)]),
@@ -1044,9 +1154,24 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
                TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
                TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),       
                TMIEM = min(travel_time_p50[which(edu_medio >= 1)]), 
-               TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
-               TMIPR = min(travel_time_p50[which(paraciclos >= 1)])
-               )
+               TMILZ = min(travel_time_p50[which(lazer_total >= 1)])
+               
+        )
+      
+      
+      
+      # acess_tmi <- ttmatrix %>% group_by(origin, mode) %>%
+      #   mutate(TMIST = min(travel_time_p50[which(saude_total >=1 )]),
+      #          TMISB = min(travel_time_p50[which(saude_baixa >= 1)]),
+      #          TMISM = min(travel_time_p50[which(saude_media >= 1)]),
+      #          TMISA = min(travel_time_p50[which(saude_alta >= 1)]),
+      #          TMIET = min(travel_time_p50[which(edu_total >= 1)]),
+      #          TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
+      #          TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),       
+      #          TMIEM = min(travel_time_p50[which(edu_medio >= 1)]), 
+      #          TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
+      #          TMIPR = min(travel_time_p50[which(paraciclos >= 1)])
+      #          )
       
       tictoc::toc()
       }

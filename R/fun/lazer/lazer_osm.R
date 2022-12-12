@@ -4,7 +4,7 @@ source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'dou'
+sigla_muni <- 'pal'
 
 create_diretorios <- function(sigla_muni){
   
