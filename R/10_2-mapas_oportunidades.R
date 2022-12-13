@@ -50,10 +50,6 @@ graficos <- function(munis = "all"){
     
     maptiles <- read_rds(path_maptiles)
     
-    area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
-                                       sigla_muni)) %>% filter(DN == 24) %>%
-      st_make_valid() %>%
-      st_union()
     
     sigla_municipio <- sigla_muni
     decisao_muni <- read_excel('../planilha_municipios.xlsx',
