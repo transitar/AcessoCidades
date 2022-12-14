@@ -4,7 +4,7 @@ rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
 sigla_muni <- 'pal'
-width <- 15
+width <- 16
 height <- 10
 
 sigla_muni <- 'pal'
@@ -514,7 +514,7 @@ plot_palma_cma <- ggplot(dados_cma,
       # "Paraciclos",
       "Saúde",
       "Empregos")) +
-  ylab("Razão de Palma\nMedida de Tempo Mínimo de Acesso") +
+  ylab("Razão de Palma\nMedida Cumulativa") +
   xlab("Oportunidade") +
   theme_light() +
   theme(#axis.title = element_blank(),
@@ -534,13 +534,13 @@ plot_palma_cma <- ggplot(dados_cma,
     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
-    axis.text = element_text(size = 14, family = "encode_sans_light"),
+    axis.text = element_text(size = 16, family = "encode_sans_light"),
     axis.title = element_text(size = 18, family = "encode_sans_bold"))
 
 ggsave(plot_palma_cma, 
        file= sprintf('../data/ind_desigualdade/muni_%s/9-muni_%s_grafico_razao_palma_cma_select.png',
                      sigla_muni, sigla_muni), 
-       dpi = 200, width = width, height = height, units = "cm")
+       dpi = 200, width = 16, height = height, units = "cm")
 
 # Grafico Palma TMI --------------------------------------------------------
 #
@@ -1379,3 +1379,318 @@ ggsave(plot_razoes_resp_tmi,
 
 
 
+
+
+
+
+# Ranking de bairros acessibilidade ---------------------------------------
+
+data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+                               sigla_muni, sigla_muni))
+dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
+data_micro2 <- data_micro %>%
+  # filter(code_tract %in% lista_tract) %>%
+  select(1:12, V0606, hex) %>%
+  mutate(V0606 = as.factor(V0606))
+
+
+#remocão dos habitantes de cor amarela e indígena
+levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
+data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+
+data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds',
+                               sigla_muni, sigla_muni)) %>% filter(mode == "transit")
+
+
+dados_acc <- left_join(dados_hex, data_acess, by = c("id_hex"="origin")) %>% st_as_sf()
+
+dados_acc_hex <- dados_acc %>%
+  st_drop_geometry() %>%
+  group_by(id_hex) %>%
+  summarise(med_acc_cmatt45 = mean(CMATT45, na.rm = T),
+            med_acc_cmast30 = mean(CMAST30, na.rm = T),
+            med_acc_cmaet30 = mean(CMAET30, na.rm = T)) %>%
+  left_join(dados_hex, by = c("id_hex"="id_hex")) %>%
+  st_as_sf() %>%
+  st_transform(4083)
+
+mapview(dados_acc_hex)
+
+
+  
+# mapview(dados_acc_hex, zcol = "med_acc_cmatt45")
+
+#dados de quadras
+
+quadras <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
+                   layer = "quadras")
+# mapview(quadras)
+quadras <- quadras %>% st_transform(4083)
+
+quadras_acc <- dados_acc_hex %>% st_join(quadras) %>% drop_na(REGIAO)
+
+quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
+  group_by(QUADRAS) %>%
+  summarise(acc_med_cmatt45 = mean(med_acc_cmatt45, na.rm = T),
+            acc_med_cmast30 = mean(med_acc_cmast30, na.rm = T),
+            acc_med_cmaet30 = mean(med_acc_cmaet30, na.rm = T)) %>%
+  left_join(quadras) %>%
+  st_as_sf() %>% arrange(acc_med_cmatt45) %>%
+  mutate(ranking = seq(1, length(QUADRAS)))
+
+mapview(quadras_acc_med, zcol = "acc_med_cmatt45")
+
+pop_counts <- data_micro2 %>%
+  group_by(hex) %>%
+  summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+  st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
+
+pop_quadras <- pop_counts %>% st_transform(4083) %>%
+  st_join(quadras) %>% st_drop_geometry() %>%
+  group_by(QUADRAS) %>%
+  summarise(pop_quadra = sum(pop_total)) %>%
+  left_join(quadras) %>%
+  st_as_sf()
+
+mapview(pop_quadras, zcol =  "pop_quadra")
+
+quadras_final <- quadras_acc_med %>% left_join(pop_quadras %>% st_drop_geometry())
+
+quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
+  arrange(acc_med_cmatt45)
+
+quadras10 <- quadras_acc_med2[1:10,]
+
+teste <- left_join(quadras, quadras10 %>% st_drop_geometry()) %>%
+  filter(is.na(acc_med_cmatt45)==F) %>%
+  mapview()
+
+quadras_percentil <- quadras_final %>% drop_na(pop_quadra) %>% 
+  mutate(quartil = ntile(acc_med_cmatt45, 5)) %>%
+  filter(quartil <= 2) 
+mapview(quadras_percentil)  
+
+showtext_auto()
+font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-VariableFont_wdth,wght.ttf')
+font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
+font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
+font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
+
+message(paste("Rodando",sigla_muni, "\n"))
+
+path_contorno <- sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds', sigla_muni)
+
+dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
+
+path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+
+data_contorno <- read_rds(path_contorno)
+
+map_tiles <- read_rds(path_maptiles)
+
+sigla_municipio <- sigla_muni
+decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                           sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
+                                   sigla_muni)) %>% filter(DN == 24) %>%
+  st_make_valid() %>%
+  st_union()
+# mapview(simplepolys)
+
+simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+  st_make_valid() %>%
+  st_transform(decisao_muni$epsg) %>%
+  st_buffer(2) %>%
+  st_union() 
+
+assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
+                                  sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
+  mutate(title = "Assentamentos Precários")
+
+
+dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_pal/micro_muni_pal.RDS',
+                                    sigla_muni, sigla_muni))
+
+pop_counts <- dados_simulacao %>%
+  group_by(hex) %>%
+  summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+  st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
+
+dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
+                               sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+
+plot3 <- ggplot()+
+  geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
+  coord_equal() +
+  scale_fill_identity()+
+  # # nova escala
+  new_scale_fill() +
+  
+  # geom_sf(data = area_urbanizada %>% st_transform(3857),
+  #         aes(colour = "black"),
+  #         fill = "grey50",
+  #         size = 1.3,
+  #         colour = NA)  +
+  
+  geom_sf(data = st_transform(quadras_percentil, 3857), aes(fill = pop_quadra) , colour = NA, alpha=.6, size = 0)+
+  
+  
+  viridis::scale_fill_viridis(option = "B"#,
+
+                              # labels = scales::nu(accuracy = 1, decimal.mark = ",")
+                              # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+                              #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+                              #                      limits = c(0,500000))+
+                              # , limits = c(0, 0.72)
+                              # , breaks = c(0.001, 0.35, 0.7)
+                              # , labels = c(0, "35", "70%")
+  ) +
+  
+  labs(fill = "População da quadra") +
+  
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "#852C2C"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.8,
+          alpha= 0.7)  +
+  
+  ggnewscale::new_scale_fill() +
+  
+  geom_sf(data = assentamentos,
+          # aes(fill = "#d96e0a"),
+          aes(color = "#0A7E5C"),
+          
+          # fill = "#d96e0a",
+          linewidth = 1.3,
+          fill = "#0A7E5C",
+          show.legend = "polygon",
+          alpha = 0.7)+
+  
+  
+  # scale_fill_manual(name = "Assentamentos Precários",)
+  
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "#615C5C"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = .8,
+          alpha= 0.7) +
+  
+  
+  
+  scale_color_manual(name = "Uso do solo",
+                     values = c("#852C2C" = "#852C2C",
+                                "#0A7E5C" = "#0A7E5C",
+                                "#615C5C" = "#615C5C"),
+                     label = c("#852C2C" = "Área Urbanizada",
+                               "#0A7E5C" = "Assentamentos precários",
+                               "#615C5C" = "Áreas de Planejamento")
+  )+
+  
+  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+  # geom_sf(data = assentamentos,
+  #         aes(colour = "white"),
+  #         fill = NA,
+  #         size = 1.3)+
+  
+  # scale_color_identity(labels = c(white = "",
+  #                                 blue = ""), guide = "legend") +
+  # labs(colour = "Assentamentos\nPrecários")+
+  
+  # scale_fill_gradientn(
+  #   name = "Nº de Empregos",
+#   colors = colors_purple ,
+#   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+#   # values = NULL,
+#   space = "Lab",
+#   na.value = NA,
+#   # guide = "colourbar",
+#   aesthetics = "fill",
+#   # colors
+# ) +
+
+# scale_fill_continuous(palette = "Blues",
+#                   aesthetics = "fill")+
+
+
+# scale_color_manual(values = 'transparent')+
+# facet_wrap(~ind, ncol = 2)+
+# tema+
+
+ggspatial::annotation_scale(style = "ticks",
+                            location = "br",
+                            text_family = "encode_sans_bold",
+                            text_cex = 3,
+                            line_width = 1,
+                            width_hint = 0.10,
+                            pad_x = unit(0.35, "cm"),
+                            pad_y = unit(0.35, "cm")
+) +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  
+  
+  
+  
+  
+  # tema_CMA() +
+  
+  theme(
+    strip.text.x = element_text(size=rel(1.2)),
+    strip.background = element_blank(),
+    panel.background = element_rect(fill = NA, colour = NA),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(),
+    plot.margin=unit(c(0,0,0,0),"mm"),
+    legend.margin = margin(unit(c(10,10,5,10),"mm")),
+    legend.key.width=unit(1,"line"),
+    legend.key.height = unit(.5,"line"),
+    legend.key = element_blank(),
+    legend.text=element_text(size=25, family = "encode_sans_light"),
+    legend.title=element_text(size=30, family = "encode_sans_bold"),
+    plot.title = element_text(hjust = 0, vjust = 4),
+    strip.text = element_text(size = 10),
+    legend.position = c(0.22, 0.30),
+    legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                         colour = "#A09C9C",
+                                         linewidth = 0.8,
+                                         linetype = "solid"),
+    legend.background = element_blank(),
+    # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+    #                                      colour = "#E0DFE3"),
+    legend.spacing.y = unit(0.4, 'cm'),
+    legend.box.just = "left"
+    # legend.margin = margin(t = -80)
+  ) + 
+  
+  # theme(strip.text = element_blank(),
+  #       legend.title = element_text(size=rel(0.6),
+  #                                   vjust = 1
+  #                                   ),
+  #       axis.ticks.length = unit(0,"pt")
+  # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+  #       # plot.background = element_rect(fill = "#eff0f0",
+  #       #                                 colour = NA)
+  # legend.background = element_rect(fill = "white",
+  #                                  colour = NA)
+# #       
+#                                          ) +
+aproxima_muni(sigla_muni = "pal") +
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"))))
+
+plot3
+
+ggsave(plot3, 
+       file= "../data/quadras_precarias.png",
+             
+       dpi = 300, width = width, height = height, units = "cm")

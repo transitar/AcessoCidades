@@ -310,7 +310,7 @@ graficos <- function(munis = "all"){
 
       scale_color_manual(name = "Infraestrutura Cicloviária",
                          values = c("#0f805e" = "#0f805e"),
-                         label = c("#0f805e" = "Ciclovias")
+                         label = c("#0f805e" = "Ciclovias/Ciclofaixas")
       )+
 
 
