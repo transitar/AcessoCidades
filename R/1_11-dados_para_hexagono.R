@@ -15,7 +15,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'pal'; ano <- 2018; source <- 'aop'; source_lazer <- 'osm'
+sigla_muni <- 'con'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm';source_escolas <- "censo_escolar"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -124,11 +124,38 @@ infos_to_hex <- function(sigla_muni, ano) {
       select(-h3_resolution, -sigla_muni)
     dados_saude <- hex_saude
     
-  } else {
+  } else if (source == "cnes"){
   
-  file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s.rds',source,  sigla_muni, source,  sigla_muni)
-  dados_saude <- read_rds(file_saude)
+  file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s_%s_geocoded_2019.rds',source,  sigla_muni,
+                        source,  sigla_muni, source)
+  dados_saude <- read_rds(file_saude) %>% mutate(S001 = 1) %>%
+    select(S001, S002 = health_low, S003 = health_med, S004 = health_high)
+  
+  join_saude_hex <- sf::st_join(dados_saude, hex)
+  
+  hex2 <- join_saude_hex %>%
+    st_drop_geometry() %>%
+    group_by(id_hex) %>% 
+    summarise(S001 = sum(S001),
+              S002 = sum(S002),
+              S003 = sum(S003),
+              S004 = sum(S004))
+  
+  hex_saude <- left_join(hex, hex2, by = "id_hex") %>%
+    mutate(S001 = ifelse(is.na(S001)==T, 0, S001),
+           S002 = ifelse(is.na(S002)==T, 0, S002),
+           S003 = ifelse(is.na(S003)==T, 0, S003),
+           S004 = ifelse(is.na(S004)==T, 0, S004)) %>% st_drop_geometry() %>%
+    select(-h3_resolution, -sigla_muni)
+  dados_saude <- hex_saude
+  
   # mapview(dados_saude, zcol = "S001")
+  } else if (source == "aop"){
+    
+    file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s_%s_geocoded_2019.rds',source,  sigla_muni,
+                          source,  sigla_muni, source)
+    dados_saude <- read_rds(file_saude)
+    
   }
   
   
@@ -188,6 +215,52 @@ infos_to_hex <- function(sigla_muni, ano) {
       select(-h3_resolution, -sigla_muni)
     dados_educacao <- hex_educacao
     
+  } else if (source_escolas == "censo_escolar"){
+    
+    file_educacao <- sprintf('../data-raw/educacao/%s/2021/muni_%s_educacao_2021/muni_%s_geocode_2021.rds',source_escolas,  sigla_muni,  sigla_muni)
+    dados_educacao <- read_rds(file_educacao) %>%
+      # mutate(health_low = ifelse(ATUACAO == "Atencao Basica",
+      #                            1, health_low)
+      # ) %>%
+      mutate(E001 = 1,
+             E002 = ifelse(TP_ETAPA_ENSINO == 1,1,0),
+             E003 = ifelse(TP_ETAPA_ENSINO == 2,1,0),
+             E004 = ifelse(TP_ETAPA_ENSINO == 3,1,0),
+             M001 = QT_MAT_BAS + QT_MAT_FUND + QT_MAT_INF+QT_MAT_MED+QT_MAT_PROF,
+             M002 = QT_MAT_BAS+QT_MAT_INF,
+             M003 = QT_MAT_FUND,
+             M004 = QT_MAT_MED+QT_MAT_PROF) %>%
+      #                            1, health_low)) %>%
+      select(E001, E002, E003, E004, M001, M002,M003,M004)
+    
+    join_educacao_hex <- sf::st_join(dados_educacao, hex)
+    
+    hex2 <- join_educacao_hex %>%
+      st_drop_geometry() %>%
+      group_by(id_hex) %>% 
+      summarise(E001 = sum(E001),
+                E002 = sum(E002),
+                E003 = sum(E003),
+                E004 = sum(E004),
+                M001 = sum(M001),
+                M002 = sum(M002),
+                M003 = sum(M003),
+                M004 = sum(M004))
+    
+    hex_educacao <- left_join(hex, hex2, by = "id_hex") %>%
+      mutate(E001 = ifelse(is.na(E001)==T, 0, E001),
+             E002 = ifelse(is.na(E002)==T, 0, E002),
+             E003 = ifelse(is.na(E003)==T, 0, E003),
+             E004 = ifelse(is.na(E004)==T, 0, E004),
+             M001 = ifelse(is.na(M001)==T, 0, M001),
+             M002 = ifelse(is.na(M002)==T, 0, M002),
+             M003 = ifelse(is.na(M003)==T, 0, M003),
+             M004 = ifelse(is.na(M004)==T, 0, M004)) %>% st_drop_geometry() %>%
+      select(-h3_resolution, -sigla_muni)
+    dados_educacao <- hex_educacao
+    
+    
+    
   } else {
   
   
@@ -206,16 +279,21 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   file_lazer <- sprintf('../data-raw/lazer/%s/muni_%s_lazer_%s/muni_%s_lazer_%s.rds',source_lazer,
                         sigla_muni, source_lazer,  sigla_muni, source_lazer)
-  dados_lazer <- read_rds(file_lazer)  %>% st_transform(decisao_muni$epsg)
   
-  dados_lazer2 <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
-                         layer = "lazer") %>%
-    mutate(name = "prefeitura", type = "municipal") %>%
-    select(name, type, osm_id = Id, geometry = geom) %>% st_transform(decisao_muni$epsg)
+  sigla_municipio <- sigla_muni
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
   
-  dados_lazer <- rbind(dados_lazer, dados_lazer2)
+  dados_lazer <- read_rds(file_lazer) %>% st_transform(decisao_muni$epsg)
   
-  # mapview(dados_lazer2)
+  # dados_lazer2 <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
+  #                        layer = "lazer") %>%
+  #   mutate(name = "prefeitura", type = "municipal") %>%
+  #   select(name, type, osm_id = Id, geometry = geom) %>% st_transform(decisao_muni$epsg)
+  
+  # dados_lazer <- rbind(dados_lazer, dados_lazer2)
+  
+  # mapview(dados_lazer)
   # mapview(dados_saude, zcol = "S001")
   
   #contar lazer no hexagono

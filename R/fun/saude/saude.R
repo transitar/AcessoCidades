@@ -8,9 +8,14 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 ano_cnes <- 2022
-estado <- 'TO'
+estado <- 'MS'
+
+
+library(ggmap)
+chave_google_maps <- readline(prompt = "API key google maps: ")
+register_google(key = chave_google_maps)
 
 create_diretorios <- function(sigla_muni){
   
@@ -165,7 +170,7 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
                                            GESPRG6E==1 |
                                            GESPRG6M==1 , 1, 0)]
     
-    cnes_filter6 <- cnes_filter5[ health_low == 1 | health_med == 1 | health_high]
+    cnes_filter6 <- cnes_filter5[ health_low == 1 | health_med == 1 | health_high == 1]
     # table(cnes_filter5$health_low, useNA = "always")  # 3593
     # table(cnes_filter5$health_med, useNA = "always")  # 4224
     # table(cnes_filter5$health_high, useNA = "always") # 858
@@ -174,7 +179,8 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     
     # colocar todos codigos de CNES com 7 digitos
     # cnes_filter6[, cnes := stringr::str_pad(CNES, width = 7, side = "left", pad = 0)]
-    
+    # dados_complementares <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/dados_complementares_%s_%s.dbc',
+    #                                                    estado, tolower(estado), ano_cnes))
     
     # 3) Salvar ---------
     write_rds(cnes_filter6, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_%s.rds",
@@ -185,27 +191,27 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     
     nrow(cnes_filter6)
     
-    library(ggmap)
-    register_google(key = 'AIzaSyAvvXrD3sI8PVxKiZyP16hFxGKrYfP2vLY')
+
     
     # Initialize the data frame
-    cnes_to_geocode <- cnes_filter6 %>% mutate(addresses = paste(COD_CEP, "Palmas", "Tocantins", "Brasil")) %>%
+    cnes_to_geocode <- cnes_filter6 %>% mutate(addresses = paste(COD_CEP, "Dourados", "Mato Grosso do Sul", "Brasil")) %>%
       mutate(addresses = stringi::stri_enc_toutf8(addresses))
     
     # escolas_to_geocode$addresses <- gsub('[^[:alnum:] ]','',escolas_to_geocode$addresses)
     
     # cnes_to_geocode <- cnes_to_geocode[1:10,]
     cnes_lat_lon <- geocode(cnes_to_geocode$addresses)
-    cnes_geocoded <- cbind(cnes_to_geocode, cnes_lat_lon)
+    cnes_geocoded <- cbind(cnes_to_geocode, cnes_lat_lon) %>% drop_na()
     cnes_geocoded_sf <- st_as_sf(cnes_geocoded, coords = c("lon", "lat"), crs = 4326)
-    mapview(cnes_geocoded_sf) + mapview(hospitais_muni)
+    mapview(cnes_geocoded_sf)# + mapview(hospitais_muni)
     
     
     
-    muni_shape <- read_rds('../data-raw/municipios/2019/municipio_pal_2019.gpkg')
+    muni_shape <- read_rds(sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds',
+                           sigla_muni))
     
-    hospitais_muni <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
-                              layer = 'saude') %>% st_filter(muni_shape)
+    # hospitais_muni <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
+    #                           layer = 'saude') %>% st_filter(muni_shape)
     
     # teste_lat_lon <- geocode(escolas_to_geocode$addresses)
     # escolas_geocoded <- cbind(escolas_to_geocode, escolas_to_geocode_lat_lon)
@@ -219,10 +225,10 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
                                        sigla_muni,
                                        sigla_muni,
                                        ano))
-    write_sf(cnes_geocoded_sf, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.gpkg",
-                                        sigla_muni,
-                                        sigla_muni,
-                                        ano))
+    # write_sf(cnes_geocoded_sf, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.gpkg",
+    #                                     sigla_muni,
+    #                                     sigla_muni,
+    #                                     ano))
     
     
   }

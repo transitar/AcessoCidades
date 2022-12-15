@@ -1,4 +1,4 @@
-# source('./R/fun/setup.R')
+source('./R/fun/setup.R')
 
 #' A funcao 'educacao_filter':
 #' 1) Lê os dados do censo escolar (que foram baixadas do site do INEP, base de escolas) e faz filtros selecionando
@@ -208,11 +208,16 @@ educacao_filter <- function(ano, download = FALSE) {
   
   walk(munis_list$munis_df$abrev_muni, create_diretorios)
   
-  sigla_munii <- "pal"
-  escolas_censo_muni <- function(sigla_munii){
+  
+  library(ggmap)
+  chave_google_maps <- readline(prompt = "API key google maps: ")
+  register_google(key = chave_google_maps)
+  
+  sigla_muni <- "dou"
+  escolas_censo_muni <- function(sigla_muni){
     
     escolas_muni <- escolas_fim_mat_end %>%
-      filter(co_municipio == munis_list$munis_metro$code_muni[which(munis_list$munis_metro$abrev_muni==sigla_munii)])
+      filter(co_municipio == munis_list$munis_metro$code_muni[which(munis_list$munis_metro$abrev_muni==sigla_muni)])
     
     write.csv(escolas_muni, sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_sem_geocode_%s.csv",
                                     ano,
@@ -220,12 +225,14 @@ educacao_filter <- function(ano, download = FALSE) {
                                     ano,
                                     sigla_muni,
                                     ano))
+    # walk(munis_list$munis_df$abrev_muni, escolas_censo_muni)
     
     # Geocoding a csv column of "addresses" in R
+    # dados_escolas_muni_sem_geocode <- fread(sprintf("../data-raw/educacao/censo_escolar/2021/muni_con_educacao_2021/"))
     
     #load ggmap
-    library(ggmap)
-    register_google(key = 'AIzaSyAvvXrD3sI8PVxKiZyP16hFxGKrYfP2vLY')
+
+    
 
     # Initialize the data frame
     escolas_to_geocode <- escolas_muni %>% mutate(addresses = paste(adress, city, state, country)) %>%
@@ -251,6 +258,11 @@ educacao_filter <- function(ano, download = FALSE) {
     
     
   }
+  
+  lista_munis <- munis_list$munis_df$abrev_muni
+  
+  # mapview(escolas_geocoded_sf)
+  walk(munis_list$munis_df$abrev_muni, escolas_censo_muni)
   
   # for (i in munis_list$munis_df$abrev_muni){
   #   escolas_censo_muni(i)

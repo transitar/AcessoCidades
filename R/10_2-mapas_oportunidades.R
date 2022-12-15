@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 
 graficos <- function(munis = "all"){
@@ -47,13 +47,19 @@ graficos <- function(munis = "all"){
     # data_msetor <- read_rds(path_muni_setor)
     # data_mhex <- read_rds(path_muni_hex)
     data_contorno <- read_rds(path_contorno)
-    
+    # mapview(data_contorno)
     maptiles <- read_rds(path_maptiles)
     
     
     sigla_municipio <- sigla_muni
     decisao_muni <- read_excel('../planilha_municipios.xlsx',
                                sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+    
+    
+    area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
+                                       sigla_muni)) %>% filter(DN == 24) %>%
+      st_make_valid() %>%
+      st_union()
     
     simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
       st_make_valid() %>%
@@ -64,18 +70,20 @@ graficos <- function(munis = "all"){
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                       sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
       mutate(title = "Assentamentos Precários")
+    mapview(assentamentos)
     
-    
-    dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_pal/micro_muni_pal.RDS',
+    dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                         sigla_muni, sigla_muni))
     
     pop_counts <- dados_simulacao %>%
       group_by(hex) %>%
       summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
-    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
-                                   sigla_muni), layer= "areas")
     
+    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                   sigla_muni, sigla_muni), layer= "areas") %>%
+      st_make_valid()
+    # mapview(dados_areas)
     # data_complete <- data_mhex %>% left_join(data_muni, by = c("id_hex"="Cod_setor")) %>% 
       # mutate(area = st_area(.)/10^6) %>%
       # rowwise() %>% 
@@ -472,17 +480,33 @@ graficos <- function(munis = "all"){
             # size = 2,
             linewidth = 0.8,
             alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "#d96e0a"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.9,
+              fill = "#d96e0a",
+              show.legend = "polygon",
+              alpha = 0.7)+
+      
       scale_color_manual(name = "Uso do solo",
                          values = c("grey45" = "grey45",
-                                    "grey70" = "grey70"),
+                                    "grey70" = "grey70",
+                                    "#d96e0a" = "#d96e0a"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento")
+                                   "grey70" = "Áreas de planejamento",
+                                   "#d96e0a" = "Assentamentos precários")
       )+
       
       
       scale_fill_gradientn(
         name = "Nº de Eq. de lazer",
         colors =colors_green ,
+        labels = c(0,3,6,9),
+        breaks = c(0, 3, 6, 9),
+        limits = c(0,9),
         # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
         # values = NULL,
         space = "Lab",
@@ -527,7 +551,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -577,12 +601,13 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.1, 'cm'),
+      legend.spacing.y = unit(0.4, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni)
+      aproxima_muni(sigla_muni = sigla_muni) +
+    guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white"))))
     
     
     
@@ -1144,12 +1169,28 @@ graficos <- function(munis = "all"){
             # size = 2,
             linewidth = 0.8,
             alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "#d96e0a"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.9,
+              # fill = "#d96e0a",
+              fill = NA,
+              show.legend = "polygon",
+              alpha = 0.7)+
+      
       scale_color_manual(name = "Uso do solo",
                          values = c("grey45" = "grey45",
-                                    "grey70" = "grey70"),
+                                    "grey70" = "grey70",
+                                    "#d96e0a" = "#d96e0a"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento")
+                                   "grey70" = "Áreas de planejamento",
+                                   "#d96e0a" = "Assentamentos precários")
       )+
+      
+      
       
       
       # scale_fill_gradientn(
@@ -1163,15 +1204,16 @@ graficos <- function(munis = "all"){
       #   aesthetics = "fill",
     #   # colors
     # ) +
+    # c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
     
-    
-    scale_fill_manual(name = "Eq. de saúde \n baixa complexidade",
-                      values = c("1" = "#ade7ff",
+    scale_fill_manual(name = "Eq. de saúde baixa complexidade",
+                      values = c(
+                        "1" = "#cbcefc",
                                  
-                                 "2" = "#73d6ff",
-                                 "3" = "#38c4ff",
-                                 "4" = "#0cb7ff",
-                                 "5" = "#0ba0e0"),
+                                 "2" = "#9FA4F9",
+                                 "3" = "#767DCE",
+                                 "4" = "#21367D",
+                                 "5" = "#1A295B"),
                       label = c("1" = "1",
                                 
                                 "2" = "2",
@@ -1198,7 +1240,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -1248,12 +1290,18 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.1, 'cm'),
+      legend.spacing.y = unit(0.3, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)
+      # guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white"
+      #                                                          # "#ade7ff",
+      #                                                          # 
+      #                                                          # "#73d6ff",
+      #                                                          # "#38c4ff"
+      #                                                          ))))
     
     
     
@@ -1334,7 +1382,7 @@ graficos <- function(munis = "all"){
                          values = c("grey45" = "grey45",
                                     "grey70" = "grey70"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento")
+                                   "grey70" = "Unidades de planejamento")
       )+
       
       
@@ -1351,21 +1399,21 @@ graficos <- function(munis = "all"){
     # ) +
     
     
-    scale_fill_manual(name = "Eq. de saúde \n baixa complexidade",
-                      values = c("1" = "#ade7ff",
-                                 
-                                 "2" = "#73d6ff",
-                                 "3" = "#38c4ff",
-                                 "4" = "#0cb7ff",
-                                 "5" = "#0ba0e0"),
+    scale_fill_manual(name = "Eq. de saúde baixa complexidade",
+                      values = c(
+                        "1" = "#cbcefc",
+                        
+                        "2" = "#9FA4F9",
+                        "3" = "#767DCE",
+                        "4" = "#21367D",
+                        "5" = "#1A295B"),
                       label = c("1" = "1",
                                 
                                 "2" = "2",
                                 "3" = "3",
                                 "4" = "4",
                                 # "#33b099" = "Cobertura de 300m",
-                                "5" = "5")) +
-      # labs(fill = "População") +
+                                "5" = "5")) +      # labs(fill = "População") +
       # ggnewscale::new_scale_color() +
       
       
@@ -1384,7 +1432,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -1767,12 +1815,26 @@ graficos <- function(munis = "all"){
             # size = 2,
             linewidth = 0.8,
             alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "#33b099"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.9,
+              fill = "#33b099",
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
       scale_color_manual(name = "Uso do solo",
                          values = c("grey45" = "grey45",
-                                    "grey70" = "grey70"),
+                                    "grey70" = "grey70",
+                                    "#33b099" = "#33b099"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento")
+                                   "grey70" = "Áreas de planejamento",
+                                   "#33b099" = "Assentamentos precários")
       )+
+      
       
       
     scale_fill_gradientn(
@@ -1821,7 +1883,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -1876,7 +1938,8 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni)
+      aproxima_muni(sigla_muni = sigla_muni) +
+      guides(color = guide_legend(override.aes = list(fill = c("#33b099", "white", "white"))))
     
     
     

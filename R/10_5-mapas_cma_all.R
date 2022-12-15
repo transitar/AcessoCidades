@@ -17,7 +17,7 @@ sigla_muni <- 'pal'
 # width <- 14
 # height <- 10
 
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 mode1 <- "transit"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
