@@ -203,7 +203,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Palmas")
+                         label = c("grey45" = "Contagem")
       )+
       
       
@@ -301,7 +301,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -564,7 +564,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Palmas")
+                         label = c("grey45" = "Contagem")
       )+
       
       
@@ -628,7 +628,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp_buffer,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/6-linhas_tp_buffer_300m_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
 
@@ -670,7 +670,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Palmas")
+                         label = c("grey45" = "Contagem")
       )+
       
       
@@ -734,7 +734,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp_buffer_500,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/7-linhas_tp_buffer_500m_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -1388,7 +1388,7 @@ graficos <- function(munis = "all"){
     ggsave(map_aglomerados_ntad,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/14-linhas_tp_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
+           dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -1549,7 +1549,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                         '15-30 minutos',
                                         '30-60 minutos',
                                         '>60 minutos')))
-    
+    # mapview(frequencias2)
 
     # map_frequencias <- ggplot() +
     #   # geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1861,7 +1861,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     ggsave(map_frequencias2,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s.png", sigla_muni, sigla_muni),
-           dpi = 250,
+           dpi = 300,
            width = width, height = height, units = "cm" )
     
     
@@ -1928,7 +1928,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               # size = 2,
               linewidth = 1,
               alpha= 0.7) +
-      geom_sf_label(data = dados_areas %>% st_transform(3857), aes(label = REGIAO))+
+      geom_sf_label(data = dados_areas %>% st_transform(3857), aes(label = area))+
       
       
       # ggnewscale::new_scale_color() +
@@ -2266,11 +2266,11 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
       geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
       guides(fill=guide_legend(title="Gênero e cor")) +
-      scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
+      scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003")
       )+
       scale_size_continuous( range = c(0,10),
-                             limits = c(1,20000),
-                             breaks = c(0,1000,5000,20000),
+                             limits = c(1,60000),
+                             breaks = c(0,5000,10000,50000),
                              name = "Habitantes",
                              guide = "legend")
     p_head_bus <- plot_cleveland_headway + scale_color_manual(name = "Gênero e Cor",
@@ -2293,8 +2293,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       xlab("Headway médio (min)") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(20,30),
-                         breaks = seq(0,30, 2.5)) +
+                         limits = c(19,23),
+                         breaks = seq(19,23, 1)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),

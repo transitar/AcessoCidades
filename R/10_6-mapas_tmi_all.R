@@ -7,11 +7,11 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 mode1 <- "walk"
-oportunidade <- "lazer"
-titulo_leg <- "Eq. de Lazer"
-sigla_op <- "LZ"
+oportunidade <- "saude"
+titulo_leg <- "Eq. de Saúde"
+sigla_op <- "ST"
 time <- 15
 # time <- c(15,30,45,60)
 type_acc <- "TMI"
@@ -228,8 +228,8 @@ mapas_tmi <- function(sigla_muni,
     summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
     st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
   
-  dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
-                                 sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+  dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                 sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
   
   if (type_acc == "CMA"){
     
@@ -516,7 +516,7 @@ mapas_tmi <- function(sigla_muni,
     #                                  colour = NA)
   # #       
   #                                          ) +
-  aproxima_muni(sigla_muni = "pal") +
+  aproxima_muni(sigla_muni = sigla_muni) +
     guides(color = guide_legend(override.aes = list(fill = c("#f1886e", "white", "white"))))
     
     
@@ -911,7 +911,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'pal',
+                    sigla_muni = 'con',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,

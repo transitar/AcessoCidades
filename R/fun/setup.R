@@ -76,7 +76,7 @@ aproxima_muni <- function(sigla_muni) {
     coord_sf(ylim = c(-1130754,-1166246), xlim = c(-5403046,-5358070), expand = FALSE)
   } else if (sigla_muni == "con") {
     
-    coord_sf(ylim = c(-2245238,-2277744), xlim = c(-4895103,-4926976), expand = FALSE)
+    coord_sf(ylim = c(-2245238,-2277744), xlim = c(-4895103, -4936148), expand = FALSE)
     
   } else if (sigla_muni == "dou") {
     

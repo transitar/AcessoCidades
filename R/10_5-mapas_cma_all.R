@@ -11,14 +11,14 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 # library(elementalist)
 # rm(list = ls())
 # width <- 14
 # height <- 10
 
 sigla_muni <- 'con'
-mode1 <- "transit"
+mode1 <- "walk"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
 sigla_op <- "TT"
@@ -205,7 +205,7 @@ mapas_cma <- function(sigla_muni,
     mutate(title = "Assentamentos Precários")
   
   
-  dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_pal/micro_muni_pal.RDS',
+  dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                       sigla_muni, sigla_muni))
   
   pop_counts <- dados_simulacao %>%
@@ -213,8 +213,8 @@ mapas_cma <- function(sigla_muni,
     summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
     st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
   
-  dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
-                                 sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+  dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                 sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
   
   
   
@@ -501,7 +501,7 @@ mapas_cma <- function(sigla_muni,
     #                                  colour = NA)
     # #       
     #                                          ) +
-      aproxima_muni(sigla_muni = "pal") +
+      aproxima_muni(sigla_muni = sigla_muni) +
       guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"))))
     
     
@@ -650,7 +650,7 @@ mapas_cma <- function(sigla_muni,
     ggsave(plot3, 
            file= sprintf("../data/map_plots_acc/muni_%s/%s/%s/%s/%s_%s_%s_%s.png",
                          sigla_muni, modo, type_acc , oportunidade, sigla_muni, type_acc , sigla_op, paste(time, collapse = '')), 
-           dpi = dpi_mapa, width = width, height = height, units = "cm")
+           dpi = 300, width = width, height = height, units = "cm")
     
   
   # width <- 18
@@ -717,7 +717,7 @@ lista_tempos <- c(rep(45, 14), rep(15,14), rep(30, 14))
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'pal',
+                    sigla_muni = 'con',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
