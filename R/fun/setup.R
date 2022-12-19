@@ -78,6 +78,10 @@ aproxima_muni <- function(sigla_muni) {
     
     coord_sf(ylim = c(-2245238,-2277744), xlim = c(-4895103,-4926976), expand = FALSE)
     
+  } else if (sigla_muni == "dou") {
+    
+    coord_sf(ylim = c(-2527577,-2552122), xlim = c(-6084234,-6119851), expand = FALSE)
+    
   }
   
 }

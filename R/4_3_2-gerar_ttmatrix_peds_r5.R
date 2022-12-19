@@ -1,11 +1,12 @@
 #4_3_2-gerar_ttmatrix_r5_PEDS
+# rm(list = ls())
 
 ###### 0.3.3 Calcula matriz de tempo de viagem com o R5
 
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-Xmx7G')
+options(java.parameters = '-Xmx6G')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -25,7 +26,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'poa'; ano <- 2022; modo <- "WALK"; sigla_muni <- "poa"
+sigla_munii <- 'con'; ano <- 2022; modo <- c("WALK", "TRANSIT"); sigla_muni <- "con"
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -63,7 +64,10 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   
   
   if (sigla_munii == 'poa') {
-    date <- '2022-06-23'
+    date <- '2022-06-08'
+  } else if (sigla_munii == "con"){
+    date <- '2022-12-08'
+    
   }
   
   # if (modes == "todos") {

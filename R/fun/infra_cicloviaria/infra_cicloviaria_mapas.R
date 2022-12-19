@@ -18,7 +18,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 #gráficos de ciclovias
 
@@ -58,7 +58,9 @@ graficos <- function(munis = "all"){
     # teste_m <- data_complete %>% select(code_tract,P006,P007,P008,P009,P010,Ptot_mulheres) %>% 
     #   gather(key = dado,value = valor, 2:7) %>% 
     #   mutate(valor = as.numeric(valor))
-    
+    sigla_municipio <- sigla_muni
+    decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                               sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
     
     #Dados de Bairros / Áreas 
     
@@ -69,13 +71,16 @@ graficos <- function(munis = "all"){
       bairros2 <- bairros %>% group_by(REGIAO) %>% st_make_valid()
         
       
+    } else {
+      
+      bairros <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                 sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+      bairros2 <- bairros %>% st_make_valid()
     }
     # mapview(bairros2)
     
     #dados de bikes
-    sigla_municipio <- sigla_muni
-    decisao_muni <- read_excel('../planilha_municipios.xlsx',
-                               sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+
     
     
     #ciclovias
@@ -86,6 +91,14 @@ graficos <- function(munis = "all"){
                                          sigla_muni, sigla_muni),
                                  layer = "infra_cicloviaria"
                                 )
+    } else if (decisao_muni$fonte_ciclo == "osm") {
+      
+      dados_ciclovias <- read_sf(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+                                         sigla_muni, sigla_muni),
+                                 layer = "infra_cicloviaria"
+      )
+      
+      
     }
     # mapview(dados_ciclovias)
     
@@ -100,6 +113,9 @@ graficos <- function(munis = "all"){
       
       dados_ciclovias <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
         mutate(Tipo = "Ciclovia/Ciclofaixa")
+    } else {
+      dados_ciclovias <- dados_ciclovias %>% st_transform(decisao_muni$epsg)
+      
     }
       
     
@@ -178,6 +194,8 @@ graficos <- function(munis = "all"){
     #        dpi = 300,
     #        width = width, height = height, units = "cm" )
     
+    
+    #NÃO USADO
     map_ciclovias_zoom <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -262,7 +280,7 @@ graficos <- function(munis = "all"){
       mutate(title = "Assentamentos Precários")
     
     
-    dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_pal/micro_muni_pal.RDS',
+    dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                 sigla_muni, sigla_muni))
     
     pop_counts <- dados_simulacao %>%
@@ -327,7 +345,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Palmas")
+                         label = c("grey45" = "Contagem")
       )+
       
       
@@ -403,11 +421,11 @@ graficos <- function(munis = "all"){
             legend.key.width=unit(2,"line"),
             legend.key.height = unit(1,"line"),
             legend.key = element_blank(),
-            legend.text=element_text(size=25, family = "encode_sans_light"),
-            legend.title=element_text(size=30, family = "encode_sans_bold"),
+            legend.text=element_text(size=23, family = "encode_sans_light"),
+            legend.title=element_text(size=28, family = "encode_sans_bold"),
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10),
-            legend.position = c(0.22, 0.30),
+            legend.position = c(0.25, 0.30),
             legend.box.background = element_rect(fill=alpha('white', 0.7),
                                                  colour = "#A09C9C",
                                                  linewidth = 0.8,
@@ -491,7 +509,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Palmas")
+                         label = c("grey45" = "Contagem")
       )+
       
       
@@ -567,11 +585,11 @@ graficos <- function(munis = "all"){
       legend.key.width=unit(2,"line"),
       legend.key.height = unit(1,"line"),
       legend.key = element_blank(),
-      legend.text=element_text(size=25, family = "encode_sans_light"),
-      legend.title=element_text(size=30, family = "encode_sans_bold"),
+      legend.text=element_text(size=23, family = "encode_sans_light"),
+      legend.title=element_text(size=28, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.25, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -912,9 +930,9 @@ graficos <- function(munis = "all"){
       #            # labels=c("5000","10000","15000"),
       #            name = "Habitantes",
       #            guide="legend") +
-      scale_size_continuous( range = c(0,10),
-                             limits = c(1,12000),
-                             breaks = c(0,1000,5000,10000),
+      scale_size_continuous( range = c(0,12),
+                             limits = c(1,4000),
+                             breaks = c(0,500,1500,3000),
                              name = "Habitantes",
                              guide = "legend")
     
@@ -939,8 +957,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.5,0.7),
-                         breaks = seq(0.5,0.70, 0.05)) +
+                         limits = c(0.025,0.075),
+                         breaks = seq(0.025,0.075, 0.005)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -990,9 +1008,9 @@ graficos <- function(munis = "all"){
     dados_hex_intersect_ntad300 <- dados_hex_intersect_ntad300 %>%
       mutate(area = st_area(.)) %>%
       mutate(area2 = as.numeric(area)) %>%
-      filter(area2 < 60000.0)
+      filter(area2 > 60000.0)
     
-    
+    #mapview(dados_hex)
     # mapview(dados_hex_intersect_ntad300)
     id_hex_intersects_bus_ntad300 <- dados_hex_intersect_ntad300$id_hex %>% unique()
     
@@ -1018,9 +1036,9 @@ graficos <- function(munis = "all"){
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("grey70", "#FFB578", "black", "#cc3003"),
       )+
-      scale_size_continuous( range = c(0,10),
-                             limits = c(1,7500),
-                             breaks = c(0,500,1000,5000),
+      scale_size_continuous( range = c(0,11),
+                             limits = c(1,50000),
+                             breaks = c(0,10000,25000,50000),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bike_ntad <- plot_cleveland_bike300_ntad + scale_color_manual(name = "Gênero e Cor",
@@ -1043,8 +1061,8 @@ graficos <- function(munis = "all"){
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(2000,7500),
-                         breaks = seq(0,7500, 500)) +
+                         limits = c(20000,50000),
+                         breaks = seq(20000,50000, 5000)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1066,7 +1084,7 @@ graficos <- function(munis = "all"){
     
     ggsave(p_b300_bike_ntad,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/13-linhasbus_300_cleveland_nao_atendidos%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/11-ciclo_300_cleveland_nao_atendidos%s.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     

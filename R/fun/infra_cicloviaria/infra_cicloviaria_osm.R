@@ -1,7 +1,7 @@
 #download de dados cicloviários do osm
 source('./R/fun/setup.R')
 
-sigla_muni = "pal"
+sigla_muni = "con"
 
 create_diretorios <- function(sigla_muni){
   
@@ -19,7 +19,7 @@ download_osm <- function(munis = 'all'){
   salva_ciclo_osm <- function(sigla_muni, width = 16.5, height = 16.5){
     
     
-    message(paste0('rodando',sigla_muni))
+    message(paste0('rodando ',sigla_muni))
     
     muni_path <- sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds', sigla_muni)
     muni_shape <- read_rds(muni_path)
@@ -30,8 +30,8 @@ download_osm <- function(munis = 'all'){
     box <- st_bbox(muni_shape)
     
     #ciclovias
-    key = "cycleway"
-    value = "nada"
+    key = "highway"
+    value = "cycleway"
     type = "osm_lines"
     type_to_col <- "ciclovia"
     
@@ -78,59 +78,64 @@ download_osm <- function(munis = 'all'){
         
       } else if (type == "osm_lines"){
         
-        feature_sf <- feature_sf %>% select(osm_lines.osm_id,
-                            osm_lines.name) %>% mutate(tipo = type_to_col)
-        feature_sf <- setNames(feature_sf, c("osm_id", "name", "tipo"))
+        feature_sf <- feature_sf %>% select(osm_id = osm_lines.osm_id,
+                            name = osm_lines.name, osm_lines.geometry) %>% mutate(tipo = type_to_col)
+        # feature_sf <- setNames(feature_sf, c("osm_id", "name", "geometry","tipo"))
       } 
       
 
       return(feature_sf)
     }
-    
+    # mapview(feature_sf)
 #problema no sf
     highway_cycleway <- baixa_feature(key = "highway",
                                       value = "cycleway",
                                       type = "osm_lines",
                                       type_to_col = "ciclovia")
+    st_geometry(highway_cycleway) <- "Tipo"
     
     cycleway <- baixa_feature(key = "cycleway",
                               type = "osm_lines",
                               type_to_col = "ciclovia")
-    
+    st_geometry(cycleway) <- "Tipo"
     cycleway_left <- baixa_feature(key = "cycleway:left",
                                     type = "osm_lines",
                                    type_to_col = "ciclofaixa")
-    
+    st_geometry(cycleway_left) <- "Tipo"
     cycleway_right <- baixa_feature(key = "cycleway:right",
                                    type = "osm_lines",
                                    type_to_col = "ciclofaixa")
+    st_geometry(cycleway_right) <- "Tipo"
 
     cycleway_route <- baixa_feature(key = "route",
                                     value = "bycicle",
                                     type = "osm_lines",
                                     type_to_col = "ciclorrota")
+    st_geometry(cycleway_route) <- "Tipo"
                                     
-    
+    # mapview(cycleway_left)
     
     # dfs_to_rbind <- is.na(cycleway_route)
     # como fazer aqui para que só rbind nos dfs não vazios
     
     ciclo <- rbind(highway_cycleway,
                    cycleway,
-                   cycleway_left)
+                   cycleway_left,
+                   cycleway_right)
 
-
+    # mapview(ciclo) + mapview(muni_shape)
     
     ciclo_final <- ciclo %>% st_filter(muni_shape)
     
-    # mapview(lazer_final)
+    # mapview(ciclo_final)
     
-    # mapview(lazer2)
+    # mapview(muni_shape) + mapview(ciclo_final)
     
-    readr::write_rds(ciclo_final,
-                     sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm.rds',
+    write_sf(ciclo_final,
+                     sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
                              sigla_muni,
-                             sigla_muni))
+                             sigla_muni),
+                    layer = "infra_cicloviaria")
     
     #paraciclos 
     
@@ -138,7 +143,7 @@ download_osm <- function(munis = 'all'){
       add_osm_feature(key = "amenity", value = "bicycle_parking") %>% osmdata_sf()
     
     paraciclos_sf <- paraciclos$osm_points %>% as.data.frame() %>% st_as_sf() %>%
-      select(osm_id, name) %>% mutate(Tipo = "Privado")
+      select(osm_id, amenity) %>% mutate(Tipo = "Privado")
     paraciclos_final <- paraciclos_sf %>% st_filter(muni_shape)
 
     st_write(paraciclos_final,

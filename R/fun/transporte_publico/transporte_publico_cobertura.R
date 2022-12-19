@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 
 #gráficos de ciclovias
@@ -126,7 +126,7 @@ graficos <- function(munis = "all"){
       mutate(title = "Assentamentos Precários")
     
     
-    dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_pal/micro_muni_pal.RDS',
+    dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                         sigla_muni, sigla_muni))
     
     pop_counts <- dados_simulacao %>%
@@ -182,7 +182,7 @@ graficos <- function(munis = "all"){
               # color = '#0f805e',
               # color = NA,
               alpha = 1,
-              linewidth = 1.0) +
+              linewidth = 0.8) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
                          values = c("#0f805e" = "#0f805e"),
@@ -199,7 +199,7 @@ graficos <- function(munis = "all"){
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
+              linewidth = 0.6,
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
@@ -241,7 +241,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = .5) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -301,7 +301,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
+           dpi = 400,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -628,7 +628,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp_buffer,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/6-linhas_tp_buffer_300m_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
+           dpi = 400,
            width = 1.62*13, height = 13, units = "cm" )
     
 
@@ -734,7 +734,7 @@ graficos <- function(munis = "all"){
     ggsave(map_linhas_tp_buffer_500,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/7-linhas_tp_buffer_500m_%s.png", sigla_muni, sigla_muni),
-           dpi = 300,
+           dpi = 400,
            width = 1.62*13, height = 13, units = "cm" )
     
     
@@ -937,11 +937,11 @@ graficos <- function(munis = "all"){
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
       )+
-      scale_size(range=c(0,10),
-                 # breaks=c(1,4,8,10,2),
-                 # labels=c("1","4","8","10","25+"),
-                 name = "Habitantes",
-                 guide="legend")
+      scale_size_continuous( range = c(0,11),
+                             limits = c(1,50000),
+                             breaks = c(0,10000,25000,50000),
+                             name = "Habitantes",
+                             guide = "legend")
     p_b300_bus <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
                                                            values = c("Homens Brancos"="#ADBEF0",
                                                                       "Homens Pretos"="#174DE8",
@@ -962,7 +962,7 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.85,0.95),
+                         limits = c(0.90,0.95),
                          breaks = seq(0.85,0.95, 0.025)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
@@ -1095,8 +1095,8 @@ graficos <- function(munis = "all"){
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(500,3000),
-                         breaks = seq(0,3000, 250)) +
+                         limits = c(1000,3500),
+                         breaks = seq(1000,3500, 500)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1195,8 +1195,8 @@ graficos <- function(munis = "all"){
 #     
 #     ratio <- (max(img$y)-min(img$y))/(max(img$x)-min(img$x))
     
-    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
-                                   sigla_muni), layer= "areas")
+    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                   sigla_muni, sigla_muni), layer= "areas")
     # mapview(dados_areas)
     
     
@@ -1388,7 +1388,7 @@ graficos <- function(munis = "all"){
     ggsave(map_aglomerados_ntad,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/14-linhas_tp_%s.png", sigla_muni, sigla_muni),
-           dpi = 200,
+           dpi = 400,
            width = 1.62*13, height = 13, units = "cm" )
     
     

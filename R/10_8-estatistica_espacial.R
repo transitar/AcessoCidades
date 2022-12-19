@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -60,8 +60,8 @@ faz_lisa <- function(sigla_muni){
                              sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
   
   
-  dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
-                                 sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+  dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                 sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
   
   area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
                                      sigla_muni)) %>% filter(DN == 24) %>%
@@ -344,7 +344,7 @@ map_lisa_cor <- ggplot()+
   new_scale_fill() +
   geom_sf(data = st_transform(data_complete_cor,
                               3857), aes(fill = cluster_bp), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.8) +
   # geom_sf(data = simplepolys %>% st_transform(3857),
   #         # aes(size = 2),
   #         aes(color = "#8E8E8E"),
@@ -357,7 +357,7 @@ map_lisa_cor <- ggplot()+
   geom_sf(data = assentamentos,
           aes(colour = "white"),
           fill = NA,
-          size = 1.3)+
+          linewidth = 0.8)+
   
   scale_color_identity(labels = c("white" = "Assentamentos Precários",
                                   blue = ""), guide = "legend") +
@@ -521,7 +521,7 @@ map_lisa_cor <- ggplot() +
                                 "grey60" = "grey60"),
                      label = c("#0f805e" = "Assentamentos precários",
                                "grey45" = "Área urbana",
-                               "grey60" = "Áreas de planejamento")) +
+                               "grey60" = "Unidades de planejamento")) +
   # scale_color_manual(name = "Área Urbanizada",
   #                    values = c("grey45" = "grey45"),
   #                    label = c("grey45" = "Palmas")
@@ -564,7 +564,7 @@ hist_difcor <- ggplot(data_complete_cor, aes(x = dif_pretos_brancos)) +
   geom_histogram(aes(y = (..count..)/sum(..count..)),
                  fill = '#d96e0a') + 
   scale_y_continuous(labels = scales::percent)+
-  xlab("Habitantes") +
+  xlab("Diferença de habitantes") +
   ylab('Porcentagem de hexagonos')+
   theme_minimal() +
   theme(
@@ -802,7 +802,7 @@ lisa_renda <- local_moran(queen_w, renda["renda"])
 renda$cluster_renda <- as.factor(lisa_renda$GetClusterIndicators())
 levels(renda$cluster_renda) <- lisa_renda$GetLabels()
 
-mapview(renda, zcol = "renda")
+# mapview(renda, zcol = "renda")
 
 
 # Lisa de Renda Antigo ----------------------------------------------------
@@ -991,7 +991,7 @@ geom_sf(data = dados_areas %>% st_transform(3857),
                                 "grey60" = "grey60"),
                      label = c("#0f805e" = "Assentamentos precários",
                                "grey45" = "Área urbana",
-                               "grey60" = "Áreas de planejamento")) +
+                               "grey60" = "Unidades de planejamento")) +
   # scale_color_manual(name = "Área Urbanizada",
   #                    values = c("grey45" = "grey45"),
   #                    label = c("grey45" = "Palmas")
@@ -1185,44 +1185,44 @@ renda_homens <- resp_dom %>% filter(resp_home == "Resp_masc") %>%
 renda_mulheres <- resp_dom %>% filter(resp_home == "Resp_fem") %>%
   select(hex, r_pcm_m = r_pcm, r_pm_m = r_pm)
 
-renda_resp <- resp_dom_all %>% left_join(renda_homens %>% st_drop_geometry(), by = "hex") %>%
-  left_join(renda_mulheres %>% st_drop_geometry(), by = "hex") %>%
-  mutate(dif_rend_pc_hm_percent = (dif_rend_pc_hm/r_pcm_m),
-         dif_rend_pes_hm_percent = (dif_rend_pes_hm/r_pm_m))
-
-renda_resp2 <- renda_resp %>% mutate_if(is.numeric, list(~na_if(., Inf)))
-renda_resp2 <- renda_resp2 %>% mutate_if(is.numeric, list(~na_if(., -Inf)))
-
-
-
-renda_resp_sem_na <- renda_resp2 %>% drop_na(dif_rend_pc_hm_percent, dif_rend_pes_hm_percent) %>%
-  ungroup() %>%
-  mutate(amplitude = (max(dif_rend_pc_hm_percent, na.rm = T)- min(dif_rend_pc_hm_percent, na.rm = T)),
-         dif_rend_pc_hm_percent_pad = (dif_rend_pc_hm_percent - min(dif_rend_pc_hm_percent, na.rm =T))/ (max(dif_rend_pc_hm_percent, na.rm = T)- min(dif_rend_pc_hm_percent, na.rm = T)))
-# max(renda_resp_sem_na$dif_rend_pc_hm_percent, na.rm = T)
+# renda_resp <- resp_dom_all %>% left_join(renda_homens %>% st_drop_geometry(), by = "hex") %>%
+#   left_join(renda_mulheres %>% st_drop_geometry(), by = "hex") %>%
+#   mutate(dif_rend_pc_hm_percent = (dif_rend_pc_hm/r_pcm_m),
+#          dif_rend_pes_hm_percent = (dif_rend_pes_hm/r_pm_m))
 # 
-# t.test(renda_resp_sem_na$dif_rend_pc_hm_percent_pad)
+# renda_resp2 <- renda_resp %>% mutate_if(is.numeric, list(~na_if(., Inf)))
+# renda_resp2 <- renda_resp2 %>% mutate_if(is.numeric, list(~na_if(., -Inf)))
 # 
-# mean(renda_resp_sem_na$dif_rend_pc_hm_percent_pad) * (max(renda_resp_sem_na$dif_rend_pc_hm_percent)- min(renda_resp_sem_na$dif_rend_pc_hm_percent)) + min(renda_resp_sem_na$dif_rend_pc_hm_percent)
 # 
-# 0.03281424 * (max(renda_resp_sem_na$dif_rend_pc_hm_percent)- min(renda_resp_sem_na$dif_rend_pc_hm_percent)) + min(renda_resp_sem_na$dif_rend_pc_hm_percent)
-# 0.03530561 * (max(renda_resp_sem_na$dif_rend_pc_hm_percent)- min(renda_resp_sem_na$dif_rend_pc_hm_percent)) + min(renda_resp_sem_na$dif_rend_pc_hm_percent)
-
-
-# summary(renda_resp_sem_na$dif_rend_pc_hm_percent)
-t.test(renda_resp_sem_na$dif_rend_pc_hm_percent)
-
-t.test(renda_resp_sem_na$dif_rend_pes_hm_percent)
-
-t.test(renda_resp2$r_pcm_h, renda_resp2$r_pcm_m, paired = T)
-
-t.test(renda_resp2$dif_rend_pc_hm)
-
-
-#teste de medias sem agregar por hex
-rendas_mulheres <- data_micro2 %>% filter(resp_home == "Resp_fem")
-rendas_homens <- data_micro2 %>% filter(resp_home == "Resp_masc")
-t.test(rendas_homens$Rend_pc, rendas_mulheres$Rend_pc)
+# 
+# renda_resp_sem_na <- renda_resp2 %>% drop_na(dif_rend_pc_hm_percent, dif_rend_pes_hm_percent) %>%
+#   ungroup() %>%
+#   mutate(amplitude = (max(dif_rend_pc_hm_percent, na.rm = T)- min(dif_rend_pc_hm_percent, na.rm = T)),
+#          dif_rend_pc_hm_percent_pad = (dif_rend_pc_hm_percent - min(dif_rend_pc_hm_percent, na.rm =T))/ (max(dif_rend_pc_hm_percent, na.rm = T)- min(dif_rend_pc_hm_percent, na.rm = T)))
+# # max(renda_resp_sem_na$dif_rend_pc_hm_percent, na.rm = T)
+# # 
+# # t.test(renda_resp_sem_na$dif_rend_pc_hm_percent_pad)
+# # 
+# # mean(renda_resp_sem_na$dif_rend_pc_hm_percent_pad) * (max(renda_resp_sem_na$dif_rend_pc_hm_percent)- min(renda_resp_sem_na$dif_rend_pc_hm_percent)) + min(renda_resp_sem_na$dif_rend_pc_hm_percent)
+# # 
+# # 0.03281424 * (max(renda_resp_sem_na$dif_rend_pc_hm_percent)- min(renda_resp_sem_na$dif_rend_pc_hm_percent)) + min(renda_resp_sem_na$dif_rend_pc_hm_percent)
+# # 0.03530561 * (max(renda_resp_sem_na$dif_rend_pc_hm_percent)- min(renda_resp_sem_na$dif_rend_pc_hm_percent)) + min(renda_resp_sem_na$dif_rend_pc_hm_percent)
+# 
+# 
+# # summary(renda_resp_sem_na$dif_rend_pc_hm_percent)
+# t.test(renda_resp_sem_na$dif_rend_pc_hm_percent)
+# 
+# t.test(renda_resp_sem_na$dif_rend_pes_hm_percent)
+# 
+# t.test(renda_resp2$r_pcm_h, renda_resp2$r_pcm_m, paired = T)
+# 
+# t.test(renda_resp2$dif_rend_pc_hm)
+# 
+# 
+# #teste de medias sem agregar por hex
+# rendas_mulheres <- data_micro2 %>% filter(resp_home == "Resp_fem")
+# rendas_homens <- data_micro2 %>% filter(resp_home == "Resp_masc")
+# t.test(rendas_homens$Rend_pc, rendas_mulheres$Rend_pc)
 
 
 # LISA genero Rsponsavel --------------------------------------------------
@@ -1445,7 +1445,7 @@ geom_sf(data = dados_areas %>% st_transform(3857),
                                 "grey60" = "grey60"),
                      label = c("#0f805e" = "Assentamentos precários",
                                "grey45" = "Área urbana",
-                               "grey60" = "Áreas de planejamento")) +
+                               "grey60" = "Unidades de planejamento")) +
   # scale_color_manual(name = "Área Urbanizada",
   #                    values = c("grey45" = "grey45"),
   #                    label = c("grey45" = "Palmas")
@@ -1526,7 +1526,7 @@ hist_resp_dif_hm <- ggplot(renda_resp_sem_na, aes(x = dif_resp_hm)) +
   )
 ggsave(hist_resp_dif_hm,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/7-hist_responsaveis_%s.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/6-hist_responsaveis_%s.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,

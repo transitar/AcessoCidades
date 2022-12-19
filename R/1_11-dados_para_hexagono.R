@@ -15,7 +15,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'con'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm';source_escolas <- "censo_escolar"
+sigla_muni <- 'dou'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm';source_escolas <- "censo_escolar"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -126,12 +126,24 @@ infos_to_hex <- function(sigla_muni, ano) {
     
   } else if (source == "cnes"){
   
-  file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s_%s_geocoded_2019.rds',source,  sigla_muni,
-                        source,  sigla_muni, source)
+  file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s_%s_geocoded_2019.rds',source_saude,  sigla_muni,
+                        source_saude,  sigla_muni, source_saude)
   dados_saude <- read_rds(file_saude) %>% mutate(S001 = 1) %>%
     select(S001, S002 = health_low, S003 = health_med, S004 = health_high)
+  mapview(dados_saude)
   
-  join_saude_hex <- sf::st_join(dados_saude, hex)
+  
+  if (muni == "dou"){
+    
+    saude_muni <- read_sf('../data-raw/dados_municipais_recebidos/muni_dou/muni_dou.gpkg',
+                          layer = "saude") %>%
+      select(S001, S002, S003, S004)
+    dados_saude <- saude_muni
+    # mapview(saude_muni) + mapview(dados_saude)
+  }
+  
+  join_saude_hex <- sf::st_join(dados_saude %>% st_transform(decisao_muni$epsg),
+                                st_transform(hex, decisao_muni$epsg))
   
   hex2 <- join_saude_hex %>%
     st_drop_geometry() %>%
@@ -286,6 +298,15 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   dados_lazer <- read_rds(file_lazer) %>% st_transform(decisao_muni$epsg)
   
+  if (sigla_muni == "dou"){
+    
+    dados_lazer_muni <- read_sf('../data-raw/dados_municipais_recebidos/muni_dou/muni_dou.gpkg',
+                                layer = "lazer")
+    # mapview( dados_lazer_muni) + mapview(dados_lazer)
+    dados_lazer <- dados_lazer_muni
+    
+  }
+  
   # dados_lazer2 <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
   #                        layer = "lazer") %>%
   #   mutate(name = "prefeitura", type = "municipal") %>%
@@ -311,6 +332,16 @@ infos_to_hex <- function(sigla_muni, ano) {
     group_by(id_hex) %>% 
     summarise(lazer_tot = sum(count)) %>% distinct(id_hex, .keep_all = T)
   
+  if (silga_muni == "dou"){
+    hex_lazer2 <- hex_lazer %>% mutate(count = ifelse(is.na(id)== TRUE,
+                                                      0,
+                                                      1)) %>%
+      st_drop_geometry() %>%
+      group_by(id_hex) %>% 
+      summarise(lazer_tot = sum(count)) %>% distinct(id_hex, .keep_all = T)
+  }
+  
+  
   hex_lazer3 <- left_join(hex,hex_lazer2 , by = "id_hex") %>% select(id_hex, lazer_tot) %>%
     st_drop_geometry()
   
@@ -320,8 +351,29 @@ infos_to_hex <- function(sigla_muni, ano) {
   # mapview(hex_total_sf, zcol = 'lazer_tot')
   
   #paraciclos
-  
+  if (sigla_muni == "poa"){
   paraciclos_hex <- read_rds(sprintf('../data/paraciclos/muni_%s/paraciclos_%s.rds', sigla_muni, sigla_muni))
+  } else if (sigla_muni == "dou"){
+    
+    paraciclos <- st_read(
+    sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+            sigla_muni,
+            sigla_muni),
+    layer = "paraciclos")
+    
+    join_paraciclos_hex <- sf::st_join(paraciclos, hex)
+    
+    paraciclos_hex <- join_paraciclos_hex %>%
+      st_drop_geometry() %>%
+      group_by(id_hex) %>% 
+      summarise(paraciclos = n())
+    
+    # hex_paraciclos <- left_join(hex, hex2, by = "id_hex") %>%
+    #   mutate(n_jobs = ifelse(is.na(n_jobs)==T,
+    #                          0,
+    #                          n_jobs)) %>% st_drop_geometry()
+    
+  }
   
   # hex_total <- read_rds('../data/dados_hex/muni_poa/dados_hex_poa.rds') %>% st_drop_geometry()
   

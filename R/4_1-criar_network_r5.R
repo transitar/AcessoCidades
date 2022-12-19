@@ -1,11 +1,21 @@
 #criação de graphs no r5r
 
-options(java.parameters = '-Xmx4G')
+options(java.parameters = '-Xmx6G')
 # system("java -version")
 library(r5r)
 library(gtfstools)
 
 gtfs <- gtfstools::read_gtfs('../11 - GTFS/muni_pal/gtfs_files/gtfs_pal.zip')
+gtfs <- gtfstools::read_gtfs('../data-raw/gtfs/muni_con/2022/gtfs_con.zip')
+
+
+a <- gtfs$routes$route_id
+
+gtfs %>%
+  filter_by_route_id(route_id = a) %>%
+  write_gtfs("gtfs_palmas_teste.zip")
+
+
 # latest_validator <- gtfstools::download_validator(tempdir())
 # latest_validator
 # head(gtfs$trips[, .(trip_id, trip_headsign, shape_id)])
@@ -28,7 +38,7 @@ write_gtfs(teste, "../r5r/network/2022/muni_pal/gtfs_pal.zip")
 
 # FUNCAO PARA CONSTRUIR network -------------------------
 # graph.obj é salvo na pasta './otp/graphs/ano/cidade
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 ano <- 2022
 
 construir_graph_muni <- function(sigla_muni, ano) {

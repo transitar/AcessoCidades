@@ -7,7 +7,7 @@ source('./R/fun/setup.R')
 
 
 
-sigla_muni <- "pal"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
+sigla_muni <- "con"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
 # sigla_muni <- "spo"; ano=2019
 # sigla_muni <- "for"; ano=2019
 # sigla_muni <- "for"; ano=2017
@@ -123,14 +123,14 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     
   } else {
   
-  # hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
-  #                                     n_jobs, S001, S002, S003,  
+  # hex_dest <- setDT(hexagonos_sf)[, .(id_hex,
+  #                                     n_jobs, S001, S002, S003,
   #                                     S004, E001, E002, E003,
   #                                     E004, M001, M002, M003,
   #                                     M004, lazer_tot, paraciclos)]
     
-    hex_dest <- setDT(hexagonos_sf)[, .(id_hex, 
-                                        n_jobs, S001, S002, S003,  
+    hex_dest <- setDT(hexagonos_sf)[, .(id_hex,
+                                        n_jobs, S001, S002, S003,
                                         S004, E001, E002, E003,
                                         E004, M001, M002, M003,
                                         M004, lazer_tot)]

@@ -37,12 +37,22 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
   # code_munis <- munis_list$munis_metro[abrev_muni == sigla_muni & ano_metro == ano]$code_muni %>% 
   #   unlist()
   
+  # if(sigla_muni == "dou"){
+  #   
+  #   muni_folder_path_shape <- sprintf('../data-raw/municipios/%s/municipio_%s_%s_zoom.gpkg',ano,sigla_muni,ano)
+  #   
+  #   temp_sf <- read_sf(muni_folder_path_shape) 
+  #   
+  #   temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(17000)
+  #   
+  # } else {
+  
   muni_folder_path_shape <- sprintf('../data-raw/municipios/%s/municipio_%s_%s.rds',ano,sigla_muni,ano)
   
   temp_sf <- read_rds(muni_folder_path_shape) 
   
   temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(17000)
-  
+  # }
   # mapview(temp_sf)
   
   # temp_sf <- read_municipality(code_muni = muni1,year = 2019) 

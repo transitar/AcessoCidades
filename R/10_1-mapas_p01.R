@@ -16,7 +16,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 tema <- function(base_size) {
   
@@ -79,8 +79,8 @@ graficos <- function(munis = "all"){
                                sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
     
     
-    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_pal/muni_%s.gpkg',
-                                   sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                   sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
     
     area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
                                        sigla_muni)) %>% filter(DN == 24) %>%
@@ -97,7 +97,7 @@ graficos <- function(munis = "all"){
       st_buffer(2) %>%
       st_union() 
     
-    mapview(simplepolys)
+    # mapview(simplepolys)
     
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                       sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
@@ -117,7 +117,7 @@ graficos <- function(munis = "all"){
     # data_micro2 <- dados_simulacao %>% filter(code_tract %in% lista_tract) %>% select(1:10, V0606, hex) %>%
     #   mutate(V0606 = as.factor(V0606))
     
-    data_micro2 <- dados_simulacao  %>% select(1:10, V0606, hex) %>%
+    data_micro2 <- dados_simulacao  %>% select(1:12, V0606, hex) %>%
       mutate(V0606 = as.factor(V0606))
     
     #remocão dos habitantes de cor amarela e indígena
@@ -158,7 +158,7 @@ graficos <- function(munis = "all"){
     
     pop_counts <- dados_simulacao %>%
       group_by(hex) %>%
-      summarise(pop_total = n()) %>% left_join(data_mhex, by = c("hex" = "id_hex")) %>%
+      summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf()
     
     st_write(pop_counts,sprintf("../data/microssimulacao/muni_%s/population_counts_%s.gpkg",
@@ -350,7 +350,7 @@ graficos <- function(munis = "all"){
                          values = c("#e1ffce" = "#e1ffce",
                                     "grey60" = "grey60"),
                          label = c("#e1ffce" = "Área urbanizada",
-                                   "grey60" = "Áreas de planejamento")
+                                   "grey60" = "Unidades de planejamento")
       )+
       
       
@@ -762,7 +762,7 @@ graficos <- function(munis = "all"){
                          values = c("#bfa5e7" = "#bfa5e7",
                                     "grey60" = "grey60"),
                          label = c("#bfa5e7" = "Área urbanizada",
-                                   "grey60" = "Áreas de planejamento")
+                                   "grey60" = "Unidades de planejamento")
       )+
       
       
