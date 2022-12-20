@@ -8,7 +8,7 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 mode1 <- "walk"
 oportunidade <- "saude"
 titulo_leg <- "Eq. de Saúde"
@@ -139,7 +139,7 @@ tema_TMI <- function(base_size) {
     legend.title=element_text(size=35, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.25, 0.30),
+    legend.position = c(0.20, 0.35),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -408,7 +408,7 @@ mapas_tmi <- function(sigla_muni,
     # scale_colour_manual(values = 'transparent') +
     # facet_wrap(~ind, ncol = 2)+
 
-    labs(fill = sprintf("Tempo Mínimo de Acesso a %s", titulo_leg)) +
+    labs(fill = sprintf("TMI a %s", titulo_leg)) +
     
     geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
@@ -867,13 +867,19 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
 #                      width = 14,
 #                      height = 10
 # )
-lista_modos <- c(rep("transit", 9), rep("walk", 9), rep("bike", 9))
+lista_modos <- c(rep("walk", 9), rep("bike", 9))
+# lista_modos <- c(rep("transit", 9), rep("walk", 9), rep("bike", 9))
 # lista_modos <- c(rep("transit", 11), rep("walk", 11), rep("bike", 11))
 lista_oportunidade <- rep(c(
   
   rep("escolas", 4),
   rep("saude", 4),
-  "lazer"),3)
+  "lazer"),2)
+# lista_oportunidade <- rep(c(
+#   
+#   rep("escolas", 4),
+#   rep("saude", 4),
+#   "lazer"),3)
 # lista_oportunidade <- rep(c(
 #   
 #   rep("escolas", 4),
@@ -885,7 +891,11 @@ lista_oportunidade <- rep(c(
 lista_siglaop <- rep(c(
   "ET", "EI", "EF", "EM",
   "ST", "SB", "SM", "SA",
-  "LZ"), 3)
+  "LZ"), 2)
+# lista_siglaop <- rep(c(
+#   "ET", "EI", "EF", "EM",
+#   "ST", "SB", "SM", "SA",
+#   "LZ"), 3)
 # lista_siglaop <- rep(c(
 #   "ET", "EI", "EF", "EM",
 #   "ST", "SB", "SM", "SA",
@@ -894,14 +904,19 @@ lista_siglaop <- rep(c(
 lista_titulo_leg <- rep(c(
   rep("Escolas", 4),
   rep("Eq. de Saúde", 4),
-  "Eq. de Lazer"), 3)
+  "Eq. de Lazer"), 2)
+# lista_titulo_leg <- rep(c(
+#   rep("Escolas", 4),
+#   rep("Eq. de Saúde", 4),
+#   "Eq. de Lazer"), 3)
 # lista_titulo_leg <- rep(c(
 #   rep("Escolas", 4),
 #   rep("Eq. de Saúde", 4),
 #   "Eq. de Lazer",
 #   "Est. de B.\n Compartilhadas",
 #   "Paraciclos"), 3)
-lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
+lista_tempos <- c(rep(15,9), rep(30, 9))
+# lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
 # lista_tempos <- c(rep(30, 11), rep(15,11), rep(15, 11))
 
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
@@ -912,7 +927,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'con',
+                    sigla_muni = 'dou',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,

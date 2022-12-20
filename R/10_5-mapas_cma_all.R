@@ -17,7 +17,7 @@ sigla_muni <- 'con'
 # width <- 14
 # height <- 10
 
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 mode1 <- "walk"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
@@ -129,7 +129,7 @@ tema_CMA <- function(base_size) {
     legend.title=element_text(size=35, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.30),
+    legend.position = c(0.22, 0.35),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -664,8 +664,8 @@ mapas_cma <- function(sigla_muni,
 library("future")
 plan(multisession)
 
-
-lista_modos <- c(rep("transit", 14), rep("walk", 14), rep("bike", 14))
+lista_modos <- c(rep("walk", 14), rep("bike", 14))
+# lista_modos <- c(rep("transit", 14), rep("walk", 14), rep("bike", 14))
 # lista_modos <- c(rep("transit", 16), rep("walk", 16), rep("bike", 16))
 
 # lista_oportunidade <- rep(c("empregos",
@@ -681,13 +681,24 @@ lista_oportunidade <- rep(c("empregos",
                         rep("matriculas",4),
                         rep("escolas", 4),
                         rep("saude", 4),
-                        "lazer"),3)
+                        "lazer"),2)
+
+# lista_oportunidade <- rep(c("empregos",
+#                             rep("matriculas",4),
+#                             rep("escolas", 4),
+#                             rep("saude", 4),
+#                             "lazer"),3)
 
 lista_siglaop <- rep(c("TT",
                        "MT", "MI", "MF", "MM",
                        "ET", "EI", "EF", "EM",
                        "ST", "SB", "SM", "SA",
-                       "LZ"), 3)
+                       "LZ"), 2)
+# lista_siglaop <- rep(c("TT",
+#                        "MT", "MI", "MF", "MM",
+#                        "ET", "EI", "EF", "EM",
+#                        "ST", "SB", "SM", "SA",
+#                        "LZ"), 3)
 
 
 # lista_siglaop <- rep(c("TT",
@@ -700,8 +711,12 @@ lista_titulo_leg <- rep(c("Empregos",
                       rep("Matrículas",4),
                       rep("Escolas", 4),
                       rep("Eq. de Saúde", 4),
-                      "Eq. de Lazer"), 3)
-
+                      "Eq. de Lazer"), 2)
+# lista_titulo_leg <- rep(c("Empregos",
+#                           rep("Matrículas",4),
+#                           rep("Escolas", 4),
+#                           rep("Eq. de Saúde", 4),
+#                           "Eq. de Lazer"), 3)
 
 
 # lista_titulo_leg <- rep(c("Empregos",
@@ -711,13 +726,14 @@ lista_titulo_leg <- rep(c("Empregos",
 #                           "Eq. de Lazer",
 #                           "Est. de B.\n Compartilhadas",
 #                           "Paraciclos"), 3)
-lista_tempos <- c(rep(45, 14), rep(15,14), rep(30, 14))
+lista_tempos <- c(rep(15,14), rep(30, 14))
+# lista_tempos <- c(rep(45, 14), rep(15,14), rep(30, 14))
 # lista_tempos <- c(rep(30, 16), rep(30,16), rep(30, 16))
 
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'con',
+                    sigla_muni = 'dou',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,

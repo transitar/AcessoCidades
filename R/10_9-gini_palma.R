@@ -834,14 +834,14 @@ razao_medias_function_cor <- function(sigla_muni, type_acc){
 
   genero_resp_func <- function(ind){
 
-    dados_homens <- data_micro_acc %>% filter(genero == "Homens") %>%
+    dados_homens <- data_micro_acc %>% filter(resp_home == "Resp_masc") %>%
       st_drop_geometry() %>%
       drop_na(ind) %>%
       select(ind)
     # dados_brancos <- dados_brancos[ind]
     media_homens <- mean(dados_homens[[ind]], na.rm = T)
 
-    dados_mulheres <- data_micro_acc %>% filter(genero == "Mulheres") %>%
+    dados_mulheres <- data_micro_acc %>% filter(resp_home == "Resp_fem") %>%
       st_drop_geometry() %>%
       drop_na(ind) %>%
       select(ind)

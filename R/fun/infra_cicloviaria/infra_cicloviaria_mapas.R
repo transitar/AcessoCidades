@@ -101,6 +101,9 @@ graficos <- function(munis = "all"){
       
     }
     # mapview(dados_ciclovias)
+    # dados_ciclovias_teste <- dados_ciclovias %>%
+    #   mutate(length = as.numeric(st_length(.)))
+    # sum(dados_ciclovias_teste$length)
     
     if (sigla_muni == "poa") {
     dados_ciclovias <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
