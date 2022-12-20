@@ -90,6 +90,10 @@ aproxima_muni_zoom <- function(sigla_muni) {
   
   if (sigla_muni == "pal") {
     coord_sf(ylim = c(-1130754,-1166246), xlim = c(-5398510,-5358070), expand = FALSE)
+  } else if (sigla_muni == "dou"){
+    
+    coord_sf(ylim = c(-2511960,-2558183), xlim = c(-6057297,-6171192), expand = FALSE)
+    
   }
   
 }

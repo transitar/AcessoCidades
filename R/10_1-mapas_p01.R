@@ -16,7 +16,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 
 tema <- function(base_size) {
   
@@ -81,7 +81,7 @@ graficos <- function(munis = "all"){
     
     dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
                                    sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
-    
+    # mapview(dados_areas)
     area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
                                        sigla_muni)) %>% filter(DN == 24) %>%
       st_make_valid() %>%
@@ -162,7 +162,7 @@ graficos <- function(munis = "all"){
       st_as_sf()
     
     st_write(pop_counts,sprintf("../data/microssimulacao/muni_%s/population_counts_%s.gpkg",
-                                sigla_muni, sigla_muni))
+                                sigla_muni, sigla_muni), append = F)
     
     # st_write(pop_counts, 'pop_poa.shp')
     
@@ -588,7 +588,7 @@ graficos <- function(munis = "all"){
       # mutate(renda = ifelse(renda>10, 10, renda))
     
     st_write(renda_escrita,sprintf("../data/microssimulacao/muni_%s/renda_%s.gpkg",
-                                sigla_muni, sigla_muni))
+                                sigla_muni, sigla_muni), append = F)
     
     renda <- dados_simulacao %>%
       group_by(hex) %>%
@@ -777,7 +777,7 @@ graficos <- function(munis = "all"){
       #   aesthetics = "fill",
       #   # colors
       # ) +
-    scale_fill_distiller("Renda per capita (Salarios Minimos)",
+    scale_fill_distiller("Renda per capita (SM)",
                          type = "div",
                          palette = "GnBu",
                          direction = 1,

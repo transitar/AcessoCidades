@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -190,6 +190,17 @@ data_complete_cor <- dados_micro_sf %>% st_drop_geometry() %>%
                                                    is_empty(n[cor == "Pretos"]) == T,
                                                  -n[cor == "Pretos"], NA)))
                                    ,
+         dif_brancos_pretos = ifelse(is_empty(n[cor == "Brancos"]) == F &
+                                       is_empty(n[cor == "Pretos"]) == F ,
+                                     n[cor == "Brancos"] - n[cor == "Pretos"],
+                                     
+                                     ifelse(is_empty(n[cor == "Pretos"]) == F &
+                                              is_empty(n[cor == "Brancos"]) == T,
+                                            -n[cor == "Pretos"],
+                                            ifelse(is_empty(n[cor == "Brancos"]) == F &
+                                                     is_empty(n[cor == "Pretos"]) == T,
+                                                   n[cor == "Pretos"], NA)))
+         ,
          
          
          
@@ -261,7 +272,7 @@ library(rgeoda)
 queen_w <- queen_weights(data_complete_cor,order = 1)
 
 # calculate LISA as per GEODA
-lisa <- local_moran(queen_w, data_complete_cor["dif_pretos_brancos"])
+lisa <- local_moran(queen_w, data_complete_cor["dif_brancos_pretos"])
 
 data_complete_cor$cluster_bp <- as.factor(lisa$GetClusterIndicators())
 levels(data_complete_cor$cluster_bp) <- lisa$GetLabels()
@@ -457,8 +468,8 @@ map_lisa_cor <- ggplot() +
                                # 'Low-High' = NA
   ),
   labels = c('Not significant' = 'Não Significativo',
-             'High-High' = '> predominância de pretos',
-             'Low-Low' = '< predominância de pretos'
+             'High-High' = '> predominância de brancos',
+             'Low-Low' = '< predominância de brancos'
              # 'Low-High' = ''
              # 'Low-High' = 'Baixo-Alto'
   )) +
@@ -560,7 +571,7 @@ ggsave(map_lisa_cor,
 # Histograma de diferença de cor ------------------------------------------
 
 
-hist_difcor <- ggplot(data_complete_cor, aes(x = dif_pretos_brancos)) +
+hist_difcor <- ggplot(data_complete_cor, aes(x = dif_brancos_pretos)) +
   geom_histogram(aes(y = (..count..)/sum(..count..)),
                  fill = '#d96e0a') + 
   scale_y_continuous(labels = scales::percent)+

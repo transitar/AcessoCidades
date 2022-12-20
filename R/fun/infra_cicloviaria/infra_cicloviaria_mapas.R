@@ -18,7 +18,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 
 #gráficos de ciclovias
 
@@ -345,7 +345,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Contagem")
+                         label = c("grey45" = "Dourados")
       )+
       
       
@@ -509,7 +509,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Contagem")
+                         label = c("grey45" = "Dourados")
       )+
       
       
@@ -931,8 +931,8 @@ graficos <- function(munis = "all"){
       #            name = "Habitantes",
       #            guide="legend") +
       scale_size_continuous( range = c(0,12),
-                             limits = c(1,4000),
-                             breaks = c(0,500,1500,3000),
+                             limits = c(1,2500),
+                             breaks = c(0,500,1000,2000),
                              name = "Habitantes",
                              guide = "legend")
     
@@ -957,8 +957,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.025,0.075),
-                         breaks = seq(0.025,0.075, 0.005)) +
+                         limits = c(0.075,0.15),
+                         breaks = seq(0.075,0.15, 0.01)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1037,8 +1037,8 @@ graficos <- function(munis = "all"){
       scale_fill_manual(values = c("grey70", "#FFB578", "black", "#cc3003"),
       )+
       scale_size_continuous( range = c(0,11),
-                             limits = c(1,50000),
-                             breaks = c(0,10000,25000,50000),
+                             limits = c(1,15000),
+                             breaks = c(0,1000,5000,10000),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bike_ntad <- plot_cleveland_bike300_ntad + scale_color_manual(name = "Gênero e Cor",
@@ -1061,8 +1061,8 @@ graficos <- function(munis = "all"){
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(20000,50000),
-                         breaks = seq(20000,50000, 5000)) +
+                         limits = c(5000,15000),
+                         breaks = seq(5000,15000, 2500)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),

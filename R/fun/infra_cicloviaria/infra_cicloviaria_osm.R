@@ -1,7 +1,7 @@
 #download de dados cicloviários do osm
 source('./R/fun/setup.R')
 
-sigla_muni = "con"
+sigla_muni = "dou"
 
 create_diretorios <- function(sigla_muni){
   
@@ -120,7 +120,7 @@ download_osm <- function(munis = 'all'){
     
     ciclo <- rbind(highway_cycleway,
                    cycleway,
-                   cycleway_left,
+                   # cycleway_left,
                    cycleway_right)
 
     # mapview(ciclo) + mapview(muni_shape)
@@ -145,12 +145,13 @@ download_osm <- function(munis = 'all'){
     paraciclos_sf <- paraciclos$osm_points %>% as.data.frame() %>% st_as_sf() %>%
       select(osm_id, amenity) %>% mutate(Tipo = "Privado")
     paraciclos_final <- paraciclos_sf %>% st_filter(muni_shape)
+    mapview(paraciclos_final)
 
     st_write(paraciclos_final,
                      sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
                              sigla_muni,
                              sigla_muni),
-             layer = "paraciclos")
+             layer = "paraciclos", append = F)
     
     
   }
