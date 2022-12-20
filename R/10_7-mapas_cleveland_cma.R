@@ -8,12 +8,13 @@
 
 source('./R/fun/setup.R')
 library(patchwork)
+library(showtext)
 
 # sigla_muni <- 'pal'
 width <- 15
 height <- 10
 
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 mode1 <- "transit"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
@@ -758,7 +759,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'pal',
+                      sigla_muni = 'con',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -810,7 +811,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'pal',
+                      sigla_muni = 'con',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,

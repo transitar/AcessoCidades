@@ -2,6 +2,7 @@
 
 source('./R/fun/setup.R')
 library(patchwork)
+library(showtext)
 # library(elementalist)
 options(scipen = 100000000)
 width <- 14
