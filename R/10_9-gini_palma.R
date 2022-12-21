@@ -3,11 +3,11 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 width <- 16
 height <- 10
 
-sigla_muni <- 'con'
+
 mode1 <- "transit"
 type_acc <- "CMA"
 ind_selec <- c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60")
@@ -301,18 +301,18 @@ write.xlsx(desigualdade_all_tmi, sprintf('../data/ind_desigualdade/muni_%s/muni_
 dados_cma <- desigualdade_all_cma %>% filter(indicador %in% ifelse(mode == "transit", c(
   "CMALZ45",
   "CMAMT45",
-  "CMAST45"
-  # "CMATT45"
+  "CMAST45",
+  "CMATT45"
   ), ifelse(mode == "bike", c(
     "CMALZ30",
     "CMAMT30",
-    "CMAST30"
-    # "CMATT30"
+    "CMAST30",
+    "CMATT30"
     ), c(
       "CMALZ15",
       "CMAMT15",
-      "CMAST15"
-      # "CMATT15"
+      "CMAST15",
+      "CMATT15"
       )))) %>%
   mutate(indicador = substr(indicador, start = 1L, stop = 5L))
 
@@ -876,25 +876,30 @@ razao_medias_function_cor <- function(sigla_muni, type_acc){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "con", "CMA")
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "dou", "CMA")
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
 
 
 # Gráfico de Razao de medias recorte de cor -------------------------------
-medias_razoes_acc_cor2 <- medias_razoes_acc %>%
-  filter(recorte == "cor") %>%
-  filter(indicador %in% c("CMALZ45", "CMALZ30", "CMALZ15")) %>%
-  mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
-                          modo == "bike" ~ "Bicicleta",
-                          modo == "walk" ~ "Caminhada"))
 # medias_razoes_acc_cor2 <- medias_razoes_acc %>%
 #   filter(recorte == "cor") %>%
-#   filter(indicador %in% c("CMATT45", "CMATT30", "CMATT15")) %>%
+#   filter(indicador %in% c("CMALZ45", "CMALZ30", "CMALZ15")) %>%
+#   # filter(modo != "transit") %>%
 #   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
 #                           modo == "bike" ~ "Bicicleta",
 #                           modo == "walk" ~ "Caminhada"))
+medias_razoes_acc_cor2 <- medias_razoes_acc %>%
+  filter(recorte == "cor") %>%
+  # filter(modo != "transit") %>%
+  filter(indicador %in% c("CMATT45", "CMALZ45",
+                          "CMATT30", "CMALZ30",
+                          "CMATT15", "CMALZ15")) %>%
+  mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT", "CMALZ")) %>%
+  mutate(modo = case_when(modo == "transit" ~ "Transporte Público (45 min)",
+                          modo == "bike" ~ "Bicicleta (30 min)",
+                          modo == "walk" ~ "Caminhada (15 min)"))
 
 plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
                          aes(y = media, x = indicador, fill = modo)) +
@@ -927,17 +932,27 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
   scale_x_discrete(breaks = c(
     # "TMIBK",
     "CMALZ15",
+    "CMALZ",
+    "CMATT",
     "CMALZ30",
     # "TMIPR",
-    # "CMATT45",
+    "CMATT45",
+    "CMATT30",
+    "CMATT15",
     "CMALZ45"),
     labels = c(
       # "Bicicletas\nCompartilhadas",
-      "Eq. de lazer (15 min)",
-      "Eq. de lazer (30 min)",
+      "CMALZ15" ="Eq. de lazer",
+      "CMALZ30" ="Eq. de lazer",
+      "CMALZ45" ="Eq. de lazer",
+      "CMALZ" ="Eq. de lazer",
+      "CMATT15" = "Empregos",
+      "CMATT30" = "Empregos",
+      "CMATT45" = "Empregos",
+      "CMATT" = "Empregos"
       # "Paraciclos",
       # "Saúde",
-      "Eq. de lazer (45 min)")) +
+      )) +
   ylab("Razão de Médias de\nAcessibilidade CMA de brancos / negros") +
   xlab("Oportunidade") +
   theme_light() +
@@ -969,18 +984,23 @@ ggsave(plot_razoes_cma_cor,
 
 # Gráfico de Razao de medias recorte de genero ----------------------------
 
-medias_razoes_acc_gen2 <- medias_razoes_acc %>%
-  filter(recorte == "genero") %>%
-  filter(indicador %in% c("CMALZ45", "CMALZ30", "CMALZ15")) %>%
-  mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
-                          modo == "bike" ~ "Bicicleta",
-                          modo == "walk" ~ "Caminhada"))
 # medias_razoes_acc_gen2 <- medias_razoes_acc %>%
 #   filter(recorte == "genero") %>%
-#   filter(indicador %in% c("CMATT45", "CMATT30", "CMATT15")) %>%
+#   filter(indicador %in% c("CMALZ45", "CMALZ30", "CMALZ15")) %>%
 #   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
 #                           modo == "bike" ~ "Bicicleta",
 #                           modo == "walk" ~ "Caminhada"))
+
+medias_razoes_acc_gen2 <- medias_razoes_acc %>%
+  filter(recorte == "genero") %>%
+  # filter(modo != "transit") %>%
+  filter(indicador %in% c("CMATT45", "CMALZ45",
+                          "CMATT30", "CMALZ30",
+                          "CMATT15", "CMALZ15")) %>%
+  mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT", "CMALZ")) %>%
+  mutate(modo = case_when(modo == "transit" ~ "Transporte Público (45 min)",
+                          modo == "bike" ~ "Bicicleta (30 min)",
+                          modo == "walk" ~ "Caminhada (15 min)"))
 
 plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
                               aes(y = media, x = indicador, fill = modo)) +
@@ -1011,19 +1031,21 @@ plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
   #                              "#d96e0a" = "Caminhada")
   # ) +
   scale_x_discrete(breaks = c(
-    # "TMIBK",
-    "CMALZ15",
-    "CMALZ30",
-    # "TMIPR",
+    "CMATT",
+    # "CMALZ15",
+    # "CMALZ30",
+    "CMALZ"
     # "CMATT45",
-    "CMALZ45"),
-    labels = c(
-      # "Bicicletas\nCompartilhadas",
-      "Eq. de lazer (15 min)",
-      "Eq. de lazer (30 min)",
-      # "Paraciclos",
-      # "Saúde",
-      "Eq. de lazer (45 min)")) +
+    # "CMALZ45"
+  ),
+  labels = c(
+    "Empregos",
+    # "Eq. de lazer (15 min)",
+    # "Eq. de lazer (30 min)",
+    # "Paraciclos",
+    "Lazer"
+    # "Eq. de lazer (45 min)"
+  )) +
   
   # scale_x_discrete(breaks = c(
   #   # "TMIBK",
@@ -1073,19 +1095,23 @@ ggsave(plot_razoes_cma_gen,
 
 # Gráfico de Razao de medias recorte de responsavel -------------------------------
 
-medias_razoes_acc_resp2 <- medias_razoes_acc %>%
-  filter(recorte == "responsavel") %>%
-  filter(indicador %in% c("CMALZ45", "CMALZ30", "CMALZ15")) %>%
-  mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
-                          modo == "bike" ~ "Bicicleta",
-                          modo == "walk" ~ "Caminhada"))
-
 # medias_razoes_acc_resp2 <- medias_razoes_acc %>%
 #   filter(recorte == "responsavel") %>%
-#   filter(indicador %in% c("CMATT45", "CMATT30", "CMATT15")) %>%
+#   filter(indicador %in% c("CMALZ45", "CMALZ30", "CMALZ15")) %>%
 #   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
 #                           modo == "bike" ~ "Bicicleta",
 #                           modo == "walk" ~ "Caminhada"))
+
+medias_razoes_acc_resp2 <- medias_razoes_acc %>%
+  filter(recorte == "responsavel") %>%
+  # filter(modo != "transit") %>%
+  filter(indicador %in% c("CMATT45", "CMALZ45",
+                          "CMATT30", "CMALZ30",
+                          "CMATT15", "CMALZ15")) %>%
+  mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT", "CMALZ")) %>%
+  mutate(modo = case_when(modo == "transit" ~ "Transporte Público (45 min)",
+                          modo == "bike" ~ "Bicicleta (30 min)",
+                          modo == "walk" ~ "Caminhada (15 min)"))
 
 plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
                               aes(y = media, x = indicador, fill = modo)) +
@@ -1116,19 +1142,21 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
   #                              "#d96e0a" = "Caminhada")
   # ) +
   scale_x_discrete(breaks = c(
-    # "TMIBK",
-    "CMALZ15",
-    "CMALZ30",
-    # "TMIPR",
+    "CMATT",
+    # "CMALZ15",
+    # "CMALZ30",
+    "CMALZ"
     # "CMATT45",
-    "CMALZ45"),
+    # "CMALZ45"
+    ),
     labels = c(
-      # "Bicicletas\nCompartilhadas",
-      "Eq. de lazer (15 min)",
-      "Eq. de lazer (30 min)",
+      "Empregos",
+      # "Eq. de lazer (15 min)",
+      # "Eq. de lazer (30 min)",
       # "Paraciclos",
-      # "Saúde",
-      "Eq. de lazer (45 min)")) +
+      "Lazer"
+      # "Eq. de lazer (45 min)"
+      )) +
   
   # scale_x_discrete(breaks = c(
   #   # "TMIBK",
@@ -1182,7 +1210,7 @@ ggsave(plot_razoes_cma_resp,
 
 # Dados Razão de Medias por Cor TMI ---------------------------------------------
 
-medias_razoes_acc_tmi <- razao_medias_function_cor(sigla_muni = "con", "TMI")
+medias_razoes_acc_tmi <- razao_medias_function_cor(sigla_muni = "dou", "TMI")
 medias_razoes_acc_tmi2 <- medias_razoes_acc_tmi %>% drop_na()
 # head(medias_razoes_acc_cor)
 
@@ -1196,6 +1224,7 @@ medias_razoes_acc_tmi2 <- medias_razoes_acc_tmi %>% drop_na()
 
 medias_razoes_acc_cor_tmi2 <- medias_razoes_acc_tmi %>%
   filter(recorte == "cor") %>%
+  # filter(modo != "transit") %>%
   filter(indicador %in% c("TMIST", "TMIET"
                           # "TMILZ"
                           )) %>%
@@ -1296,6 +1325,7 @@ ggsave(plot_razoes_cor_tmi,
 
 medias_razoes_acc_genero_tmi2 <- medias_razoes_acc_tmi %>%
   filter(recorte == "genero") %>%
+  # filter(modo != "transit") %>%
   filter(indicador %in% c("TMIST", "TMIET"
                           # "TMILZ"
                           )) %>%
@@ -1397,6 +1427,7 @@ ggsave(plot_razoes_genero_tmi,
 
 medias_razoes_acc_resp_tmi2 <- medias_razoes_acc_tmi %>%
   filter(recorte == "responsavel") %>%
+  # filter(modo != "transit") %>%
   filter(indicador %in% c("TMIST", "TMIET"
                           # "TMILZ"
                           )) %>%
@@ -1483,7 +1514,8 @@ ggsave(plot_razoes_resp_tmi,
 
 # Ranking de bairros acessibilidade ---------------------------------------
 
-type_acc <- "TMI"
+type_acc <- "CMA"
+modo_acc <- "walk"
 
 
 data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
@@ -1505,8 +1537,8 @@ if (type_acc == "CMA"){
 
 # data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds',
 #                                sigla_muni, sigla_muni)) %>% filter(mode == "transit")
-data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/tmi/acc_tmi_%s.rds',
-                               sigla_muni, sigla_muni)) %>% filter(mode == "transit")
+data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds',
+                               sigla_muni, sigla_muni)) %>% filter(mode == modo_acc)
 
 dados_acc <- left_join(dados_hex, data_acess, by = c("id_hex"="origin")) %>% st_as_sf()
 
@@ -1579,24 +1611,24 @@ data_acess <- acess2
 acess <- acess2
 dados_acc <- acess
 
-if (type_acc == "CMA"){
+if (type_acc == "CMA" & modo_acc == "walk"){
 dados_acc_hex <- dados_acc %>%
   st_drop_geometry() %>%
   group_by(id_hex) %>%
-  summarise(med_acc_cmatt45 = mean(CMATT45, na.rm = T),
-            med_acc_cmast30 = mean(CMAST30, na.rm = T),
-            med_acc_cmaet30 = mean(CMAET30, na.rm = T)) %>%
+  summarise(med_acc_cmatt15 = mean(CMATT15, na.rm = T),
+            med_acc_cmast15 = mean(CMAST15, na.rm = T),
+            med_acc_cmaet15 = mean(CMAET15, na.rm = T)) %>%
   left_join(dados_hex, by = c("id_hex"="id_hex")) %>%
   st_as_sf() %>%
   st_transform(4083)
-} else if (type_acc == "TMI"){
+} else if (type_acc == "CMA" & modo_acc == "transit"){
   
   dados_acc_hex <- dados_acc %>%
     st_drop_geometry() %>%
     group_by(id_hex) %>%
-    summarise(med_acc_tmist = mean(TMIST, na.rm = T),
-              med_acc_tmist = mean(TMIET, na.rm = T),
-              med_acc_tmist = mean(TMILZ, na.rm = T)) %>%
+    summarise(med_acc_cmatt45 = mean(CMATT45, na.rm = T),
+              med_acc_cmast45 = mean(CMAST45, na.rm = T),
+              med_acc_cmamt45 = mean(CMAMT45, na.rm = T)) %>%
     left_join(dados_hex, by = c("id_hex"="id_hex")) %>%
     st_as_sf() %>%
     st_transform(4083)
@@ -1618,17 +1650,28 @@ quadras <- quadras %>% st_transform(4083)
 
 quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
 # mapview(quadras_acc)
-
+if (modo_acc == "transit"){
 quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
   group_by(area) %>%
   summarise(acc_med_cmatt45 = mean(med_acc_cmatt45, na.rm = T),
-            acc_med_cmast30 = mean(med_acc_cmast30, na.rm = T),
-            acc_med_cmaet30 = mean(med_acc_cmaet30, na.rm = T)) %>%
+            acc_med_cmast45 = mean(med_acc_cmast45, na.rm = T),
+            acc_med_cmaet45 = mean(med_acc_cmaet45, na.rm = T)) %>%
   left_join(quadras) %>%
-  st_as_sf() %>% arrange(acc_med_cmast30) %>%
+  st_as_sf() %>% arrange(acc_med_cmatt45) %>%
   mutate(ranking = seq(1, length(area)))
-
-mapview(quadras_acc_med, zcol = "acc_med_cmatt45")
+} else if (modo_acc == "walk"){
+  quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
+    group_by(bairro) %>%
+    summarise(acc_med_cmatt15 = mean(med_acc_cmatt15, na.rm = T),
+              acc_med_cmast15 = mean(med_acc_cmast15, na.rm = T),
+              acc_med_cmaet15 = mean(med_acc_cmaet15, na.rm = T)) %>%
+    left_join(quadras) %>%
+    st_as_sf() %>% arrange(acc_med_cmatt15) %>%
+    mutate(ranking = seq(1, length(bairro)))
+  
+}
+quadras_acc_med <- quadras_acc_med %>% filter(is.na(bairro)==F & is.nan(acc_med_cmatt15)==F)
+# mapview(quadras_acc_med, zcol = "acc_med_cmatt15")
 
 pop_counts <- data_micro2 %>%
   group_by(hex) %>%
@@ -1637,7 +1680,7 @@ pop_counts <- data_micro2 %>%
 
 pop_quadras <- pop_counts %>% st_transform(4083) %>%
   st_join(quadras) %>% st_drop_geometry() %>%
-  group_by(area) %>%
+  group_by(bairro) %>%
   summarise(pop_quadra = sum(pop_total)) %>%
   left_join(quadras) %>%
   st_as_sf()
@@ -1646,8 +1689,8 @@ mapview(pop_quadras, zcol =  "pop_quadra")
 
 quadras_final <- quadras_acc_med %>% left_join(pop_quadras %>% st_drop_geometry())
 
-quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
-  arrange(acc_med_cmatt45)
+quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt15 > 0 & is.na(pop_quadra)==F) %>%
+  arrange(acc_med_cmatt15)
 
 quadras10 <- quadras_acc_med2[1:10,]
 
@@ -1656,7 +1699,7 @@ teste <- left_join(quadras, quadras10 %>% st_drop_geometry()) %>%
   mapview()
 
 quadras_percentil <- quadras_final %>% drop_na(pop_quadra) %>% 
-  mutate(quartil = ntile(acc_med_cmatt45, 5)) %>%
+  mutate(quartil = ntile(acc_med_cmatt15, 5)) %>%
   filter(quartil <= 2) 
 mapview(quadras_percentil)
 
@@ -1864,7 +1907,7 @@ plot3 <- ggplot()+
                                 "#615C5C" = "#615C5C"),
                      label = c("#852C2C" = "Área Urbanizada",
                                "#0A7E5C" = "Assentamentos precários",
-                               "#615C5C" = "Áreas de Planejamento")
+                               "#615C5C" = "Bairros")
   )+
   
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +

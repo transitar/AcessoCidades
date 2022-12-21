@@ -98,6 +98,7 @@ graficos <- function(munis = "all"){
     dados_peds_buffer_300 <- dados_peds %>% st_buffer(300) %>% st_union() %>% st_as_sf()
     dados_peds_buffer_500 <- dados_peds %>% st_buffer(500) %>% st_union() %>% st_as_sf()
     
+    # mapview(dados_peds_buffer_300)
     area_natend300 <- data_contorno %>% st_transform(decisao_muni$epsg) %>%
       st_difference(dados_peds_buffer_300)%>%
       st_union() %>% st_as_sf()
@@ -125,7 +126,7 @@ graficos <- function(munis = "all"){
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                       sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
       mutate(title = "Assentamentos Precários")
-    
+    # mapview(assentamentos)
     
     dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                         sigla_muni, sigla_muni))
@@ -1476,7 +1477,7 @@ graficos <- function(munis = "all"){
                                     "grey70" = "grey70",
                                     "#0f805e" = "#0f805e"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento",
+                                   "grey70" = "Bairros",
                                    "#0f805e" = "Aglomerados subnormais")
       )+
       
@@ -1949,7 +1950,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                    "grey70" = "Áreas de planejamento",
                                    "#0f805e" = "Aglomerados subnormais",
                                    "#FBFEA2" = "População não atendidada",
-                                   "ntad" = "População não atendido")
+                                   "ntad" = "População não atendida")
       )+
       
 

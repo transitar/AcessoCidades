@@ -509,7 +509,7 @@ graficos <- function(munis = "all"){
                                     "grey70" = "grey70",
                                     "#d96e0a" = "#d96e0a"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento",
+                                   "grey70" = "Bairros",
                                    "#d96e0a" = "Assentamentos precários")
       )+
       
@@ -1201,7 +1201,7 @@ graficos <- function(munis = "all"){
                                     "grey70" = "grey70",
                                     "#d96e0a" = "#d96e0a"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento",
+                                   "grey70" = "Bairros",
                                    "#d96e0a" = "Assentamentos precários")
       )+
       
@@ -1223,11 +1223,11 @@ graficos <- function(munis = "all"){
     
     scale_fill_manual(name = "Eq. de saúde baixa complexidade",
                       values = c(
-                        "1" = "#cbcefc",
+                        "1" = "#b5b9fb",
                                  
-                                 "2" = "#9FA4F9",
+                                 "2" = "#969cf8",
                                  "3" = "#767DCE",
-                                 "4" = "#21367D",
+                                 "4" = "#2b47a4",
                                  "5" = "#1A295B"),
                       label = c("1" = "1",
                                 
@@ -1395,12 +1395,28 @@ graficos <- function(munis = "all"){
             # size = 2,
             linewidth = 0.8,
             alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "#d96e0a"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.9,
+              # fill = "#d96e0a",
+              fill = NA,
+              show.legend = "polygon",
+              alpha = 0.7)+
+      
       scale_color_manual(name = "Uso do solo",
                          values = c("grey45" = "grey45",
-                                    "grey70" = "grey70"),
+                                    "grey70" = "grey70",
+                                    "#d96e0a" = "#d96e0a"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Unidades de planejamento")
+                                   "grey70" = "Bairros",
+                                   "#d96e0a" = "Assentamentos precários")
       )+
+      
+      
       
       
       # scale_fill_gradientn(
@@ -1410,19 +1426,19 @@ graficos <- function(munis = "all"){
       #   # values = NULL,
       #   space = "Lab",
       #   na.value = NA,
-      #   # guide = "colourbar",
-      #   aesthetics = "fill",
+    #   # guide = "colourbar",
+    #   aesthetics = "fill",
     #   # colors
     # ) +
-    
+    # c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
     
     scale_fill_manual(name = "Eq. de saúde alta complexidade",
                       values = c(
-                        "1" = "#cbcefc",
+                        "1" = "#b5b9fb",
                         
-                        "2" = "#9FA4F9",
+                        "2" = "#969cf8",
                         "3" = "#767DCE",
-                        "4" = "#21367D",
+                        "4" = "#2b47a4",
                         "5" = "#1A295B"),
                       label = c("1" = "1",
                                 
@@ -1430,7 +1446,8 @@ graficos <- function(munis = "all"){
                                 "3" = "3",
                                 "4" = "4",
                                 # "#33b099" = "Cobertura de 300m",
-                                "5" = "5")) +      # labs(fill = "População") +
+                                "5" = "5")) +
+      # labs(fill = "População") +
       # ggnewscale::new_scale_color() +
       
       
@@ -1499,15 +1516,21 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.1, 'cm'),
+      legend.spacing.y = unit(0.3, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)
+    # guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white"
+    #                                                          # "#ade7ff",
+    #                                                          # 
+    #                                                          # "#73d6ff",
+    #                                                          # "#38c4ff"
+    #                                                          ))))
     
     
-    
+      
     
     
     ggsave(map_saude,
@@ -1517,7 +1540,7 @@ graficos <- function(munis = "all"){
            width = 16.5, height = 16.5, units = "cm" )
     
 
-# Matriculas Antigo-----------------------------------------------------------------
+  # Matriculas Antigo-----------------------------------------------------------------
 
     
     
@@ -1848,7 +1871,7 @@ graficos <- function(munis = "all"){
                                     "grey70" = "grey70",
                                     "#33b099" = "#33b099"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento",
+                                   "grey70" = "Bairros",
                                    "#33b099" = "Assentamentos precários")
       )+
       
@@ -2044,7 +2067,7 @@ graficos <- function(munis = "all"){
                                     "grey70" = "grey70",
                                     "#33b099" = "#33b099"),
                          label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento",
+                                   "grey70" = "Bairros",
                                    "#33b099" = "Assentamentos precários")
       )+
       

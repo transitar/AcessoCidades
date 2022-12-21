@@ -14,8 +14,8 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'con'
-mode1 <- "transit"
+sigla_muni <- 'dou'
+mode1 <- "walk"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
 sigla_op <- "TT"
@@ -367,11 +367,11 @@ faz_grafico_e_salva <- function(sigla_muni,
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
                         )+
-      scale_size(range=c(0,12),
-               # breaks=c(1,4,8,10,2),
-               # labels=c("1","4","8","10","25+"),
-               name = "Habitantes",
-               guide="legend")
+      scale_size_continuous( range = c(0,12),
+                             limits = c(1,20000),
+                             breaks = c(0,1000,5000,15000),
+                             name = "Habitantes",
+                             guide = "legend")
     cma_clev <- plot+ scale_color_manual(name = "Gênero e Cor",
                                  values = c("Homens Brancos"="#5766cc",
                                             "Homens Pretos"="#21367d",
@@ -420,11 +420,11 @@ faz_grafico_e_salva <- function(sigla_muni,
         guides(fill=guide_legend(title="Gênero e cor")) +
         scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
         )+
-        scale_size(range=c(0,12),
-                   # breaks=c(1,4,8,10,2),
-                   # labels=c("1","4","8","10","25+"),
-                   name = "Habitantes",
-                   guide="legend")
+        scale_size_continuous( range = c(0,12),
+                               limits = c(1,20000),
+                               breaks = c(0,1000,5000,15000),
+                               name = "Habitantes",
+                               guide = "legend")
       cma_clev <- plot+ scale_color_manual(name = "Gênero e Cor",
                                            values = c("Homens Brancos"="#5766cc",
                                                       "Homens Pretos"="#21367d",
@@ -714,14 +714,20 @@ faz_grafico_e_salva <- function(sigla_muni,
   library("future")
   plan(multisession)
   
-  lista_modos <- c(rep("transit", 14), rep("walk", 14), rep("bike", 14))
+  lista_modos <- c(rep("walk", 14), rep("bike", 14))
+  # lista_modos <- c(rep("transit", 14), rep("walk", 14), rep("bike", 14))
   # lista_modos <- c(rep("transit", 16), rep("walk", 16), rep("bike", 16))
   
   lista_oportunidade <- rep(c("empregos",
                               rep("matriculas",4),
                               rep("escolas", 4),
                               rep("saude", 4),
-                              "lazer"),3)
+                              "lazer"),2)
+  # lista_oportunidade <- rep(c("empregos",
+  #                             rep("matriculas",4),
+  #                             rep("escolas", 4),
+  #                             rep("saude", 4),
+  #                             "lazer"),3)
   # lista_oportunidade <- rep(c("empregos",
   #                             rep("matriculas",4),
   #                             rep("escolas", 4),
@@ -734,7 +740,12 @@ faz_grafico_e_salva <- function(sigla_muni,
                          "MT", "MI", "MF", "MM",
                          "ET", "EI", "EF", "EM",
                          "ST", "SB", "SM", "SA",
-                         "LZ"), 3)
+                         "LZ"), 2)
+  # lista_siglaop <- rep(c("TT",
+  #                        "MT", "MI", "MF", "MM",
+  #                        "ET", "EI", "EF", "EM",
+  #                        "ST", "SB", "SM", "SA",
+  #                        "LZ"), 3)
   # lista_siglaop <- rep(c("TT",
   #                        "MT", "MI", "MF", "MM",
   #                        "ET", "EI", "EF", "EM",
@@ -745,7 +756,12 @@ faz_grafico_e_salva <- function(sigla_muni,
                             rep("Matrículas",4),
                             rep("Escolas", 4),
                             rep("Eq. de Saúde", 4),
-                            "Eq. de Lazer"), 3)
+                            "Eq. de Lazer"), 2)
+  # lista_titulo_leg <- rep(c("Empregos",
+  #                           rep("Matrículas",4),
+  #                           rep("Escolas", 4),
+  #                           rep("Eq. de Saúde", 4),
+  #                           "Eq. de Lazer"), 3)
   # lista_titulo_leg <- rep(c("Empregos",
   #                           rep("Matrículas",4),
   #                           rep("Escolas", 4),
@@ -753,13 +769,14 @@ faz_grafico_e_salva <- function(sigla_muni,
   #                           "Eq. de Lazer",
   #                           "Est. de B.\n Compartilhadas",
   #                           "Paraciclos"), 3)
-  lista_tempos <- c(rep(45, 14), rep(15,14), rep(30, 14))
+  lista_tempos <- c(rep(15,14), rep(30, 14))
+  # lista_tempos <- c(rep(45, 14), rep(15,14), rep(30, 14))
   # lista_tempos <- c(rep(15, 16), rep(60,16), rep(60, 16))
   
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'con',
+                      sigla_muni = 'dou',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -770,14 +787,20 @@ faz_grafico_e_salva <- function(sigla_muni,
 
 # Aplicacao da funcao para tmi --------------------------------------------
 
-  lista_modos <- c(rep("transit", 9), rep("walk", 9), rep("bike", 9))
+  lista_modos <- c(rep("walk", 9), rep("bike", 9))
+  # lista_modos <- c(rep("transit", 9), rep("walk", 9), rep("bike", 9))
   # lista_modos <- c(rep("transit", 11), rep("walk", 11), rep("bike", 11))
   
   lista_oportunidade <- rep(c(
     
     rep("escolas", 4),
     rep("saude", 4),
-    "lazer"),3)
+    "lazer"),2)
+  # lista_oportunidade <- rep(c(
+  #   
+  #   rep("escolas", 4),
+  #   rep("saude", 4),
+  #   "lazer"),3)
   # lista_oportunidade <- rep(c(
   #   
   #   rep("escolas", 4),
@@ -793,25 +816,35 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_siglaop <- rep(c(
     "ET", "EI", "EF", "EM",
     "ST", "SB", "SM", "SA",
-    "LZ"), 3)
+    "LZ"), 2)
+  # lista_siglaop <- rep(c(
+  #   "ET", "EI", "EF", "EM",
+  #   "ST", "SB", "SM", "SA",
+  #   "LZ"), 3)
+  
   
   lista_titulo_leg <- rep(c(
     rep("Escolas", 4),
     rep("Eq. de Saúde", 4),
-    "Eq. de Lazer"), 3)
+    "Eq. de Lazer"), 2)
+  # lista_titulo_leg <- rep(c(
+  #   rep("Escolas", 4),
+  #   rep("Eq. de Saúde", 4),
+  #   "Eq. de Lazer"), 3)
   # lista_titulo_leg <- rep(c(
   #   rep("Escolas", 4),
   #   rep("Eq. de Saúde", 4),
   #   "Eq. de Lazer",
   #   "Est. de B.\n Compartilhadas",
   #   "Paraciclos"), 3)
-  lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
+  lista_tempos <- c(rep(15,9), rep(30, 9))
+  # lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
   # lista_tempos <- c(rep(30, 11), rep(15,11), rep(15, 11))
   
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'con',
+                      sigla_muni = 'dou',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,

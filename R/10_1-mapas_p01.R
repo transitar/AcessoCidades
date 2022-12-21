@@ -350,7 +350,7 @@ graficos <- function(munis = "all"){
                          values = c("#e1ffce" = "#e1ffce",
                                     "grey60" = "grey60"),
                          label = c("#e1ffce" = "Área urbanizada",
-                                   "grey60" = "Unidades de planejamento")
+                                   "grey60" = "Bairros")
       )+
       
       
@@ -762,7 +762,7 @@ graficos <- function(munis = "all"){
                          values = c("#bfa5e7" = "#bfa5e7",
                                     "grey60" = "grey60"),
                          label = c("#bfa5e7" = "Área urbanizada",
-                                   "grey60" = "Unidades de planejamento")
+                                   "grey60" = "Bairros")
       )+
       
       

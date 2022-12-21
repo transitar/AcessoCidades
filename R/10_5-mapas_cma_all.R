@@ -439,7 +439,7 @@ mapas_cma <- function(sigla_muni,
                                     "grey60" = "grey60"),
                          label = c("white" = "Área Urbanizada",
                                    "#0A7E5C" = "Assentamentos precários",
-                                   "grey60" = "Áreas de Planejamento")
+                                   "grey60" = "Bairros")
                          )+
       
       geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
