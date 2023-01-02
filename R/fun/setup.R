@@ -74,6 +74,7 @@ aproxima_muni <- function(sigla_muni) {
   
   if (sigla_muni == "pal") {
     coord_sf(ylim = c(-1130754,-1166246), xlim = c(-5403046,-5358070), expand = FALSE)
+    
   } else if (sigla_muni == "con") {
     
     coord_sf(ylim = c(-2245238,-2277744), xlim = c(-4895103, -4936148), expand = FALSE)
@@ -85,6 +86,26 @@ aproxima_muni <- function(sigla_muni) {
   }
   
 }
+
+aproxima_muni_recortes <- function(sigla_muni) {
+  
+  if (sigla_muni == "pal") {
+    coord_sf(ylim = c(-1163497,-1134516), xlim = c(-5392552,-5370110), expand = FALSE)
+    
+  } else if (sigla_muni == "con") {
+    
+    coord_sf(ylim = c(-2245238,-2277744), xlim = c(-4895103, -4936148), expand = FALSE)
+    
+  } else if (sigla_muni == "dou") {
+    
+    coord_sf(ylim = c(-2527577,-2552122), xlim = c(-6084234,-6119851), expand = FALSE)
+    
+  }
+  
+}
+
+
+
 
 aproxima_muni_zoom <- function(sigla_muni) {
   

@@ -21,7 +21,7 @@ Sys.setenv(MAPBOX_API_KEY = my_api$V1)
 
 Sys.getenv("MAPBOX_API_KEY")
 
-sigla_muni = 'DOU'
+sigla_muni = 'POA'
 ano = 2019
 
 # 2.1) Baixar e salvar os maps tiles de todos os municipios ---------------------
