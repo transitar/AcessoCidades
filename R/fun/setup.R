@@ -1,54 +1,113 @@
 Sys.setenv(TZ='UTC') # Fuso horario local
 
+ipak <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE)
+  
+}
+
+lpak<- function(pkg){sapply(pkg, require, character.only = TRUE)}
+
+
+packages <- c('osmdata',
+              'raster',
+              'ggplot2',
+              'ggthemes',
+              'sf',
+              'data.table',
+              'geobr',
+              'pbapply',
+              'readr',
+              'stringr',
+              'lubridate',
+              'fasttime',
+              'mapview',
+              'RColorBrewer',
+              'extrafont',
+              'knitr',
+              'furrr',
+              'purrr',
+              'forcats',
+              'future.apply',
+              'dplyr',
+              'hrbrthemes',
+              'beepr',
+              'patchwork',
+              'Hmisc',
+              'opentripplanner',
+              'ggmap',
+              'h3jsr',
+              'bit64',
+              'quantreg',
+              'gtfstools',
+              'readxl',
+              'magrittr',
+              'ceramic',
+              'ggalt',
+              'hrbrthemes',
+              'ggnewscale',
+              'ggsn',
+              'ggthemes',
+              'rlist',
+              'pipeR',
+              'xlsx',
+              'ggspatial')
+
+suppressMessages(ipak(packages))
+suppressMessages(lpak(packages))
+
+rm(packages,lpak,ipak)
+
 # carregar bibliotecas
-suppressMessages(library(osmdata))
-suppressMessages(library(raster))
-suppressMessages(library(ggplot2) )     # visualizacao de dados
-suppressMessages(library(ggthemes)  )   # temas para visualizacao de dados
-suppressMessages(library(sf)  )         # leitura e manipulacao de dados espaciais
-suppressMessages(library(data.table)  ) # manipulacao de dados
-# suppressMessages(library(read.dbc)  )   # leitura de bases relacionais em Microsoft Access
-suppressMessages(library(geobr) )       # dados espaciais do brasil
-suppressMessages(library(pbapply) )     # progress bar
-suppressMessages(library(readr) )       # rapida leitura de dados 
-suppressMessages(library(tidyr) )       # manipulacao de dados
-suppressMessages(library(stringr) )     # operacoes em strings
-suppressMessages(library(lubridate) )   # dados em data/horario
-suppressMessages(library(fasttime)  )   # rapido processamento deddados em data/horario
-suppressMessages(library(mapview) )     # visualizacao interativa dos dados
-suppressMessages(library(RColorBrewer)) # paleta de cores
-suppressMessages(library(extrafont) )   # fontes de texto
-# suppressMessages(library(bit.64)  )     # lidar com numeros ee 64bits
-suppressMessages(library(knitr))
-suppressMessages(library(furrr))
-suppressMessages(library(purrr))
-suppressMessages(library(forcats))
-suppressMessages(library(future.apply)) # Aplicar funcoes em paralelo
-# suppressMessages(library(h3jsr)) # H3 grade hexagonal
-suppressMessages(library(dplyr))
-suppressMessages(library(hrbrthemes))
-suppressMessages(library(beepr))
-suppressMessages(library(patchwork))
-suppressMessages(library(Hmisc)) # calcular quantis ponderados
-suppressMessages(library(osmdata)) # Download de dados do OpenStreeteMaps (OSM)
-suppressMessages(library(opentripplanner)) # Usar OTP de dentro do R: https://github.com/ITSLeeds/opentripplanner
-suppressMessages(library(ggmap)) # geocoding
-suppressMessages(library(h3jsr)) #h3 hex remotes::install_github("obrl-soil/h3jsr")
-suppressMessages(library(bit64)) # viz large numbers
-suppressMessages(library(quantreg))
-suppressMessages(library(gtfstools))
-suppressMessages(library(readxl))
-suppressMessages(library(magrittr))
-suppressMessages(library(ceramic))
-suppressMessages(library(ggalt))
-suppressMessages(library(hrbrthemes))
-suppressMessages(library(ggnewscale))
-suppressMessages(library(ggsn))
-suppressMessages(library(ggthemes))
-suppressMessages(library(rlist))
-suppressMessages(library(pipeR))
-suppressMessages(library(xlsx))
-suppressMessages(library(ggspatial))
+# suppressMessages(library(osmdata))
+# suppressMessages(library(raster))
+# suppressMessages(library(ggplot2) )     # visualizacao de dados
+# suppressMessages(library(ggthemes)  )   # temas para visualizacao de dados
+# suppressMessages(library(sf)  )         # leitura e manipulacao de dados espaciais
+# suppressMessages(library(data.table)  ) # manipulacao de dados
+# # suppressMessages(library(read.dbc)  )   # leitura de bases relacionais em Microsoft Access
+# suppressMessages(library(geobr) )       # dados espaciais do brasil
+# suppressMessages(library(pbapply) )     # progress bar
+# suppressMessages(library(readr) )       # rapida leitura de dados 
+# suppressMessages(library(readr) )       # manipulacao de dados
+# suppressMessages(library(stringr) )     # operacoes em strings
+# suppressMessages(library(lubridate) )   # dados em data/horario
+# suppressMessages(library(fasttime)  )   # rapido processamento deddados em data/horario
+# suppressMessages(library(mapview) )     # visualizacao interativa dos dados
+# suppressMessages(library(RColorBrewer)) # paleta de cores
+# suppressMessages(library(extrafont) )   # fontes de texto
+# # suppressMessages(library(bit.64)  )     # lidar com numeros ee 64bits
+# suppressMessages(library(knitr))
+# suppressMessages(library(furrr))
+# suppressMessages(library(purrr))
+# suppressMessages(library(forcats))
+# suppressMessages(library(future.apply)) # Aplicar funcoes em paralelo
+# # suppressMessages(library(h3jsr)) # H3 grade hexagonal
+# suppressMessages(library(dplyr))
+# suppressMessages(library(hrbrthemes))
+# suppressMessages(library(beepr))
+# suppressMessages(library(patchwork))
+# suppressMessages(library(Hmisc)) # calcular quantis ponderados
+# # suppressMessages(library(osmdata)) # Download de dados do OpenStreeteMaps (OSM)
+# suppressMessages(library(opentripplanner)) # Usar OTP de dentro do R: https://github.com/ITSLeeds/opentripplanner
+# suppressMessages(library(ggmap)) # geocoding
+# suppressMessages(library(h3jsr)) #h3 hex remotes::install_github("obrl-soil/h3jsr")
+# suppressMessages(library(bit64)) # viz large numbers
+# suppressMessages(library(quantreg))
+# suppressMessages(library(gtfstools))
+# suppressMessages(library(readxl))
+# suppressMessages(library(magrittr))
+# suppressMessages(library(ceramic))
+# suppressMessages(library(ggalt))
+# suppressMessages(library(hrbrthemes))
+# suppressMessages(library(ggnewscale))
+# suppressMessages(library(ggsn))
+# suppressMessages(library(ggthemes))
+# suppressMessages(library(rlist))
+# suppressMessages(library(pipeR))
+# suppressMessages(library(xlsx))
+# suppressMessages(library(ggspatial))
 
 #cores
 
