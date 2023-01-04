@@ -10,8 +10,8 @@ library(showtext)
 library(ggspatial)
 library(patchwork)
 showtext_auto()
-width <- 16.5
-height <- 16.5
+# width <- 16.5
+# height <- 16.5
 # font_add_google("Encode Sans Light 300")
 font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
@@ -465,7 +465,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_pop_density,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s_new.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
@@ -884,7 +884,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_renda,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_%s.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_new_%s.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
@@ -1001,12 +1001,78 @@ data_recorte_gen_hex <- data_recorte_gen %>%
   ) %>%
   distinct(hex, .keep_all = T) %>%
   select(hex, dif_hm, mulheres, homens)
+
+
+data_recorte_gen_resp <- data_micro %>%
+  group_by(hex, resp_home) %>%
+  summarise(n = n()) %>%
+  filter(resp_home != "Resp_dep") %>%
+  left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+  st_as_sf()
+  
+data_recorte_gen_resp_hex <- data_recorte_gen_resp %>%
+    group_by(hex) %>%
+    
+    mutate(dif_resp_hm = ifelse(is_empty(n[resp_home == "Resp_masc"]) == F &
+                                                   is_empty(n[resp_home == "Resp_fem"]) == F ,
+                                                 n[resp_home == "Resp_masc"] - n[resp_home == "Resp_fem"],
+                                                 
+                                                 ifelse(is_empty(n[resp_home == "Resp_masc"]) == F &
+                                                          is_empty(n[resp_home == "Resp_fem"]) == T,
+                                                        n[resp_home == "Resp_masc"] - 0,
+                                                        ifelse(is_empty(n[resp_home == "Resp_fem"]) == F &
+                                                                 is_empty(n[resp_home == "Resp_masc"]) == T,
+                                                               -n[resp_home == "Resp_fem"], NA))),
+           resp_mulheres  = ifelse(is_empty(n[resp_home == "Resp_fem"]) == F,
+                              n[resp_home == "Resp_fem"], 0),
+           resp_homens  = ifelse(is_empty(n[resp_home == "Resp_masc"]) == F,
+                            n[resp_home == "Resp_masc"], 0)
+           
+           
+           
+    ) %>%
+    distinct(hex, .keep_all = T) %>%
+    select(hex, dif_resp_hm, resp_mulheres, resp_homens) %>% st_as_sf()
+  
+  
+
 # mapview(data_recorte_gen_hex, zcol = "dif_hm")
 
 
 
 # Mapa de gênero - Homens -------------------------------------------------
 
+#contagem
+# data_recorte_gen_hex2 <- data_recorte_gen_hex %>%
+#   mutate(homens = ifelse(homens > 1500, 1500, homens),
+#          mulheres = ifelse(mulheres > 1500, 1500, mulheres),
+#          dif_hm = ifelse(dif_hm > 200,200, ifelse(dif_hm < (-200), -200, dif_hm)))
+
+
+#dourados
+# data_recorte_gen_hex2 <- data_recorte_gen_hex %>%
+#   mutate(homens = ifelse(homens > 800, 800, homens),
+#          mulheres = ifelse(mulheres > 800, 800, mulheres),
+#          dif_hm = ifelse(dif_hm > 100,100, ifelse(dif_hm < (-100), -100, dif_hm)))
+
+
+data_recorte_gen_hex2 <- data_recorte_gen_hex %>%
+  mutate(homens = ifelse(homens > munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         homens),
+         mulheres = ifelse(mulheres > munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                           munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                           mulheres),
+         dif_hm = ifelse(dif_hm > munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         ifelse(dif_hm < (-munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                -munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                dif_hm)))
+
+
+# boxplot(data_recorte_gen_hex$homens)
+# boxplot(data_recorte_gen_hex$mulheres)
+# boxplot(data_recorte_gen_hex$dif_hm)
 
 #homens
 map_pop_homens <- ggplot() +
@@ -1016,7 +1082,7 @@ map_pop_homens <- ggplot() +
   # nova escala
   new_scale_fill() +
   
-  geom_sf(data = st_transform(data_recorte_gen_hex, 3857),
+  geom_sf(data = st_transform(data_recorte_gen_hex2, 3857),
           aes(fill = homens),
           colour = NA,
           alpha=.8,
@@ -1030,7 +1096,7 @@ map_pop_homens <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   
   geom_sf(data = assentamentos,
@@ -1057,7 +1123,7 @@ map_pop_homens <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -1070,9 +1136,13 @@ map_pop_homens <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,800,200),
-    labels =as.character(seq(0,800,200)),
-    limits = c(0,800)
+    breaks = seq(0,munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])
     # colors
   ) +
   ggtitle("Homens") +
@@ -1089,7 +1159,7 @@ map_pop_homens <- ggplot() +
                               line_width = 1,
                               width_hint = 0.10,
                               pad_x = unit(0.35, "cm"),
-                              pad_y = unit(0.35, "cm")
+                              pad_y = unit(0.25, "cm")
   ) +
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0),
                                     location = "tr",
@@ -1135,7 +1205,6 @@ map_pop_homens <- ggplot() +
 
 # Mapa gênero - Mulehres ----------------------------------------------------
 
-
 map_pop_mulheres <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
   coord_equal() +
@@ -1145,7 +1214,7 @@ map_pop_mulheres <- ggplot() +
   
   
   # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
-  geom_sf(data = st_transform(data_recorte_gen_hex, 3857),
+  geom_sf(data = st_transform(data_recorte_gen_hex2, 3857),
           aes(fill = mulheres),
           colour = NA,
           alpha=.8,
@@ -1159,7 +1228,7 @@ map_pop_mulheres <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   geom_sf(data = assentamentos,
           aes(color = "#f6dc8d"),
@@ -1184,7 +1253,7 @@ map_pop_mulheres <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -1199,9 +1268,16 @@ map_pop_mulheres <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,800,200),
-    labels = seq(0,800,200),
-    limits = c(0,800)
+    
+    
+    breaks = seq(0,munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+
     
   ) +
   ggtitle("Mulheres")+
@@ -1215,7 +1291,7 @@ map_pop_mulheres <- ggplot() +
                               line_width = 1,
                               width_hint = 0.10,
                               pad_x = unit(0.35, "cm"),
-                              pad_y = unit(0.35, "cm")
+                              pad_y = unit(0.25, "cm")
   ) +
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0),
                                     location = "tr",
@@ -1270,6 +1346,8 @@ map_pop_mulheres <- ggplot() +
 
 #mudar limite para cada cidade
 
+# data_recorte_gen_hex2 <- data_recorte_gen_hex %>%
+#   mutate(dif_hm = ifelse(dif_hm > 100, 100, ifelse(dif_hm < (-100), -100, dif_hm)))
 
 map_pop_dif_gen <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1278,7 +1356,7 @@ map_pop_dif_gen <- ggplot() +
   
   new_scale_fill() +
   
-  geom_sf(data = st_transform(data_recorte_gen_hex, 3857),
+  geom_sf(data = st_transform(data_recorte_gen_hex2, 3857),
           aes(fill = dif_hm),
           colour = NA,
           alpha=.8,
@@ -1293,7 +1371,7 @@ map_pop_dif_gen <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   
   geom_sf(data = assentamentos,
@@ -1320,14 +1398,30 @@ map_pop_dif_gen <- ggplot() +
                                 "grey60" = "grey60",
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#0f805e" = "Assen. precários")
   )+
   
-  scale_fill_distiller("Habitantes",type = "div",palette = "RdBu",
-                       breaks = seq(-150,150,75),labels = c("<-150","-75","0","75",">150"),
-                       limits = c(-150,150)) +
+  scale_fill_distiller("Habitantes",
+                       type = "div",
+                       palette = "RdBu",
+                       breaks = seq(-munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                    munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                    munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2),
+                       labels = c(paste0("<-",
+                                       munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                       -munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
+                                       "0",
+                                       munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
+                                       paste0(">",
+                                       munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]))
+
+                       limits = c(-munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                  munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])) +
+  
   ggtitle("Diferença entre homens e mulheres")+
+  
+  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
   
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
@@ -1336,7 +1430,7 @@ map_pop_dif_gen <- ggplot() +
                               line_width = 1,
                               width_hint = 0.10,
                               pad_x = unit(0.35, "cm"),
-                              pad_y = unit(0.35, "cm")
+                              pad_y = unit(0.25, "cm")
   ) +
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0),
                                     location = "tr",
@@ -1381,8 +1475,12 @@ map_pop_dif_gen <- ggplot() +
 
 
 
-# Composição dos mapas de recorte de cor ----------------------------------
 
+
+
+
+
+# Composição dos mapas em separado de genero ------------------------------
 
 #ajustar legend.margin para a caixa da legenda ficar do mesmo tamanho da caixa do mapa
 #margin(cima,direita, baixo, esquerda)
@@ -1390,8 +1488,6 @@ map_pop_dif_gen <- ggplot() +
 map_genero <- wrap_plots(map_pop_homens, map_pop_mulheres, map_pop_dif_gen, ncol = 3) &
   theme(plot.margin = unit(c(0,0,0,0),"mm"),
         legend.margin = margin(unit(c(2,4,1,3),"mm")) )
-
-# Composição dos mapas em separado de genero ------------------------------
 
 
 suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
@@ -1407,8 +1503,22 @@ ggsave(map_genero,
 
 
 
-# Mapas de recorte de cor - Brancos e Pretos ------------------------------------------------
+# Mapas de recorte de cor - Brancos ------------------------------------------------
 
+
+# boxplot(data_recorte_cor2_hex$brancos)
+# boxplot(data_recorte_cor2_hex$pretos)
+# boxplot(data_recorte_cor2_hex$dif_bp)
+
+#Contagem
+# data_recorte_cor2_hex_map <- data_recorte_cor2_hex %>%
+#   mutate(brancos = ifelse(brancos > 1000, 1000, brancos),
+#          pretos = ifelse(pretos > 1500, 1500, pretos))
+
+#Dourados
+data_recorte_cor2_hex_map <- data_recorte_cor2_hex %>%
+  mutate(brancos = ifelse(brancos > 500, 500, brancos),
+         pretos = ifelse(pretos > 500, 500, pretos))
 
 #brancos
 map_pop_brancos <- ggplot() +
@@ -1418,7 +1528,7 @@ map_pop_brancos <- ggplot() +
   # nova escala
   new_scale_fill() +
   
-  geom_sf(data = st_transform(data_recorte_cor2_hex, 3857),
+  geom_sf(data = st_transform(data_recorte_cor2_hex_map, 3857),
           aes(fill = brancos),
           colour = NA,
           alpha=.8,
@@ -1432,7 +1542,7 @@ map_pop_brancos <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   
   geom_sf(data = assentamentos,
@@ -1459,7 +1569,7 @@ map_pop_brancos <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -1472,9 +1582,9 @@ map_pop_brancos <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,600,150),
-    labels =as.character(seq(0,600,150)),
-    limits = c(0,600)
+    breaks = seq(0,500,125),
+    labels =c(as.character(seq(0,375,125)), ">500"),
+    limits = c(0,500)
     # colors
   ) +
   ggtitle("Brancos") +
@@ -1536,6 +1646,8 @@ theme(
 
 #pretos
 
+# Mapa Recorte de cor - Pretos --------------------------------------------
+
 map_pop_pretos <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
   coord_equal() +
@@ -1545,7 +1657,7 @@ map_pop_pretos <- ggplot() +
   
   
   # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
-  geom_sf(data = st_transform(data_recorte_cor2_hex, 3857),
+  geom_sf(data = st_transform(data_recorte_cor2_hex_map, 3857),
           aes(fill = pretos),
           colour = NA,
           alpha=.8,
@@ -1559,7 +1671,7 @@ map_pop_pretos <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   geom_sf(data = assentamentos,
           aes(color = "#f6dc8d"),
@@ -1584,7 +1696,7 @@ map_pop_pretos <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -1599,6 +1711,9 @@ map_pop_pretos <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
+    breaks = seq(0,500,125),
+    labels =c(as.character(seq(0,375,125)), ">500"),
+    limits = c(0,500)
     
   ) +
   ggtitle("Pretos")+
@@ -1658,14 +1773,22 @@ map_pop_pretos <- ggplot() +
 
 
 
+# Mapa de diferença entre brancos e pretos --------------------------------
+
+
 #diferença entre brancos e pretos
 
 #necessário definir os limites e breaks
 
 #mudar limite para cada cidade
 
+#Contagem
+# data_recorte_cor2_hex2 <- data_recorte_cor2_hex %>%
+#   mutate(dif_bp = ifelse(dif_bp < (-500), -500, ifelse(dif_bp > 500, 500, dif_bp)))
+
+#dourados
 data_recorte_cor2_hex2 <- data_recorte_cor2_hex %>%
-  mutate(dif_bp = ifelse(dif_bp < -500, -500, dif_bp))
+  mutate(dif_bp = ifelse(dif_bp < (-200), -200, ifelse(dif_bp > 200, 200, dif_bp)))
 
 map_pop_dif_cor <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1689,7 +1812,7 @@ map_pop_dif_cor <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   
   geom_sf(data = assentamentos,
@@ -1716,14 +1839,16 @@ geom_sf(data = simplepolys %>% st_transform(3857),
                                 "grey60" = "grey60",
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#0f805e" = "Assen. precários")
   )+
 
   scale_fill_distiller("Habitantes",type = "div",palette = "RdBu",
-                     breaks = seq(-500,500,250),labels = c("<-500","-250","0","250",">500"),
-                     limits = c(-500,500)) +
+                     breaks = seq(-200,200,100),labels = c("<-500","-250","0","250",">500"),
+                     limits = c(-200,200)) +
   ggtitle("Diferença entre brancos e pretos")+
+  
+  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
 
 ggspatial::annotation_scale(style = "ticks",
                             location = "br",
@@ -1801,11 +1926,15 @@ ggsave(map_cor,
 
 
 
-# Mapa de recorte de cor - amarelos e indigenas ---------------------------
+# Mapa de recorte de cor - amarelos  ---------------------------
 
 #amarelos
 
 amarelos <- data_recorte_cor %>% filter(V0606 == "Amarelos")
+amarelos2 <- amarelos %>% 
+  mutate(n = ifelse(n > 40, 40, n))
+# boxplot(amarelos$n)
+
 
 map_pop_amarelos <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1828,7 +1957,7 @@ map_pop_amarelos <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   
   geom_sf(data = assentamentos,
@@ -1855,7 +1984,7 @@ map_pop_amarelos <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -1868,9 +1997,10 @@ map_pop_amarelos <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,60,15),
-    labels =as.character(seq(0,60,15)),
-    limits = c(0,60)
+    
+    breaks = seq(0,40,10),
+    labels =c(as.character(seq(0,30,10)), ">40"),
+    limits = c(0,40)
     # colors
   ) +
   ggtitle("Amarelos") +
@@ -1931,9 +2061,14 @@ map_pop_amarelos <- ggplot() +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
 
+
 # Mapa Indígenas ----------------------------------------------------------
 
+
 indigenas <- data_recorte_cor %>% filter(V0606 == "Indígenas")
+# boxplot(indigenas$n)
+indigenas2 <- indigenas %>%
+  mutate(n = ifelse(n > 100, 100, n))
 
 map_pop_indigenas <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1958,7 +2093,7 @@ map_pop_indigenas <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.7,
+          linewidth = 0.3,
           alpha= 0.7) +
   geom_sf(data = assentamentos,
           aes(color = "#f6dc8d"),
@@ -1983,7 +2118,7 @@ map_pop_indigenas <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Áreas de Planej.",
+                               "grey60" = "Bairros",
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -1998,9 +2133,10 @@ map_pop_indigenas <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(1,5,1),
-    labels = seq(1,5,1),
-    limits = c(0,5)
+    breaks = seq(0,100,25),
+    labels =c(as.character(seq(0,75,25)), ">100"),
+    limits = c(0,100)
+
     
   ) +
   ggtitle("Indígenas")+
@@ -2060,6 +2196,7 @@ map_pop_indigenas <- ggplot() +
 
 
 
+
 # Composição dos mapas de recorte de cor amarelos e indigenas----------------------------------
 
 
@@ -2081,6 +2218,422 @@ ggsave(map_am_in,
                            sigla_muni),
        dpi = 300,
        width = 10, height = 12, units = "cm" )
+
+
+
+
+# recorte de genero do responsável homens ----------------------------------------
+
+boxplot(data_recorte_gen_resp_hex$resp_homens)
+boxplot(data_recorte_gen_resp_hex$resp_mulheres)
+boxplot(data_recorte_gen_resp_hex$dif_resp_hm)
+mapview(data_recorte_gen_resp_hex)
+
+data_recorte_gen_resp_hex2 <- data_recorte_gen_resp_hex %>%
+  mutate(resp_homens = ifelse(resp_homens > 160, 160, resp_homens),
+         resp_mulheres = ifelse(resp_mulheres > 160, 160, resp_mulheres),
+         dif_resp_hm = ifelse(dif_resp_hm > 80, 80, ifelse(dif_resp_hm < (-80), -80, dif_resp_hm)))
+
+#Resp homens
+map_pop_resp_homens <- ggplot() +
+  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+  coord_equal() +
+  scale_fill_identity()+
+  # nova escala
+  new_scale_fill() +
+  
+  geom_sf(data = st_transform(data_recorte_gen_resp_hex2, 3857),
+          aes(fill = resp_homens),
+          colour = NA,
+          alpha=.8,
+          size = 0)+
+  
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "grey60"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
+  
+  geom_sf(data = assentamentos,
+          aes(color = "#2B6CB0"),
+          size = 1.3,
+          fill = '#2B6CB0',
+          show.legend = "polygon",
+          alpha = 0.3)+
+  
+  # ggnewscale::new_scale_color() +
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "#8f040e"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7)  +
+  scale_color_manual(name = "Uso do solo",
+                     breaks = c("#2B6CB0", "#8f040e", "grey60"),
+                     values = c("#8f040e" = "#8f040e",
+                                "grey60" = "grey60",
+                                "#2B6CB0" = "#2B6CB0"),
+                     label = c("#8f040e" = "Área urbanizada",
+                               "grey60" = "Bairros",
+                               "#2B6CB0" = "Assen. precários")
+  )+
+  
+  
+  scale_fill_gradientn(
+    name = "Habitantes",
+    colors = colors_orange ,
+    # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+    # values = NULL,
+    space = "Lab",
+    na.value = NA,
+    # guide = "colourbar",
+    aesthetics = "fill",
+    breaks = seq(0,160,40),
+    labels =c(as.character(seq(0,120,40)), ">160"),
+    limits = c(0,160)
+    
+  ) +
+  ggtitle("Responsáveis homens") +
+  
+  
+  # ggnewscale::new_scale_color() +
+  
+  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+  
+  ggspatial::annotation_scale(style = "ticks",
+                              location = "br",
+                              text_family = "encode_sans_bold",
+                              text_cex = 2,
+                              line_width = 1,
+                              width_hint = 0.10,
+                              pad_x = unit(0.35, "cm"),
+                              pad_y = unit(0.25, "cm")
+  ) +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0),
+                                    location = "tr",
+                                    height = unit(0.5, "cm"),
+                                    width = unit(0.5, "cm")) +
+  
+  theme(
+    strip.text.x = element_text(size=30, family = "encode_sans_bold"),
+    strip.background = element_blank(),
+    panel.background = element_rect(fill = NA, colour = NA),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(),
+    plot.margin=unit(c(0,0,0,0),"mm"),
+    legend.margin = margin(unit(c(2,2,1,2),"mm")),
+    legend.key.width=unit(1,"line"),
+    legend.key.height = unit(0.75,"line"),
+    legend.key = element_blank(),
+    legend.text=element_text(size=22, family = "encode_sans_light"),
+    legend.title= element_text(size=24, family = "encode_sans_bold"),
+    plot.title = element_text(size=24, family = "encode_sans_bold", vjust = 0.5),
+    strip.text = element_text(size = 10),
+    legend.position = c(0.50, -0.17),
+    legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                         colour = "#A09C9C",
+                                         linewidth = 0.2,
+                                         linetype = "solid"),
+    legend.background = element_blank(),
+    # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+    #                                      colour = "#E0DFE3"),
+    legend.spacing.y = unit(0.05, 'cm'),
+    legend.box.just = "left",
+    legend.direction = "horizontal"
+    # legend.margin = margin(t = -80)
+  ) +
+  guides(colour = guide_legend(nrow = 3, order = 1,
+                               override.aes = list(fill = c("#2B6CB0","white", "white"),
+                                                   alpha = c(0.2,0.7,0.7)))) +
+  # guides(fill = guide_legend(byrow = TRUE)) +
+  aproxima_muni_recortes(sigla_muni = sigla_muni)
+
+
+# Mapa gênero resp - mulheres ----------------------------------------------------
+
+
+map_pop_resp_mulheres <- ggplot() +
+  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+  coord_equal() +
+  scale_fill_identity()+
+  # nova escala
+  new_scale_fill() +
+  
+  
+  # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
+  geom_sf(data = st_transform(data_recorte_gen_resp_hex2, 3857),
+          aes(fill = resp_mulheres),
+          colour = NA,
+          alpha=.8,
+          size = 0)+
+  
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "grey60"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
+  geom_sf(data = assentamentos,
+          aes(color = "#f6dc8d"),
+          size = 1.3,
+          fill = '#f6dc8d',
+          show.legend = "polygon",
+          alpha = 0.5)+
+  
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "#8f040e"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7)  +
+  scale_color_manual(name = "Uso do solo",
+                     breaks = c("#f6dc8d", "#8f040e", "grey60"),
+                     values = c("#8f040e" = "#8f040e",
+                                "grey60" = "grey60",
+                                "#f6dc8d" = "#f6dc8d"),
+                     label = c("#8f040e" = "Área urbanizada",
+                               "grey60" = "Bairros",
+                               "#f6dc8d" = "Assen. precários")
+  )+
+  
+  
+  
+  scale_fill_gradientn(
+    name = "Habitantes",
+    colors = colors_purple ,
+    # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+    # values = NULL,
+    space = "Lab",
+    na.value = NA,
+    # guide = "colourbar",
+    aesthetics = "fill",
+    breaks = seq(0,160,40),
+    labels =c(as.character(seq(0,120,40)), ">160"),
+    limits = c(0,160)
+    
+  ) +
+  ggtitle("Responsáveis mulheres")+
+  
+  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+  
+  ggspatial::annotation_scale(style = "ticks",
+                              location = "br",
+                              text_family = "encode_sans_bold",
+                              text_cex = 2,
+                              line_width = 1,
+                              width_hint = 0.10,
+                              pad_x = unit(0.35, "cm"),
+                              pad_y = unit(0.25, "cm")
+  ) +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0),
+                                    location = "tr",
+                                    height = unit(0.5, "cm"),
+                                    width = unit(0.5, "cm")) +
+  
+  theme(
+    strip.text.x = element_text(size=30, family = "encode_sans_bold"),
+    strip.background = element_blank(),
+    panel.background = element_rect(fill = NA, colour = NA),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(),
+    plot.margin=unit(c(0,0,0,0),"mm"),
+    legend.margin = margin(unit(c(2,2,1,2),"mm")),
+    legend.key.width=unit(1,"line"),
+    legend.key.height = unit(0.75,"line"),
+    legend.key = element_blank(),
+    legend.text=element_text(size=22, family = "encode_sans_light"),
+    legend.title= element_text(size=24, family = "encode_sans_bold"),
+    plot.title = element_text(size=24, family = "encode_sans_bold", vjust = 0.5),
+    strip.text = element_text(size = 10),
+    legend.position = c(0.50, -0.17),
+    legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                         colour = "#A09C9C",
+                                         linewidth = 0.2,
+                                         linetype = "solid"),
+    legend.background = element_blank(),
+    
+    legend.spacing.y = unit(0.05, 'cm'),
+    legend.box.just = "left",
+    legend.direction = "horizontal"
+    # legend.margin = margin(t = -80)
+  ) +
+  guides(colour = guide_legend(nrow = 3, order = 1,
+                               override.aes = list(fill = c("#f6dc8d","white", "white"),
+                                                   alpha = c(0.2,0.7,0.7)))) +
+  # guides(fill = guide_legend(byrow = TRUE)) +
+  aproxima_muni_recortes(sigla_muni = sigla_muni)
+
+
+
+# Mapa diferença de resp homens e mulheres -------------------------------------
+
+
+
+#necessário definir os limites e breaks
+
+#mudar limite para cada cidade
+
+# data_recorte_gen_resp_hex2 <- data_recorte_gen_resp_hex %>%
+#   mutate(dif_resp_hm = ifelse(dif_resp_hm < (-200), -200, ifelse(dif_resp_hm > 200, 200, dif_resp_hm)))
+
+
+map_pop_dif_resp_gen <- ggplot() +
+  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+  coord_equal() +
+  scale_fill_identity()+
+  
+  new_scale_fill() +
+  
+  geom_sf(data = st_transform(data_recorte_gen_resp_hex2, 3857),
+          aes(fill = dif_resp_hm),
+          colour = NA,
+          alpha=.8,
+          size = 0)+
+  
+  
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "grey60"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
+  
+  geom_sf(data = assentamentos,
+          aes(color = "#0f805e"),
+          size = 1.3,
+          fill = '#0f805e',
+          show.legend = "polygon",
+          alpha = 0.3)+
+  
+  
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "#8f040e"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.4)  +
+  scale_color_manual(name = "Uso do solo",
+                     breaks = c("#0f805e", "#8f040e", "grey60"),
+                     values = c("#8f040e" = "#8f040e",
+                                "grey60" = "grey60",
+                                "#0f805e" = "#0f805e"),
+                     label = c("#8f040e" = "Área urbanizada",
+                               "grey60" = "Bairros",
+                               "#0f805e" = "Assen. precários")
+  )+
+  
+  scale_fill_distiller("Habitantes",type = "div",palette = "RdBu",
+                       breaks = seq(-80,80,40),labels = c("<-80","-40","0","40",">80"),
+                       limits = c(-80,80)) +
+  ggtitle("Diferença de resp. homens e mulheres")+
+  
+  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+  
+  ggspatial::annotation_scale(style = "ticks",
+                              location = "br",
+                              text_family = "encode_sans_bold",
+                              text_cex = 2,
+                              line_width = 1,
+                              width_hint = 0.10,
+                              pad_x = unit(0.35, "cm"),
+                              pad_y = unit(0.25, "cm")
+  ) +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0),
+                                    location = "tr",
+                                    height = unit(0.5, "cm"),
+                                    width = unit(0.5, "cm")) +
+  theme(
+    strip.text.x = element_text(size=30, family = "encode_sans_bold"),
+    strip.background = element_blank(),
+    panel.background = element_rect(fill = NA, colour = NA),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank(),
+    plot.margin=unit(c(0,0,0,0),"mm"),
+    legend.margin = margin(unit(c(2,2,1,2),"mm")),
+    legend.key.width=unit(1,"line"),
+    legend.key.height = unit(0.75,"line"),
+    legend.key = element_blank(),
+    legend.text=element_text(size=22, family = "encode_sans_light"),
+    legend.title= element_text(size=24, family = "encode_sans_bold"),
+    plot.title = element_text(size=23, family = "encode_sans_bold", vjust = 0.5),
+    strip.text = element_text(size = 10),
+    legend.position = c(0.50, -0.17),
+    legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                         colour = "#A09C9C",
+                                         linewidth = 0.2,
+                                         linetype = "solid"),
+    legend.background = element_blank(),
+    # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+    #                                      colour = "#E0DFE3"),
+    legend.spacing.y = unit(0.05, 'cm'),
+    legend.box.just = "left",
+    legend.direction = "horizontal"
+    # legend.margin = margin(t = -80)
+  ) +
+  guides(colour = guide_legend(nrow = 3, order = 1,
+                               override.aes = list(fill = c("#0f805e","white", "white"),
+                                                   alpha = c(0.2,0.7,0.7)))) +
+  
+  # guides(fill = guide_legend(byrow = TRUE)) +
+  aproxima_muni_recortes(sigla_muni = sigla_muni)
+
+
+
+# Composição dos mapas de recorte de cor ----------------------------------
+
+#ajustar legend.margin para a caixa da legenda ficar do mesmo tamanho da caixa do mapa
+#margin(cima,direita, baixo, esquerda)
+
+map_resp_genero <- wrap_plots(map_pop_resp_homens, map_pop_resp_mulheres, map_pop_dif_resp_gen, ncol = 3) &
+  theme(plot.margin = unit(c(0,0,0,0),"mm"),
+        legend.margin = margin(unit(c(2,4,1,3),"mm")) )
+
+
+# Composição dos mapas em separado de genero ------------------------------
+
+
+suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+
+
+ggsave(map_resp_genero,
+       device = "png",
+       filename =  sprintf('../data/map_plots_population/muni_%s/11-recorte_genero_responsavel_%s.png',
+                           sigla_muni,
+                           sigla_muni),
+       dpi = 300,
+       width = 15, height = 12, units = "cm" )
+
 
 
 # Mapas de recorte.Antigo. Isolar -----------------------------------------
