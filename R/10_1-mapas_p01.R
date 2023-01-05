@@ -8,7 +8,7 @@ sf_use_s2(use_s2 = TRUE)
 library(showtext)
 # library(ggmap)
 library(ggspatial)
-library(patchwork)
+
 showtext_auto()
 # width <- 16.5
 # height <- 16.5
@@ -1123,7 +1123,7 @@ map_pop_homens <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -1253,7 +1253,7 @@ map_pop_mulheres <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -1398,7 +1398,7 @@ map_pop_dif_gen <- ggplot() +
                                 "grey60" = "grey60",
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#0f805e" = "Assen. precários")
   )+
   
@@ -1414,7 +1414,7 @@ map_pop_dif_gen <- ggplot() +
                                        "0",
                                        munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
                                        paste0(">",
-                                       munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)]))
+                                       munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
 
                        limits = c(-munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)],
                                   munis_recorte_limites$rec_dif_gen[which(munis_recorte_limites$abrev_muni == sigla_muni)])) +
@@ -1516,9 +1516,22 @@ ggsave(map_genero,
 #          pretos = ifelse(pretos > 1500, 1500, pretos))
 
 #Dourados
+# data_recorte_cor2_hex_map <- data_recorte_cor2_hex %>%
+#   mutate(brancos = ifelse(brancos > 500, 500, brancos),
+#          pretos = ifelse(pretos > 500, 500, pretos))
+
 data_recorte_cor2_hex_map <- data_recorte_cor2_hex %>%
-  mutate(brancos = ifelse(brancos > 500, 500, brancos),
-         pretos = ifelse(pretos > 500, 500, pretos))
+  mutate(brancos = ifelse(brancos > munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         brancos),
+         pretos = ifelse(pretos > munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                           munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                           pretos),
+         dif_bp = ifelse(dif_bp > munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         ifelse(dif_bp < (-munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                -munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                dif_bp)))
 
 #brancos
 map_pop_brancos <- ggplot() +
@@ -1569,7 +1582,7 @@ map_pop_brancos <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -1582,9 +1595,19 @@ map_pop_brancos <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,500,125),
-    labels =c(as.character(seq(0,375,125)), ">500"),
-    limits = c(0,500)
+    
+    
+    breaks = seq(0,munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_brancos[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+    # 
+    # breaks = seq(0,500,125),
+    # labels =c(as.character(seq(0,375,125)), ">500"),
+    # limits = c(0,500)
     # colors
   ) +
   ggtitle("Brancos") +
@@ -1696,7 +1719,7 @@ map_pop_pretos <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -1711,9 +1734,19 @@ map_pop_pretos <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,500,125),
-    labels =c(as.character(seq(0,375,125)), ">500"),
-    limits = c(0,500)
+    
+    
+    breaks = seq(0,munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_pretos[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+    # 
+    # breaks = seq(0,500,125),
+    # labels =c(as.character(seq(0,375,125)), ">500"),
+    # limits = c(0,500)
     
   ) +
   ggtitle("Pretos")+
@@ -1787,8 +1820,8 @@ map_pop_pretos <- ggplot() +
 #   mutate(dif_bp = ifelse(dif_bp < (-500), -500, ifelse(dif_bp > 500, 500, dif_bp)))
 
 #dourados
-data_recorte_cor2_hex2 <- data_recorte_cor2_hex %>%
-  mutate(dif_bp = ifelse(dif_bp < (-200), -200, ifelse(dif_bp > 200, 200, dif_bp)))
+# data_recorte_cor2_hex2 <- data_recorte_cor2_hex %>%
+#   mutate(dif_bp = ifelse(dif_bp < (-200), -200, ifelse(dif_bp > 200, 200, dif_bp)))
 
 map_pop_dif_cor <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1797,7 +1830,7 @@ map_pop_dif_cor <- ggplot() +
 
   new_scale_fill() +
 
-  geom_sf(data = st_transform(data_recorte_cor2_hex2, 3857),
+  geom_sf(data = st_transform(data_recorte_cor2_hex_map, 3857),
           aes(fill = dif_bp),
           colour = NA,
           alpha=.8,
@@ -1839,13 +1872,31 @@ geom_sf(data = simplepolys %>% st_transform(3857),
                                 "grey60" = "grey60",
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#0f805e" = "Assen. precários")
   )+
 
-  scale_fill_distiller("Habitantes",type = "div",palette = "RdBu",
-                     breaks = seq(-200,200,100),labels = c("<-500","-250","0","250",">500"),
-                     limits = c(-200,200)) +
+  scale_fill_distiller("Habitantes",
+                       type = "div",
+                       palette = "RdBu",
+                       
+                       breaks = seq(-munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                    munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                    munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2),
+                       labels = c(paste0("<-",
+                                         munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                  -munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
+                                  "0",
+                                  munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
+                                  paste0(">",
+                                         munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+                       
+                       limits = c(as.numeric(-munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                  as.numeric(munis_recorte_limites$rec_dif_cor[which(munis_recorte_limites$abrev_muni == sigla_muni)]))
+                       
+                     # breaks = seq(-200,200,100),labels = c("<-500","-250","0","250",">500"),
+                     # limits = c(-200,200)
+                     ) +
   ggtitle("Diferença entre brancos e pretos")+
   
   geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
@@ -1932,7 +1983,9 @@ ggsave(map_cor,
 
 amarelos <- data_recorte_cor %>% filter(V0606 == "Amarelos")
 amarelos2 <- amarelos %>% 
-  mutate(n = ifelse(n > 40, 40, n))
+  mutate(n = ifelse(n > munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                    munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                    n))
 # boxplot(amarelos$n)
 
 
@@ -1984,7 +2037,7 @@ map_pop_amarelos <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -1998,9 +2051,18 @@ map_pop_amarelos <- ggplot() +
     # guide = "colourbar",
     aesthetics = "fill",
     
-    breaks = seq(0,40,10),
-    labels =c(as.character(seq(0,30,10)), ">40"),
-    limits = c(0,40)
+    
+    breaks = seq(0,munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+    
+    # breaks = seq(0,40,10),
+    # labels =c(as.character(seq(0,30,10)), ">40"),
+    # limits = c(0,40)
     # colors
   ) +
   ggtitle("Amarelos") +
@@ -2068,7 +2130,9 @@ map_pop_amarelos <- ggplot() +
 indigenas <- data_recorte_cor %>% filter(V0606 == "Indígenas")
 # boxplot(indigenas$n)
 indigenas2 <- indigenas %>%
-  mutate(n = ifelse(n > 100, 100, n))
+  mutate(n = ifelse(n > munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                    munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                    n))
 
 map_pop_indigenas <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2118,7 +2182,7 @@ map_pop_indigenas <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -2133,9 +2197,19 @@ map_pop_indigenas <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,100,25),
-    labels =c(as.character(seq(0,75,25)), ">100"),
-    limits = c(0,100)
+    
+    
+    breaks = seq(0,munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+    
+    # breaks = seq(0,100,25),
+    # labels =c(as.character(seq(0,75,25)), ">100"),
+    # limits = c(0,100)
 
     
   ) +
@@ -2224,15 +2298,30 @@ ggsave(map_am_in,
 
 # recorte de genero do responsável homens ----------------------------------------
 
-boxplot(data_recorte_gen_resp_hex$resp_homens)
-boxplot(data_recorte_gen_resp_hex$resp_mulheres)
-boxplot(data_recorte_gen_resp_hex$dif_resp_hm)
-mapview(data_recorte_gen_resp_hex)
+# boxplot(data_recorte_gen_resp_hex$resp_homens)
+# boxplot(data_recorte_gen_resp_hex$resp_mulheres)
+# boxplot(data_recorte_gen_resp_hex$dif_resp_hm)
+# mapview(data_recorte_gen_resp_hex)
+
+# data_recorte_gen_resp_hex2 <- data_recorte_gen_resp_hex %>%
+#   mutate(resp_homens = ifelse(resp_homens > 160, 160, resp_homens),
+#          resp_mulheres = ifelse(resp_mulheres > 160, 160, resp_mulheres),
+#          dif_resp_hm = ifelse(dif_resp_hm > 80, 80, ifelse(dif_resp_hm < (-80), -80, dif_resp_hm)))
+
 
 data_recorte_gen_resp_hex2 <- data_recorte_gen_resp_hex %>%
-  mutate(resp_homens = ifelse(resp_homens > 160, 160, resp_homens),
-         resp_mulheres = ifelse(resp_mulheres > 160, 160, resp_mulheres),
-         dif_resp_hm = ifelse(dif_resp_hm > 80, 80, ifelse(dif_resp_hm < (-80), -80, dif_resp_hm)))
+  mutate(resp_homens = ifelse(resp_homens > munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         resp_homens),
+         resp_mulheres = ifelse(resp_mulheres > munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                           munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                           resp_mulheres),
+         dif_resp_hm = ifelse(dif_resp_hm > munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                         ifelse(dif_resp_hm < (-munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                -munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                dif_resp_hm)))
+
 
 #Resp homens
 map_pop_resp_homens <- ggplot() +
@@ -2283,7 +2372,7 @@ map_pop_resp_homens <- ggplot() +
                                 "grey60" = "grey60",
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#2B6CB0" = "Assen. precários")
   )+
   
@@ -2297,9 +2386,19 @@ map_pop_resp_homens <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,160,40),
-    labels =c(as.character(seq(0,120,40)), ">160"),
-    limits = c(0,160)
+    
+    
+    breaks = seq(0,munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$rec_resp_h[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+    
+    # breaks = seq(0,160,40),
+    # labels =c(as.character(seq(0,120,40)), ">160"),
+    # limits = c(0,160)
     
   ) +
   ggtitle("Responsáveis homens") +
@@ -2411,7 +2510,7 @@ map_pop_resp_mulheres <- ggplot() +
                                 "grey60" = "grey60",
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#f6dc8d" = "Assen. precários")
   )+
   
@@ -2426,9 +2525,19 @@ map_pop_resp_mulheres <- ggplot() +
     na.value = NA,
     # guide = "colourbar",
     aesthetics = "fill",
-    breaks = seq(0,160,40),
-    labels =c(as.character(seq(0,120,40)), ">160"),
-    limits = c(0,160)
+    
+    
+    breaks = seq(0,munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                 munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4),
+    labels =c(as.character(seq(0,
+                               munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)]-munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4,
+                               munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)]/4)),
+              paste0(">",munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+    limits = c(0,munis_recorte_limites$res_resp_m[which(munis_recorte_limites$abrev_muni == sigla_muni)])
+    
+    # breaks = seq(0,160,40),
+    # labels =c(as.character(seq(0,120,40)), ">160"),
+    # limits = c(0,160)
     
   ) +
   ggtitle("Responsáveis mulheres")+
@@ -2547,13 +2656,32 @@ map_pop_dif_resp_gen <- ggplot() +
                                 "grey60" = "grey60",
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = "Bairros",
+                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "#0f805e" = "Assen. precários")
   )+
   
-  scale_fill_distiller("Habitantes",type = "div",palette = "RdBu",
-                       breaks = seq(-80,80,40),labels = c("<-80","-40","0","40",">80"),
-                       limits = c(-80,80)) +
+  scale_fill_distiller("Habitantes",
+                       type = "div",
+                       palette = "RdBu",
+                       
+                       breaks = seq(-munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                    munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)],
+                                    munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2),
+                       labels = c(paste0("<-",
+                                         munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                  -munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
+                                  "0",
+                                  munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]/2,
+                                  paste0(">",
+                                         munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)])),
+                       
+                       limits = c(as.numeric(-munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]),
+                                  as.numeric(munis_recorte_limites$rec_dif_resp[which(munis_recorte_limites$abrev_muni == sigla_muni)]))
+                       
+                       # breaks = seq(-80,80,40),labels = c("<-80","-40","0","40",">80"),
+                       # limits = c(-80,80)
+                       ) +
+  
   ggtitle("Diferença de resp. homens e mulheres")+
   
   geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
