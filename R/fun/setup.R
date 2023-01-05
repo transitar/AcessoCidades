@@ -11,6 +11,7 @@ lpak<- function(pkg){sapply(pkg, require, character.only = TRUE)}
 
 
 packages <- c('osmdata',
+              'tidyr',
               'raster',
               'ggplot2',
               'ggthemes',
@@ -170,18 +171,18 @@ aproxima_muni_recortes <- function(sigla_muni) {
 
 
 munis_recorte_limites = tribble(
-  ~abrev_muni, ~rec_gen,  ~rec_dif_gen, ~rec_brancos, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
-  "poa",       3000,      200,         2000,         1000,       1000,          200,          100,             1500,          1500,          200,
-  "bel",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "man",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "slz",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "rma",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "noh",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "dou",       800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
-  "con",       1500,      200,         1000,         1500,        200,           40,          100,            160,         160,          80,
-  "vic",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "cit",       NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "pal",       800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
+  ~abrev_muni, ~legenda,           ~rec_gen,  ~rec_dif_gen, ~rec_brancos, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
+  "poa", "Bairros",      3000,      200,         2000,         1000,       1000,          200,          100,             1500,          1500,          200,
+  "bel",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "man",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "slz",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "rma",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "noh",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "dou",  "Bairros",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
+  "con",  "Unidades de Planej.",  1500,      200,         1000,         1500,        200,           40,          100,            160,         160,          80,
+  "vic",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "cit",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "pal",  "Áreas de Planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
   
   
 ) %>% setDT()
