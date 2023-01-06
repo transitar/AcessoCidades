@@ -138,7 +138,7 @@ aproxima_muni <- function(sigla_muni) {
   } else if (sigla_muni == "poa") {
     
     coord_sf(ylim = c(-3492606,-3539050), xlim = c(-5728164, -5676223), expand = FALSE)
-    
+    # (-3492606--3539050)/(-5676223--5728164)
   } else if (sigla_muni == "dou") {
     
     coord_sf(ylim = c(-2527577,-2552122), xlim = c(-6084234,-6119851), expand = FALSE)
@@ -179,10 +179,10 @@ munis_recorte_limites = tribble(
   "rma",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "noh",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "dou",  "Bairros",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
-  "con",  "Unidades de Planej.",  1500,      200,         1000,         1500,        200,           40,          100,            160,         160,          80,
+  "con",  "Unid. de Planej.",  1500,      200,         1000,         1500,        200,           40,          100,            160,         160,          80,
   "vic",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "cit",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "pal",  "Áreas de Planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
+  "pal",  "Área de Planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
   
   
 ) %>% setDT()

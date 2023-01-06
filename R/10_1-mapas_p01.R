@@ -17,7 +17,7 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 tema <- function(base_size) {
   

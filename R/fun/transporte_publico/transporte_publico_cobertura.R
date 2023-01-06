@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 
 
 #gráficos de ciclovias
@@ -184,7 +184,7 @@ graficos <- function(munis = "all"){
               # color = '#0f805e',
               # color = NA,
               alpha = 1,
-              linewidth = 0.8) +
+              linewidth = 0.4) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
                          values = c("#0f805e" = "#0f805e"),
@@ -205,7 +205,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Dourados")
+                         label = c("grey45" = munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni == sigla_muni)])
       )+
       
       
@@ -285,7 +285,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.25, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -302,7 +302,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_linhas_tp,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -552,7 +552,7 @@ graficos <- function(munis = "all"){
               # color = NA,
               fill = "grey70",
               alpha = 0.7,
-              linewidth = 1.0) +
+              linewidth = 0.4) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
                          values = c("#0f805e" = "#0f805e"),
@@ -566,7 +566,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Dourados")
+                         label = c("grey45" = munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni == sigla_muni)])
       )+
       
       
@@ -615,7 +615,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.25, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -629,7 +629,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_linhas_tp_buffer,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/6-linhas_tp_buffer_300m_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/6-linhas_tp_buffer_300m_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -771,7 +771,7 @@ graficos <- function(munis = "all"){
               # color = NA,
               fill = "grey70",
               alpha = 0.7,
-              linewidth = 1.0) +
+              linewidth = 0.4) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
                          values = c("#0f805e" = "#0f805e"),
@@ -785,7 +785,7 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       scale_color_manual(name = "Área Urbanizada",
                          values = c("grey45" = "grey45"),
-                         label = c("grey45" = "Dourados")
+                         label = c("grey45" = munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni == sigla_muni)])
       )+
       
       
@@ -834,7 +834,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.30),
+        legend.position = c(0.25, 0.30),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -848,7 +848,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_linhas_tp_buffer_500,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/7-linhas_tp_buffer_500m_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/7-linhas_tp_buffer_500m_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
 
@@ -1157,8 +1157,8 @@ graficos <- function(munis = "all"){
       scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
       )+
       scale_size_continuous( range = c(0,11),
-                             limits = c(1,15000),
-                             breaks = c(0,1000,5000,15000),
+                             limits = c(1,200000),
+                             breaks = c(0,50000,100000,150000),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bus <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
@@ -1181,8 +1181,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.70,0.80),
-                         breaks = seq(0.70,0.80, 0.01)) +
+                         limits = c(0.875,0.975),
+                         breaks = seq(0.875,0.975, 0.025)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1208,7 +1208,7 @@ graficos <- function(munis = "all"){
     
     ggsave(p_b300_bus,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
@@ -1290,8 +1290,8 @@ graficos <- function(munis = "all"){
       scale_fill_manual(values = c("grey70", "#FFB578", "black", "#cc3003"),
       )+
       scale_size_continuous( range = c(0,10),
-                             limits = c(1,3000),
-                             breaks = c(0,500,1000,3000),
+                             limits = c(0,6000),
+                             breaks = c(0,500,1000,5000),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bus_ntad <- plot_cleveland_bus300_ntad + scale_color_manual(name = "Gênero e Cor",
@@ -1314,8 +1314,8 @@ graficos <- function(munis = "all"){
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(1000,3000),
-                         breaks = seq(1000,3000, 500)) +
+                         limits = c(1000,6000),
+                         breaks = seq(1000,6000, 500)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1606,7 +1606,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_aglomerados_ntad,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/14-linhas_tp_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/14-aglomerados_nao_atendidos_tp_%s.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -2488,8 +2488,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003")
       )+
       scale_size_continuous( range = c(0,10),
-                             limits = c(1,60000),
-                             breaks = c(0,5000,10000,50000),
+                             limits = c(1,200000),
+                             breaks = c(0,50000,100000,150000),
                              name = "Habitantes",
                              guide = "legend")
     p_head_bus <- plot_cleveland_headway + scale_color_manual(name = "Gênero e Cor",
@@ -2512,8 +2512,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       xlab("Headway médio (min)") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(19,23),
-                         breaks = seq(19,23, 1)) +
+                         limits = c(25,30),
+                         breaks = seq(25,30, 1)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
