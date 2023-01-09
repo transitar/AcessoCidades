@@ -8,7 +8,7 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 mode1 <- "walk"
 oportunidade <- "saude"
 titulo_leg <- "Eq. de Saúde"
@@ -131,7 +131,7 @@ tema_TMI <- function(base_size) {
     axis.ticks = element_blank(), 
     panel.grid = element_blank(),
     plot.margin=unit(c(0,0,0,0),"mm"),
-    legend.margin = margin(unit(c(10,10,5,10),"mm")),
+    legend.margin = margin(unit(c(10,10,10,10),"mm")),
     legend.key.width=unit(2,"line"),
     legend.key.height = unit(1,"line"),
     legend.key = element_blank(),
@@ -139,7 +139,7 @@ tema_TMI <- function(base_size) {
     legend.title=element_text(size=35, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.20, 0.35),
+    legend.position = c(0.22, 0.26),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -147,7 +147,7 @@ tema_TMI <- function(base_size) {
     legend.background = element_blank(),
     # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
     #                                      colour = "#E0DFE3"),
-    legend.spacing.y = unit(0.3, 'cm'),
+    legend.spacing.y = unit(0.2, 'cm'),
     legend.box.just = "left"
     # legend.margin = margin(t = -80)
   )
@@ -167,10 +167,7 @@ tema_TMI <- function(base_size) {
 #funciona apenas para 1 ou 4 tempos
 #cols: numero de colunas do facet
 
-area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
-                                   sigla_muni)) %>% filter(DN == 24) %>%
-  st_make_valid() %>%
-  st_union()
+
 
 mapas_tmi <- function(sigla_muni,
                       type_acc,
@@ -204,6 +201,10 @@ mapas_tmi <- function(sigla_muni,
   sigla_municipio <- sigla_muni
   decisao_muni <- read_excel('../planilha_municipios.xlsx',
                              sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+  area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
+                                     sigla_muni)) %>% filter(DN == 24) %>%
+    st_make_valid() %>%
+    st_union()
   # area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
   #                                    sigla_muni)) %>% filter(DN == 24) %>%
   #   st_make_valid() %>%
@@ -228,6 +229,9 @@ mapas_tmi <- function(sigla_muni,
     group_by(hex) %>%
     summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
     st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
+  
+  rm(dados_simulacao)
+  gc()
   
   dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
                                  sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
@@ -334,6 +338,7 @@ mapas_tmi <- function(sigla_muni,
   acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op)))
   acess <- acess2
   
+  rm(acess2)
   #Ajustar o tempo de acesso maximo
   acess <- acess %>%
     mutate(valor = ifelse(is.na(valor)==T, 180, valor)) %>%
@@ -384,6 +389,16 @@ mapas_tmi <- function(sigla_muni,
   # fazer plots
   #adicionar if com escala viridis para o tmi
   
+  limits <- c(0, time)
+  if (time == 15 | time == 45){
+    breaks <- seq(0,time,time/3)
+    labels <- c(seq(0,time-time/3,time/3), paste0("> ", time))
+  } else {
+    breaks <- seq(0,time,time/4)
+    labels <- c(seq(0,time-time/4,time/4), paste0("> ", time))
+  }
+  
+  
   plot3 <- ggplot()+
     geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
     coord_equal() +
@@ -400,45 +415,21 @@ mapas_tmi <- function(sigla_muni,
     geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6, size = 0)+
     
     viridis::scale_fill_viridis(option = "D",
-                                direction = -1
-                                # , limits = c(0, 0.72)
-                                # , breaks = c(0.001, 0.35, 0.7)
-                                # , labels = c(0, "35", "70%")
+                                direction = -1,
+                                limits = limits,
+                                breaks = breaks,
+                                labels = labels
     ) +
     # scale_colour_manual(values = 'transparent') +
     # facet_wrap(~ind, ncol = 2)+
 
     labs(fill = sprintf("TMI a %s", titulo_leg)) +
     
-    geom_sf(data = simplepolys %>% st_transform(3857),
-            # aes(size = 2),
-            aes(color = "white"),
-            # color = "grey45",
-            # aes(fill = '#CFF0FF'),
-            fill = NA,
-            # stroke = 2,
-            # size = 2,
-            linewidth = 0.8,
-            alpha= 0.7)  +
-    
     ggnewscale::new_scale_fill() +
-    
-    geom_sf(data = assentamentos,
-            # aes(fill = "#d96e0a"),
-            aes(color = "#f1886e"),
-            
-            # fill = "#d96e0a",
-            linewidth = 0.5,
-            fill = "#f1886e",
-            show.legend = "polygon",
-            alpha = 0.7)+
-    
-    
-    # scale_fill_manual(name = "Assentamentos Precários",)
     
     geom_sf(data = dados_areas %>% st_transform(3857),
             # aes(size = 2),
-            aes(color = "grey60"),
+            aes(color = "bairros"),
             # color = "grey45",
             # aes(fill = '#CFF0FF'),
             fill = NA,
@@ -446,16 +437,36 @@ mapas_tmi <- function(sigla_muni,
             # size = 2,
             linewidth = 0.7,
             alpha= 0.7) +
+
+    geom_sf(data = assentamentos,
+            # aes(fill = "#d96e0a"),
+            aes(color = "assentamentos"),
+            
+            # fill = "#d96e0a",
+            linewidth = 0.5,
+            fill = "#f1886e",
+            show.legend = "polygon",
+            alpha = 0.7)+
     
-    
+     geom_sf(data = simplepolys %>% st_transform(3857),
+            # aes(size = 2),
+            aes(color = "urb"),
+            # color = "grey45",
+            # aes(fill = '#CFF0FF'),
+            fill = NA,
+            # stroke = 2,
+            # size = 2,
+            linewidth = 0.5,
+            alpha= 0.7)  +
     
     scale_color_manual(name = "Uso do solo",
-                       values = c("white" = "white",
-                                  "#f1886e" = "#f1886e",
-                                  "grey60" = "grey60"),
-                       label = c("white" = "Área Urbanizada",
-                                 "#f1886e" = "Assentamentos precários",
-                                 "grey60" = "Bairros")
+                       breaks = c("assentamentos", "bairros", "urb"),
+                       values = c("urb" = "#fdfdc1",
+                                  "assentamentos" = "#f1886e",
+                                  "bairros" = "grey60"),
+                       label = c("urb" = "Área Urbanizada",
+                                 "assentamentos" = "Assentamentos precários",
+                                 "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
     )+
     
     geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
@@ -518,9 +529,15 @@ mapas_tmi <- function(sigla_muni,
   # #       
   #                                          ) +
   aproxima_muni(sigla_muni = sigla_muni) +
-    guides(color = guide_legend(override.aes = list(fill = c("#f1886e", "white", "white"))))
+    guides(color = guide_legend(override.aes = list(fill = c("#f1886e", "white", "white"),
+                                                    color = c("#f1886e", "grey60", "#fcfb76"),
+                                                    linewidth = c(1,1,1)),
+                                order = 1))
     
-    
+    # rm(acess)
+    rm(acess, dados_acc, dados_areas, pop_counts, assentamentos,
+       simplepolys, area_urbanizada, map_tiles, dados_hex, data_contorno)
+    gc()
     # theme(strip.text = element_blank(),
     #       legend.title = element_text(
     #         # size=rel(0.6),
@@ -736,20 +753,21 @@ mapas_tmi <- function(sigla_muni,
                        sigla_muni, modo, type_acc , oportunidade, sigla_muni, type_acc , sigla_op, paste(time, collapse = '')), 
          dpi = 350, width = 16.5, height = 16.5, units = "cm")
   
-  
+  rm(plot3)
+  gc()
   # width <- 18
   # height <- 10
   
 }
 
 
-# mapas_tmi(sigla_muni = "poa",
-#           type_acc = "TMI",
-#           sigla_op = "ET",
-#           mode1 = "bike",
-#           oportunidade = "educacao",
-#           titulo_leg = "E.q de\nEducação",
-#           time = 15)
+mapas_tmi(sigla_muni = "poa",
+          type_acc = "TMI",
+          sigla_op = "SB",
+          mode1 = "bike",
+          oportunidade = "saude",
+          titulo_leg = "saúde",
+          time = 45)
 # mapas_tmi(sigla_muni = "poa",
 #           type_acc = "TMI",
 #           sigla_op = "EI",
@@ -804,30 +822,30 @@ mapas_tmi <- function(sigla_muni,
 #           titulo_leg = "E. de\nEducação",
 #           time = 15)
 
-library("future")
-plan(multisession)
-
-lista_modos <- c(rep("walk", 1), rep("bike", 1))
-
-lista_oportunidade <- rep(c(
-                            "bikes_compartilhadas"),2)
-
-lista_siglaop <- rep(c("BK"), 2)
-
-lista_titulo_leg <- rep(c(
-                          "B. Compart.")
-                          ,2)
-lista_tempos <- c(rep(30,1), rep(30, 1))
-
-lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
-
-furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'poa',
-                    type_acc = "TMI",
-                    cols = 1,
-                    width = 14,
-                    height = 10)
-
+# library("future")
+# plan(multisession)
+# 
+# lista_modos <- c(rep("walk", 1), rep("bike", 1))
+# 
+# lista_oportunidade <- rep(c(
+#                             "bikes_compartilhadas"),2)
+# 
+# lista_siglaop <- rep(c("BK"), 2)
+# 
+# lista_titulo_leg <- rep(c(
+#                           "B. Compart.")
+#                           ,2)
+# lista_tempos <- c(rep(30,1), rep(30, 1))
+# 
+# lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+# 
+# furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
+#                     sigla_muni = 'poa',
+#                     type_acc = "TMI",
+#                     cols = 1,
+#                     width = 14,
+#                     height = 10)
+# 
 
 
 
@@ -881,12 +899,12 @@ lista_oportunidade <- rep(c(
 #   rep("saude", 4),
 #   "lazer"),3)
 # lista_oportunidade <- rep(c(
-#   
-#   rep("escolas", 4),
-#   rep("saude", 4),
-#   "lazer",
-#   "bikes_compartilhadas",
-#   "paraciclos"),3)
+# 
+# rep("escolas", 4),
+# rep("saude", 4),
+# "lazer",
+# "bikes_compartilhadas",
+# "paraciclos"),3)
 
 lista_siglaop <- rep(c(
   "ET", "EI", "EF", "EM",
@@ -913,7 +931,7 @@ lista_titulo_leg <- rep(c(
 #   rep("Escolas", 4),
 #   rep("Eq. de Saúde", 4),
 #   "Eq. de Lazer",
-#   "Est. de B.\n Compartilhadas",
+#   "Est. de B. Comp.",
 #   "Paraciclos"), 3)
 lista_tempos <- c(rep(15,9), rep(30, 9))
 # lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
@@ -927,7 +945,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'dou',
+                    sigla_muni = 'poa',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
