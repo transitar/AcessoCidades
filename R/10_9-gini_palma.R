@@ -3,7 +3,7 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 width <- 16
 height <- 10
 
@@ -161,7 +161,7 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
 
 
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
               type_acc = "CMA")
@@ -170,7 +170,7 @@ gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -179,7 +179,7 @@ gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -223,7 +223,7 @@ write.xlsx(desigualdade_select_cma, sprintf('../data/ind_desigualdade/muni_%s/mu
 
 # TMI ---------------------------------------------------------------------
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
                       mode1 = "transit",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -236,7 +236,7 @@ palma_temp_transit_selec <- palma_selec
 # mode1 <- "bike"
 # type_acc <- "TMI"
 ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR")
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
                       mode1 = "bike",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -250,7 +250,7 @@ palma_temp_bike_selec <- palma_selec
 # type_acc <- "TMI"
 # ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR")
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
                       mode1 = "walk",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -352,15 +352,16 @@ plot_gini_cma <- ggplot(dados_cma,
   #                              "#d96e0a" = "Caminhada")
   # ) +
     scale_x_discrete(breaks = c(
-                                "CMALZ",
-                                "CMAMT",
+                                "CMATT",
                                 "CMAST",
-                                "CMATT"),
+                                "CMAMT",
+                                "CMALZ"
+                                ),
                      labels = c(
-                                "Lazer",
-                                "Matrículas Totais",
-                                "Eq. de Saúde Totais",
-                                "Empregos")) +
+                                "CMALZ"="Lazer",
+                                "CMAMT"="Matrículas Totais",
+                                "CMAST"="Eq. de Saúde Totais",
+                                "CMATT"="Empregos")) +
   ylab("Índice de Gini\nMedida Cumulativa de Oportunidades") +
   xlab("Oportunidade") +
   theme_light() +
@@ -395,7 +396,7 @@ ggsave(plot_gini_cma,
 
 # mode1 <- "bike"
 dados_tmi <- desigualdade_all_tmi %>%
-  filter(indicador %in%  c("TMIST", "TMIET"
+  filter(indicador %in%  c("TMIST", "TMIET", "TMIBK", "TMIPR"
                            # "TMILZ"
                            ))
 dados_tmi <- dados_tmi %>% mutate(mode = case_when(mode=="transit" ~ "Transporte Público",
@@ -434,17 +435,17 @@ plot_gini_tmi <- ggplot(dados_tmi,
   #                              "#d96e0a" = "Caminhada")
   # ) +
   scale_x_discrete(breaks = c(
-
+    "TMIST",
     "TMIET",
-    "TMILZ",
-
-    "TMIST"),
+    # "TMILZ",
+    "TMIBK",
+    "TMIPR"),
     labels = c(
-
-      "Escolas",
-      "Lazer",
-
-      "Saúde")) +
+      "TMIET"="Escolas",
+      # "TMILZ"="Lazer",
+      "TMIST"="Saúde",
+      "TMIBK" = "B. Compartilhadas",
+      "TMIPR" = "Paraciclos")) +
   ylab("Índice de Gini\nMedida de Tempo Mínimo de Acesso") +
   xlab("Oportunidade") +
   theme_light() +
@@ -876,7 +877,7 @@ razao_medias_function_cor <- function(sigla_muni, type_acc){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "dou", "CMA")
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "poa", "CMA")
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
@@ -931,9 +932,10 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
   # ) +
   scale_x_discrete(breaks = c(
     # "TMIBK",
+    "CMATT",
     "CMALZ15",
     "CMALZ",
-    "CMATT",
+
     "CMALZ30",
     # "TMIPR",
     "CMATT45",
@@ -1210,7 +1212,7 @@ ggsave(plot_razoes_cma_resp,
 
 # Dados Razão de Medias por Cor TMI ---------------------------------------------
 
-medias_razoes_acc_tmi <- razao_medias_function_cor(sigla_muni = "dou", "TMI")
+medias_razoes_acc_tmi <- razao_medias_function_cor(sigla_muni = "poa", "TMI")
 medias_razoes_acc_tmi2 <- medias_razoes_acc_tmi %>% drop_na()
 # head(medias_razoes_acc_cor)
 
@@ -1225,7 +1227,7 @@ medias_razoes_acc_tmi2 <- medias_razoes_acc_tmi %>% drop_na()
 medias_razoes_acc_cor_tmi2 <- medias_razoes_acc_tmi %>%
   filter(recorte == "cor") %>%
   # filter(modo != "transit") %>%
-  filter(indicador %in% c("TMIST", "TMIET"
+  filter(indicador %in% c("TMIST", "TMIET", "TMIBK", "TMIPR"
                           # "TMILZ"
                           )) %>%
   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
@@ -1277,19 +1279,18 @@ plot_razoes_cor_tmi <- ggplot(medias_razoes_acc_cor_tmi2,
   #     "Eq. de saúde")) +
   
   scale_x_discrete(breaks = c(
-    # "TMIBK",
     "TMIET",
     # "TMILZ",
-    # "TMIPR",
+    "TMIST",
+    "TMIPR",
     # "CMATT45",
-    "TMIST"),
+    "TMIBK"),
     labels = c(
-      # "Bicicletas\nCompartilhadas",
-      "Escolas",
+      "TMIBK"="B. Compart.",
+      "TMIET"="Escolas",
       # "Eq. de lazer",
-      # "Paraciclos",
-      # "Saúde",
-      "Eq. de saúde")) +
+      "TMIPR"="Paraciclos",
+      "TMIST"="Eq. de saúde")) +
   
   
   ylab("Razão de Médias de\nTMI de brancos / negros") +
@@ -1326,9 +1327,9 @@ ggsave(plot_razoes_cor_tmi,
 medias_razoes_acc_genero_tmi2 <- medias_razoes_acc_tmi %>%
   filter(recorte == "genero") %>%
   # filter(modo != "transit") %>%
-  filter(indicador %in% c("TMIST", "TMIET"
+  filter(indicador %in% c("TMIST", "TMIET", "TMIBK", "TMIPR"
                           # "TMILZ"
-                          )) %>%
+  )) %>%
   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
                           modo == "bike" ~ "Bicicleta",
                           modo == "walk" ~ "Caminhada"))
@@ -1363,19 +1364,18 @@ plot_razoes_genero_tmi <- ggplot(medias_razoes_acc_genero_tmi2,
   #                              "#d96e0a" = "Caminhada")
   # ) +
   scale_x_discrete(breaks = c(
-    # "TMIBK",
     "TMIET",
     # "TMILZ",
-    # "TMIPR",
+    "TMIST",
+    "TMIPR",
     # "CMATT45",
-    "TMIST"),
+    "TMIBK"),
     labels = c(
-      # "Bicicletas\nCompartilhadas",
-      "Escolas",
+      "TMIBK"="B. Compart.",
+      "TMIET"="Escolas",
       # "Eq. de lazer",
-      # "Paraciclos",
-      # "Saúde",
-      "Eq. de saúde")) +
+      "TMIPR"="Paraciclos",
+      "TMIST"="Eq. de saúde")) +
   
   # scale_x_discrete(breaks = c(
   #   # "TMIBK",
@@ -1428,9 +1428,9 @@ ggsave(plot_razoes_genero_tmi,
 medias_razoes_acc_resp_tmi2 <- medias_razoes_acc_tmi %>%
   filter(recorte == "responsavel") %>%
   # filter(modo != "transit") %>%
-  filter(indicador %in% c("TMIST", "TMIET"
+  filter(indicador %in% c("TMIST", "TMIET", "TMIBK", "TMIPR"
                           # "TMILZ"
-                          )) %>%
+  )) %>%
   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
                           modo == "bike" ~ "Bicicleta",
                           modo == "walk" ~ "Caminhada"))
@@ -1465,19 +1465,18 @@ plot_razoes_resp_tmi <- ggplot(medias_razoes_acc_resp_tmi2,
   #                              "#d96e0a" = "Caminhada")
   # ) +
   scale_x_discrete(breaks = c(
-    # "TMIBK",
     "TMIET",
     # "TMILZ",
-    # "TMIPR",
+    "TMIST",
+    "TMIPR",
     # "CMATT45",
-    "TMIST"),
+    "TMIBK"),
     labels = c(
-      # "Bicicletas\nCompartilhadas",
-      "Escolas",
+      "TMIBK"="B. Compart.",
+      "TMIET"="Escolas",
       # "Eq. de lazer",
-      # "Paraciclos",
-      # "Saúde",
-      "Eq. de saúde")) +
+      "TMIPR"="Paraciclos",
+      "TMIST"="Eq. de saúde")) +
   ylab("Razão de Médias de\nTMI de responsáveis homens / mulheres") +
   xlab("Oportunidade") +
   theme_light() +
@@ -1515,7 +1514,7 @@ ggsave(plot_razoes_resp_tmi,
 # Ranking de bairros acessibilidade ---------------------------------------
 
 type_acc <- "CMA"
-modo_acc <- "walk"
+modo_acc <- "transit"
 
 
 data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
@@ -1646,19 +1645,26 @@ quadras <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_
                            sigla_muni, sigla_muni),
                    layer = "areas")
 # mapview(quadras)
-quadras <- quadras %>% st_transform(4083)
+quadras <- quadras %>% st_transform(4083) %>% mutate(area = NOME)
 
 quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
 # mapview(quadras_acc)
+
+#MUDAR ONOME DE ACORDO COM O SHAPEFILE
 if (modo_acc == "transit"){
+  # quadras_acc <- quadras_acc %>% mutate(area = NOME)
 quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
+  drop_na(area) %>%
   group_by(area) %>%
   summarise(acc_med_cmatt45 = mean(med_acc_cmatt45, na.rm = T),
             acc_med_cmast45 = mean(med_acc_cmast45, na.rm = T),
-            acc_med_cmaet45 = mean(med_acc_cmaet45, na.rm = T)) %>%
-  left_join(quadras) %>%
+            acc_med_cmaet45 = mean(med_acc_cmamt45, na.rm = T)) %>%
+  left_join(quadras, by = c("area"= "NOME")) %>%
   st_as_sf() %>% arrange(acc_med_cmatt45) %>%
   mutate(ranking = seq(1, length(area)))
+
+quadras_acc_med <- quadras_acc_med %>% filter(is.na(area)==F & is.nan(acc_med_cmatt45)==F)
+
 } else if (modo_acc == "walk"){
   quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
     group_by(bairro) %>%
@@ -1669,8 +1675,8 @@ quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
     st_as_sf() %>% arrange(acc_med_cmatt15) %>%
     mutate(ranking = seq(1, length(bairro)))
   
+quadras_acc_med <- quadras_acc_med %>% filter(is.na(area)==F & is.nan(acc_med_cmatt15)==F)
 }
-quadras_acc_med <- quadras_acc_med %>% filter(is.na(bairro)==F & is.nan(acc_med_cmatt15)==F)
 # mapview(quadras_acc_med, zcol = "acc_med_cmatt15")
 
 pop_counts <- data_micro2 %>%
@@ -1680,7 +1686,7 @@ pop_counts <- data_micro2 %>%
 
 pop_quadras <- pop_counts %>% st_transform(4083) %>%
   st_join(quadras) %>% st_drop_geometry() %>%
-  group_by(bairro) %>%
+  group_by(area) %>%
   summarise(pop_quadra = sum(pop_total)) %>%
   left_join(quadras) %>%
   st_as_sf()
@@ -1689,8 +1695,8 @@ mapview(pop_quadras, zcol =  "pop_quadra")
 
 quadras_final <- quadras_acc_med %>% left_join(pop_quadras %>% st_drop_geometry())
 
-quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt15 > 0 & is.na(pop_quadra)==F) %>%
-  arrange(acc_med_cmatt15)
+quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
+  arrange(acc_med_cmatt45)
 
 quadras10 <- quadras_acc_med2[1:10,]
 
@@ -1699,7 +1705,7 @@ teste <- left_join(quadras, quadras10 %>% st_drop_geometry()) %>%
   mapview()
 
 quadras_percentil <- quadras_final %>% drop_na(pop_quadra) %>% 
-  mutate(quartil = ntile(acc_med_cmatt15, 5)) %>%
+  mutate(quartil = ntile(acc_med_cmatt45, 5)) %>%
   filter(quartil <= 2) 
 mapview(quadras_percentil)
 
@@ -1862,17 +1868,6 @@ plot3 <- ggplot()+
   
   labs(fill = "População da quadra") +
   
-  geom_sf(data = simplepolys %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "#852C2C"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.8,
-          alpha= 0.7)  +
-  
   ggnewscale::new_scale_fill() +
   
   geom_sf(data = assentamentos,
@@ -1885,6 +1880,9 @@ plot3 <- ggplot()+
           show.legend = "polygon",
           alpha = 0.7)+
   
+  
+  
+
   
   # scale_fill_manual(name = "Assentamentos Precários",)
   
@@ -1899,6 +1897,16 @@ plot3 <- ggplot()+
           linewidth = .8,
           alpha= 0.7) +
   
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "#852C2C"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.8,
+          alpha= 0.7)  +
   
   
   scale_color_manual(name = "Uso do solo",
@@ -1958,7 +1966,7 @@ ggspatial::annotation_scale(style = "ticks",
   # tema_CMA() +
   
   theme(
-    strip.text.x = element_text(size=rel(1.2)),
+    strip.text.x = element_text(size=rel(1)),
     strip.background = element_blank(),
     panel.background = element_rect(fill = NA, colour = NA),
     axis.text = element_blank(),
@@ -1966,15 +1974,15 @@ ggspatial::annotation_scale(style = "ticks",
     axis.ticks = element_blank(), 
     panel.grid = element_blank(),
     plot.margin=unit(c(0,0,0,0),"mm"),
-    legend.margin = margin(unit(c(10,10,5,10),"mm")),
-    legend.key.width=unit(1,"line"),
-    legend.key.height = unit(.5,"line"),
+    legend.margin = margin(unit(c(10,10,10,10),"mm")),
+    legend.key.width=unit(1.5,"line"),
+    legend.key.height = unit(1,"line"),
     legend.key = element_blank(),
     legend.text=element_text(size=25, family = "encode_sans_light"),
     legend.title=element_text(size=30, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.30),
+    legend.position = c(0.25, 0.35),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -1982,7 +1990,7 @@ ggspatial::annotation_scale(style = "ticks",
     legend.background = element_blank(),
     # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
     #                                      colour = "#E0DFE3"),
-    legend.spacing.y = unit(0.4, 'cm'),
+    legend.spacing.y = unit(0.05, 'cm'),
     legend.box.just = "left"
     # legend.margin = margin(t = -80)
   ) + 
@@ -2000,7 +2008,9 @@ ggspatial::annotation_scale(style = "ticks",
 # #       
 #                                          ) +
 aproxima_muni(sigla_muni = sigla_muni) +
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"))))
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white")),
+                              byrow = T),
+         fill = guide_legend(keyheight = unit(1, "line")))
 
 # plot3
 
@@ -2011,3 +2021,8 @@ ggsave(plot3,
                      sigla_muni),
              
        dpi = 300, width = width, height = height, units = "cm")
+
+assentamentos_bairros <- st_join(st_transform(quadras10, decisao_muni$epsg),
+                                  st_transform(assentamentos, decisao_muni$epsg)) %>%
+  drop_na(NM_AGSN)
+
