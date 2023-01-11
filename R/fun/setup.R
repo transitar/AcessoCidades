@@ -110,6 +110,12 @@ rm(packages,lpak,ipak)
 # suppressMessages(library(xlsx))
 # suppressMessages(library(ggspatial))
 
+n_int_digits = function(x) {
+  result = floor(log10(abs(x)))
+  result[!is.finite(result)] = 0
+  result
+}
+
 #cores
 
 colors_purple <- c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
@@ -129,6 +135,7 @@ colors_acc <- c("#090e20","#111B3F", "#21367D",
                 "#BB4115", "#D34F07", "#E4753A",
                 "#EB9432", "#F5C226", "#FAD920",
                 "#FDE63A", "#FFF354")
+viridis_magma_discrete <- c('#2B105F', '#C43C75', '#F3655C', '#FDE0A1')
 
 aproxima_muni <- function(sigla_muni) {
   
