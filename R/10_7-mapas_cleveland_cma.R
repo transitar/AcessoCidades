@@ -14,13 +14,13 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'dou'
-mode1 <- "walk"
+sigla_muni <- 'poa'
+mode1 <- "transit"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
 sigla_op <- "TT"
 # time <- c(15,30,45,60)
-time <- 30
+time <- 45
 type_acc <- "CMA"
 
 
@@ -121,6 +121,8 @@ faz_grafico_e_salva <- function(sigla_muni,
 
   data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                  sigla_muni, sigla_muni))
+  
+  max_pop <- nrow(data_micro)
   
   grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
                                  sigla_muni, sigla_muni))
@@ -253,6 +255,8 @@ faz_grafico_e_salva <- function(sigla_muni,
       acess <- dados_acc
     }
     
+    rm(dados_acc, dados_acc_maps); gc()
+    
     if (type_acc == "CMA"){
     sigla_munii <- sigla_muni
     # abrir acess
@@ -287,7 +291,7 @@ faz_grafico_e_salva <- function(sigla_muni,
     
     #Aqui, acess já foi filtrado pelo modo e data_micro já não contém amarelos e indigenas
     data_micro_acc <- data_micro2 %>% left_join(acess, by = c("hex"= "id_hex"))
-    
+    rm(acess, acess2); gc()
     #precisa modificar os temas lá em cima para cada nível
     #por hora, funcionando apenas o tema para um único mapa
     # if (type_acc == "CMA") {
@@ -341,6 +345,7 @@ faz_grafico_e_salva <- function(sigla_muni,
       
     }
     # recorte_rr_acc
+    rm(data_micro_acc); gc()
     # %>% group_by(cor, genero) %>% 
     #   summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"])
     
@@ -356,10 +361,31 @@ faz_grafico_e_salva <- function(sigla_muni,
     # geom_sf()
     #faz o plot
     
+    pop_max <- round(max(recorte_rr_acc$n),digits = -4)
+    break_max <- round(max(recorte_rr_acc$n),digits = -5)
+    break_leap <- break_max/4
+    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 15, ifelse(pop_max > 50000, 17, 19)))
+    
     if (type_acc == "CMA"){
+      
+      range_tot <- max(recorte_rr_acc$opp)-min(recorte_rr_acc$opp)
+
+      if (range_tot <= 0.002){
+        passo <- 0.0025
+        extend <- 0.01
+      } else if (range_tot <= 0.05) {
+        passo <- 0.005
+        extend <- 0.01
+      } else if (range_tot <= 0.10){
+        passo <- 0.01
+        extend <- 0.01
+      } else {
+        passo <- 0.025
+        extend <- 0.01
+      }
   
-    range1 <- round(ifelse( (min(recorte_rr_acc$opp) - 0.025)<0, 0, min(recorte_rr_acc$opp) - 0.025), digits = 2)
-    range2 <- round(ifelse( (max(recorte_rr_acc$opp) + 0.025)>1, 1, max(recorte_rr_acc$opp) + 0.025), digits = 2)
+    range1 <- round(ifelse( (min(recorte_rr_acc$opp) - extend)<0, 0, min(recorte_rr_acc$opp) - extend), digits = 2)
+    range2 <- round(ifelse( (max(recorte_rr_acc$opp) + extend)>1, 1, max(recorte_rr_acc$opp) + extend), digits = 2)
     # by1 <- round((range2 -range1)/100, 2)
     plot <- ggplot(recorte_rr_acc, aes(opp, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -367,24 +393,26 @@ faz_grafico_e_salva <- function(sigla_muni,
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
                         )+
-      scale_size_continuous( range = c(0,12),
-                             limits = c(1,20000),
-                             breaks = c(0,1000,5000,15000),
+      scale_size_continuous( range = c(0,escala),
+                             limits = c(0,break_max),
+                             breaks = c(break_leap,break_leap*2,break_leap*3),
                              name = "Habitantes",
                              guide = "legend")
     cma_clev <- plot+ scale_color_manual(name = "Gênero e Cor",
-                                 values = c("Homens Brancos"="#5766cc",
-                                            "Homens Pretos"="#21367d",
-                                            "Mulheres Brancos" = "#33b099",
-                                            "Mulheres Pretos"="#0f805e"),
-                                 labels = c("Homens Brancos",
-                                            "Homens Pretos",
-                                            "Mulheres Brancas",
-                                            "Mulheres Pretas"))+
+                                         values = c("Homens Brancos"="#ADBEF0",
+                                                    "Homens Pretos"="#174DE8",
+                                                    "Mulheres Brancos" = "#EBB814",
+                                                    "Mulheres Pretos"="#B39229"),
+                                         labels = c("Homens Brancos",
+                                                    "Homens Pretos",
+                                                    "Mulheres Brancas",
+                                                    "Mulheres Pretas"))+
       scale_x_continuous(labels = scales::percent, # baixa complexidade car
                          limits = c(range1,range2), # baixa complexidade car
-                         breaks = seq(range1,range2, by=.025))+ # media complexidade a pé
-      scale_y_discrete(expand = c(0.4,0.4)) +
+                         breaks = seq(range1,range2, by=passo))+ # media complexidade a pé
+      scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil"),
+                       expand = c(0.35,0.35)) +
+      # scale_y_discrete(expand = c(0.35,0.35)) +
       # labs(title = sprintf()"Quantidade de empregos acessíveis a pé")+  
            #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
            # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
@@ -393,26 +421,49 @@ faz_grafico_e_salva <- function(sigla_muni,
       ylab("Quartil de renda per capta") +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
-        legend.background = element_blank(),
         panel.background = element_blank(),
-        legend.direction = "vertical",
-        legend.position = "bottom",
         text = element_text(family = "sans",
                             # face = "bold",
                             size = 20),
-        
+        #titulo
         plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
         plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
         plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+        #legenda
         legend.title = element_text(size = 35, family = "encode_sans_bold"),
         legend.text = element_text(size = 30, family = "encode_sans_light"),
+        legend.direction = "vertical",
+        legend.position = "bottom",
+        legend.background = element_blank(),
+        legend.spacing.y = unit(0.2, "cm"),
+        #Eixos
         axis.text = element_text(size = 30, family = "encode_sans_light"),
-        axis.title = element_text(size = 35, family = "encode_sans_bold"))
+        axis.title = element_text(size = 35, family = "encode_sans_bold")) +
+      guides(size = guide_legend(order = 2))
+    
     } else if (type_acc=="TMI"){
       
+      range_tot <- max(recorte_rr_acc$tempo)-min(recorte_rr_acc$tempo)
+      
+      if (range_tot <= 2){
+        passo <- 0.25
+        extend <- 1
+      } else if (range_tot <= 5) {
+        passo <- 0.5
+        extend <- 1
+      } else if (range_tot <= 10){
+        passo <- 1
+        extend <- 1
+      } else {
+        passo <- 2.5
+        extend <- 1
+      }
       # library(plyr)
-      range1 <- plyr::round_any(round(ifelse( (min(recorte_rr_acc$tempo) - 2.5)<0, 0, min(recorte_rr_acc$tempo) - 2.5), digits = 0)%/% 1, 2.5)
-      range2 <- plyr::round_any(round(ifelse( (max(recorte_rr_acc$tempo) + 2.5)>180, 180, max(recorte_rr_acc$tempo) + 2.5), digits = 0) %/% 1, 2.5)
+      range1 <- plyr::round_any(round(ifelse( (min(recorte_rr_acc$tempo) - extend/100)<0, 0, min(recorte_rr_acc$tempo) - extend/100), digits = 0)%/% 1, extend/100)
+      range2 <- plyr::round_any(round(ifelse( (max(recorte_rr_acc$tempo) + extend/100)>180, 180, max(recorte_rr_acc$tempo) + extend/100), digits = 0) %/% 1, extend/100)
+
+      
+
       # by1 <- round((range2 -range1)/100, 2)
       plot <- ggplot(recorte_rr_acc, aes(tempo, as.character(quintil_renda))) +
         geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -420,24 +471,27 @@ faz_grafico_e_salva <- function(sigla_muni,
         guides(fill=guide_legend(title="Gênero e cor")) +
         scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003"),
         )+
-        scale_size_continuous( range = c(0,12),
-                               limits = c(1,20000),
-                               breaks = c(0,1000,5000,15000),
+        scale_size_continuous( range = c(0,escala),
+                               limits = c(0,break_max),
+                               breaks = c(break_leap,break_leap*2,break_leap*3),
                                name = "Habitantes",
                                guide = "legend")
-      cma_clev <- plot+ scale_color_manual(name = "Gênero e Cor",
-                                           values = c("Homens Brancos"="#5766cc",
-                                                      "Homens Pretos"="#21367d",
-                                                      "Mulheres Brancos" = "#33b099",
-                                                      "Mulheres Pretos"="#0f805e"),
-                                           labels = c("Homens Brancos",
-                                                      "Homens Pretos",
-                                                      "Mulheres Brancas",
-                                                      "Mulheres Pretas"))+
+      
+      cma_clev <- plot + scale_color_manual(name = "Gênero e Cor",
+                                            values = c("Homens Brancos"="#ADBEF0",
+                                                       "Homens Pretos"="#174DE8",
+                                                       "Mulheres Brancos" = "#EBB814",
+                                                       "Mulheres Pretos"="#B39229"),
+                                            labels = c("Homens Brancos",
+                                                       "Homens Pretos",
+                                                       "Mulheres Brancas",
+                                                       "Mulheres Pretas"))+
         scale_x_continuous(labels = scales::number, # baixa complexidade car
                            limits = c(range1,range2), # baixa complexidade car
-                           breaks = seq(range1,range2, by=2.5))+ # media complexidade a pé
-        scale_y_discrete(expand = c(0.4,0.4)) +
+                           breaks = seq(range1,range2, by=passo))+ # media complexidade a pé
+        scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil"),
+                         expand = c(0.35,0.35)) +
+        # scale_y_discrete(expand = c(0.5,0.5)) +
         # labs(title = sprintf()"Quantidade de empregos acessíveis a pé")+  
         #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
         # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
@@ -446,21 +500,25 @@ faz_grafico_e_salva <- function(sigla_muni,
         ylab("Quartil de renda per capta") +
         theme(#axis.title = element_blank(),
           panel.grid.minor = element_line(),
-          legend.background = element_blank(),
           panel.background = element_blank(),
-          legend.direction = "vertical",
-          legend.position = "bottom",
           text = element_text(family = "sans",
                               # face = "bold",
                               size = 20),
-          
+          #titulo
           plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
           plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
           plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+          #legenda
           legend.title = element_text(size = 35, family = "encode_sans_bold"),
           legend.text = element_text(size = 30, family = "encode_sans_light"),
+          legend.direction = "vertical",
+          legend.position = "bottom",
+          legend.background = element_blank(),
+          legend.spacing.y = unit(0.2, "cm"),
+          #Eixos
           axis.text = element_text(size = 30, family = "encode_sans_light"),
-          axis.title = element_text(size = 35, family = "encode_sans_bold"))
+          axis.title = element_text(size = 35, family = "encode_sans_bold")) +
+        guides(size = guide_legend(order = 2))
       
       
       
@@ -486,7 +544,7 @@ faz_grafico_e_salva <- function(sigla_muni,
     
     # cma_clev
     
-    
+    rm(cma_clev); gc()
     
     # quintil1 <- data_micro_acc %>%
     #   # mutate(total = "total") %>% 
@@ -714,69 +772,69 @@ faz_grafico_e_salva <- function(sigla_muni,
   library("future")
   plan(multisession)
   
-  lista_modos <- c(rep("walk", 14), rep("bike", 14))
+  # lista_modos <- c(rep("walk", 14), rep("bike", 14))
   # lista_modos <- c(rep("transit", 14), rep("walk", 14), rep("bike", 14))
-  # lista_modos <- c(rep("transit", 16), rep("walk", 16), rep("bike", 16))
+  lista_modos <- c(rep("transit", 16), rep("walk", 16), rep("bike", 16))
   
-  lista_oportunidade <- rep(c("empregos",
-                              rep("matriculas",4),
-                              rep("escolas", 4),
-                              rep("saude", 4),
-                              "lazer"),2)
+  # lista_oportunidade <- rep(c("empregos",
+  #                             rep("matriculas",4),
+  #                             rep("escolas", 4),
+  #                             rep("saude", 4),
+  #                             "lazer"),2)
   # lista_oportunidade <- rep(c("empregos",
   #                             rep("matriculas",4),
   #                             rep("escolas", 4),
   #                             rep("saude", 4),
   #                             "lazer"),3)
-  # lista_oportunidade <- rep(c("empregos",
-  #                             rep("matriculas",4),
-  #                             rep("escolas", 4),
-  #                             rep("saude", 4),
-  #                             "lazer",
-  #                             "bikes_compartilhadas",
-  #                             "paraciclos"),3)
+  lista_oportunidade <- rep(c("empregos",
+                              rep("matriculas",4),
+                              rep("escolas", 4),
+                              rep("saude", 4),
+                              "lazer",
+                              "bikes_compartilhadas",
+                              "paraciclos"),3)
   
-  lista_siglaop <- rep(c("TT",
-                         "MT", "MI", "MF", "MM",
-                         "ET", "EI", "EF", "EM",
-                         "ST", "SB", "SM", "SA",
-                         "LZ"), 2)
+  # lista_siglaop <- rep(c("TT",
+  #                        "MT", "MI", "MF", "MM",
+  #                        "ET", "EI", "EF", "EM",
+  #                        "ST", "SB", "SM", "SA",
+  #                        "LZ"), 2)
   # lista_siglaop <- rep(c("TT",
   #                        "MT", "MI", "MF", "MM",
   #                        "ET", "EI", "EF", "EM",
   #                        "ST", "SB", "SM", "SA",
   #                        "LZ"), 3)
-  # lista_siglaop <- rep(c("TT",
-  #                        "MT", "MI", "MF", "MM",
-  #                        "ET", "EI", "EF", "EM",
-  #                        "ST", "SB", "SM", "SA",
-  #                        "LZ", "BK", "PR"), 3)
+  lista_siglaop <- rep(c("TT",
+                         "MT", "MI", "MF", "MM",
+                         "ET", "EI", "EF", "EM",
+                         "ST", "SB", "SM", "SA",
+                         "LZ", "BK", "PR"), 3)
   
-  lista_titulo_leg <- rep(c("Empregos",
-                            rep("Matrículas",4),
-                            rep("Escolas", 4),
-                            rep("Eq. de Saúde", 4),
-                            "Eq. de Lazer"), 2)
+  # lista_titulo_leg <- rep(c("Empregos",
+  #                           rep("Matrículas",4),
+  #                           rep("Escolas", 4),
+  #                           rep("Eq. de Saúde", 4),
+  #                           "Eq. de Lazer"), 2)
   # lista_titulo_leg <- rep(c("Empregos",
   #                           rep("Matrículas",4),
   #                           rep("Escolas", 4),
   #                           rep("Eq. de Saúde", 4),
   #                           "Eq. de Lazer"), 3)
-  # lista_titulo_leg <- rep(c("Empregos",
-  #                           rep("Matrículas",4),
-  #                           rep("Escolas", 4),
-  #                           rep("Eq. de Saúde", 4),
-  #                           "Eq. de Lazer",
-  #                           "Est. de B.\n Compartilhadas",
-  #                           "Paraciclos"), 3)
-  lista_tempos <- c(rep(15,14), rep(30, 14))
+  lista_titulo_leg <- rep(c("Empregos",
+                            rep("Matrículas",4),
+                            rep("Escolas", 4),
+                            rep("Eq. de Saúde", 4),
+                            "Eq. de Lazer",
+                            "Est. de B. Comp.",
+                            "Paraciclos"), 3)
+  # lista_tempos <- c(rep(15,14), rep(30, 14))
   # lista_tempos <- c(rep(45, 14), rep(15,14), rep(30, 14))
-  # lista_tempos <- c(rep(15, 16), rep(60,16), rep(60, 16))
+  lista_tempos <- c(rep(45, 16), rep(15,16), rep(30, 16))
   
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'dou',
+                      sigla_muni = 'poa',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -801,8 +859,9 @@ faz_grafico_e_salva <- function(sigla_muni,
   #   rep("escolas", 4),
   #   rep("saude", 4),
   #   "lazer"),3)
+  
   # lista_oportunidade <- rep(c(
-  #   
+  # 
   #   rep("escolas", 4),
   #   rep("saude", 4),
   #   "lazer",
@@ -835,16 +894,18 @@ faz_grafico_e_salva <- function(sigla_muni,
   #   rep("Escolas", 4),
   #   rep("Eq. de Saúde", 4),
   #   "Eq. de Lazer",
-  #   "Est. de B.\n Compartilhadas",
+  #   "Est. de B. Comp.",
   #   "Paraciclos"), 3)
   lista_tempos <- c(rep(15,9), rep(30, 9))
   # lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
-  # lista_tempos <- c(rep(30, 11), rep(15,11), rep(15, 11))
+  # lista_tempos <- c(rep(45, 11), rep(15,11), rep(30, 11))
   
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
+  seed = TRUE
+  
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'dou',
+                      sigla_muni = 'poa',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
