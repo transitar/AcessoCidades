@@ -1147,8 +1147,33 @@ graficos <- function(munis = "all"){
     #   left_join(dados_hex, by = c("hex" = "id_hex")) %>% st_as_sf()
     # mapview(teste_recorte_rr)
 # Cleveland Plot Atendidos 300m -------------------------------------------
-
+    options(scipen = 10000000)
+    pop_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
+    break_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
+    break_leap <- break_max/4
+    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 15, ifelse(pop_max > 50000, 17, 19)))
     
+    range_tot <- max(recorte_rr$prop)-min(recorte_rr$prop)
+    
+    if (range_tot <= 0.002){
+      passo <- 0.0025
+      extend <- 0.01
+    } else if (range_tot <= 0.05) {
+      passo <- 0.005
+      extend <- 0.01
+    } else if (range_tot <= 0.10){
+      passo <- 0.02
+      extend <- 0.01
+    } else if (range_tot <= 20){
+      passo <- 0.025
+      extend <- 0.01
+    } else {
+      passo <- 0.05
+      extend <- 0.01
+    }
+    
+    range1 <- round(ifelse( (min(recorte_rr$prop) - extend)<0, 0, min(recorte_rr$prop) - extend), digits = 2)
+    range2 <- round(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend), digits = 2)
     
     plot_cleveland_bus300 <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -1156,9 +1181,9 @@ graficos <- function(munis = "all"){
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
       )+
-      scale_size_continuous( range = c(0,11),
-                             limits = c(1,200000),
-                             breaks = c(0,50000,100000,150000),
+      scale_size_continuous( range = c(0,escala),
+                             limits = c(0,break_max),
+                             breaks = c(break_leap,break_leap*2,break_leap*3),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bus <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
@@ -1166,10 +1191,10 @@ graficos <- function(munis = "all"){
                                                                       "Homens Pretos"="#174DE8",
                                                                       "Mulheres Brancos" = "#EBB814",
                                                                       "Mulheres Pretos"="#B39229"),
-                                                           labels = c("Homens Brancos",
-                                                                      "Homens Pretos",
-                                                                      "Mulheres Brancas",
-                                                                      "Mulheres Pretas"))+
+                                                           labels = c("Homens Brancos"="Homens Brancos",
+                                                                      "Homens Pretos"= "Homens Negros",
+                                                                      "Mulheres Brancos"="Mulheres Brancas",
+                                                                      "Mulheres Pretos"="Mulheres Negras"))+
       # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
       #                    limits = c(0,5), # baixa complexidade car                   
       #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
@@ -1181,8 +1206,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.875,0.975),
-                         breaks = seq(0.875,0.975, 0.025)) +
+                         limits = c(range1,range2),
+                         breaks = seq(range1,range2, passo)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1208,7 +1233,7 @@ graficos <- function(munis = "all"){
     
     ggsave(p_b300_bus,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
@@ -1252,7 +1277,7 @@ graficos <- function(munis = "all"){
     
     recorte_rr_ntad <- data_micro2 %>%
       mutate(quintil_renda = ntile(Rend_pc, 4)) %>%
-      filter(quintil_renda %in% c(1,2,3)) %>%
+      filter(quintil_renda %in% c(1,2,3,4)) %>%
       filter(hex %in% id_hex_intersects_bus_ntad300) %>% st_drop_geometry() %>%
       # mutate(total = "total") %>% 
       mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
@@ -1282,6 +1307,28 @@ graficos <- function(munis = "all"){
       mutate(id = paste(class, quintil_renda))
     
     
+    pop_max_ntad <- round(max(recorte_rr_ntad2$n),digits = -n_int_digits(max(recorte_rr_ntad2$n)))
+    break_max_ntad <- round(max(recorte_rr_ntad2$n),digits = -n_int_digits(max(recorte_rr_ntad2$n)))
+    break_leap_ntad <- break_max_ntad/4
+    escala_ntad <- ifelse(pop_max_ntad > 150000, 12, ifelse( pop_max_ntad > 100000, 12, ifelse(pop_max_ntad > 50000, 12, 12)))
+    
+    range_tot <- max(recorte_rr_ntad2$n)-min(recorte_rr_ntad2$n)
+    extend_ntad <- 100
+    
+    if (range_tot <= 100){
+      passo_ntad <- 50
+    } else if (range_tot <= 500) {
+      passo_ntad <- 100
+    } else if (range_tot <= 1000){
+      passo_ntad <- 250
+    } else if (range_tot <= 5000){
+      passo_ntad <- 500
+    } else {
+      passo_ntad <- 1000
+    }
+    
+    range1_ntad <- round(ifelse( (min(recorte_rr_ntad2$n) - extend_ntad)<0, 0, min(recorte_rr_ntad2$n) - extend_ntad), digits = -n_int_digits(max(recorte_rr_ntad2$n)))
+    range2_ntad <- round(ifelse( (max(recorte_rr_ntad2$n) + extend_ntad)>break_max_ntad, 1, max(recorte_rr_ntad2$n) + extend_ntad), digits = -n_int_digits(max(recorte_rr_ntad2$n)))
     
     plot_cleveland_bus300_ntad <- ggplot(recorte_rr_ntad2, aes(n, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -1289,33 +1336,33 @@ graficos <- function(munis = "all"){
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("grey70", "#FFB578", "black", "#cc3003"),
       )+
-      scale_size_continuous( range = c(0,10),
-                             limits = c(0,6000),
-                             breaks = c(0,500,1000,5000),
+      scale_size_continuous( range = c(0,escala_ntad),
+                             limits = c(0,break_max_ntad),
+                             breaks = c(break_leap_ntad,break_leap_ntad*2,break_leap_ntad*3),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bus_ntad <- plot_cleveland_bus300_ntad + scale_color_manual(name = "Gênero e Cor",
-                                                             values = c("Homens Brancos"="grey70",
-                                                                        "Homens Pretos"="#FFB578",
-                                                                        "Mulheres Brancos" = "black",
-                                                                        "Mulheres Pretos"="#cc3003"),
-                                                             labels = c("Homens Brancos",
-                                                                        "Homens Pretos",
-                                                                        "Mulheres Brancas",
-                                                                        "Mulheres Pretas"))+
+                                                                       values = c("Homens Brancos"="grey70",
+                                                                                  "Homens Pretos"="#FFB578",
+                                                                                  "Mulheres Brancos" = "black",
+                                                                                  "Mulheres Pretos"="#cc3003"),
+                                                                       labels = c("Homens Brancos"="Homens Brancos",
+                                                                                  "Homens Pretos"= "Homens Negros",
+                                                                                  "Mulheres Brancos"="Mulheres Brancas",
+                                                                                  "Mulheres Pretos"="Mulheres Negras"))+
       # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
       #                    limits = c(0,5), # baixa complexidade car                   
       #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
       scale_y_discrete(expand = c(0.4,0.4)) +
-      labs(title = "População sem acesso à infraestrutura de Transporte público")+  
+      labs(title = "População sem acesso à infraestrutura de transporte público")+  
       #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
       # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
       # theme_minimal() +
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(1000,6000),
-                         breaks = seq(1000,6000, 500)) +
+                         limits = c(range1_ntad,range2_ntad),
+                         breaks = seq(range1_ntad,range2_ntad, passo_ntad)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -1419,6 +1466,9 @@ graficos <- function(munis = "all"){
     # mapview(dados_areas)
     
     
+    recorte_rr_ntad_map <- recorte_rr_ntad %>%
+      st_drop_geometry() %>%
+      left_join(pop_counts, by = "hex") %>% st_as_sf()
     
     map_aglomerados_ntad <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1458,8 +1508,8 @@ graficos <- function(munis = "all"){
       
       
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
-      geom_sf(data = st_transform(recorte_rr_ntad, 3857),
-              aes(fill = n),
+      geom_sf(data = st_transform(recorte_rr_ntad_map, 3857),
+              aes(fill = quintil),
               colour = NA,
               alpha=1,
               size = 0)+
@@ -1507,10 +1557,40 @@ graficos <- function(munis = "all"){
 
       
       
-    viridis::scale_fill_viridis(option = "B", direction = -1, name = "População (hab)"
-                                
-                                ) +
+    # viridis::scale_fill_viridis(option = "B",
+    #                             direction = -1,
+    #                             name = "População (hab)",
+    #                             breaks = seq(1,3,1),
+    #                             labels = paste(seq(1,3,1), "quartil"),
+    #                             limits = c(1,3)
+    #                             
+    #                             ) +
+      # scale_fill_gradientn(
+      #   name = "Quintil de população",
+      #   colors = viridis_magma_discrete,
+      #   breaks = seq(1,3,1),
+      #   labels = seq(1,3,1),
+      #   limits = c(1,3),
+      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #   # values = NULL,
+      #   space = "Lab",
+      #   na.value = NA,
+      #   # guide = "colourbar",
+      #   aesthetics = "fill",
+      #   # colors
+      # ) +
       
+    scale_fill_manual(name = "População",
+                      values = c("1" = "#FEF8ED",
+                                 
+                                 "2" = "#FED49A",
+                                 "3" = "#FDA065",
+                                 "4" = "#D96542"),
+                      label = c("1" = "25% menos populosos",
+                                
+                                "2" = "25% a 50% menos populosos",
+                                "3" = "25% a 50% mais populosos",
+                                "4" = "25% mais populosos")) +
       
       # scale_fill_viridis_c(direction = -1,option = "inferno", name = "População não atendida") +
       # scale_fill_manual(values = c("1" = "#FEF8ED",
@@ -1528,7 +1608,7 @@ graficos <- function(munis = "all"){
       #                             "4" = "25% mais populosos",
       #                             # "#33b099" = "Cobertura de 300m",
       #                             "#5766cc" = "Aglomerados subnormais")) +
-      labs(fill = "População") +
+      # labs(fill = "População") +
       # ggnewscale::new_scale_color() +
       
       
@@ -1597,11 +1677,12 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.4, 'cm'),
+      legend.spacing.y = unit(0.1, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
-      # guides(fill = guide_legend(byrow = TRUE)) +
+      guides(fill = guide_legend(byrow = TRUE,
+                                 order = 2)) +
       aproxima_muni(sigla_muni = sigla_muni)
     
     ggsave(map_aglomerados_ntad,
@@ -1862,7 +1943,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               "#dfc27d", "#bf812d","#8c510a", "#543005")
     
     
-    
+    cor_ntad <- "#957A03"
     
     map_frequencias2 <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1876,16 +1957,10 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               aes(#fill = "ntad",
                   color = "ntad"),
               # color = "ntad",
-              fill = "grey40",
+              fill = cor_ntad,
               alpha=1,
               size = 0)+
-      scale_fill_manual(name = "",
-                        values = c("ntad" = "grey40"),
-                        label = c("ntad" = "População não atendidada")
-                        
-      ) +
-      
-      
+
       ggnewscale::new_scale_fill() +
       geom_sf(data = st_transform(frequencias2, 3857),
               aes(fill = headway_medio),
@@ -1898,10 +1973,20 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                   
       ) +
       
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.6,
+              alpha= 0.7) +
       
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "grey45"),
+              aes(color = "urb"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
               fill = NA,
@@ -1910,16 +1995,6 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               linewidth = 0.8,
               alpha= 0.7)  +
       
-      geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
-              aes(color = "grey70"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.5,
-              alpha= 0.7) +
       
       
       # ggnewscale::new_scale_color() +
@@ -1933,7 +2008,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
 
       
       geom_sf(data = st_transform(aglomerados_natend300, 3857),
-              aes(color = '#0f805e'),
+              aes(color = 'assentamentos'),
               # color = '#0f805e',
               # color = NA,
               # fill = "#0f805e",
@@ -1941,15 +2016,14 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               alpha = 0.6,
               linewidth = 1.0) +
       scale_color_manual(name = "Uso do solo",
-                         values = c("grey45" = "grey45",
-                                    "grey70" = "grey70",
-                                    "#0f805e" = "#0f805e",
-                                    "#FBFEA2" = "#FBFEA2",
-                                    "ntad" = "grey40"),
-                         label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Áreas de planejamento",
-                                   "#0f805e" = "Aglomerados subnormais",
-                                   "#FBFEA2" = "População não atendidada",
+                         breaks = c('urb', "areas", "assentamentos", "ntad"),
+                         values = c("urb" = "grey50",
+                                    "areas" = "#fefedf",
+                                    "assentamentos" = "#0F805E",
+                                    "ntad" = cor_ntad),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = "Áreas de planejamento",
+                                   "assentamentos" = "Aglomerados subnormais",
                                    "ntad" = "População não atendida")
       )+
       
@@ -2074,9 +2148,11 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("white", "white", "white", "grey40"))))
-    
-    
+      guides(color = guide_legend(override.aes = list(fill = c("white", "white", "white", cor_ntad),
+                                                      color = c("grey50", "#fdfc99", "#0F805E", cor_ntad))))
+    #511277 roxo
+    #142577 azul
+    #957A03 amarelo queimado
     ggsave(map_frequencias2,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s.png", sigla_muni, sigla_muni),
@@ -2437,8 +2513,9 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     # 
     # # mapview(dados_hex_intersect_freq)
     # dados_hex_intersect_freq <- dados_hex_intersect_freq$id_hex %>% unique()
+    showtext_auto()
     
-    recorte_rr <- data_micro2 %>%
+    recorte_rr_h <- data_micro2 %>%
       # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
       left_join(frequencias2 %>% st_drop_geometry(), by = c("hex"="id_hex")) %>%
       drop_na(headway_medio) %>%
@@ -2479,6 +2556,28 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     #   # mutate(class = paste(genero, cor))%>%
     #   mutate(id = paste(class, quintil_renda))
     
+    pop_max_headway <- round(max(recorte_rr_h$n),digits = -n_int_digits(max(recorte_rr_h$n)))
+    break_max_h <- round(max(recorte_rr_h$n),digits = -n_int_digits(max(recorte_rr_h$n)))
+    break_leap_h <- break_max_h/4
+    escala_h <- ifelse(pop_max_headway > 150000, 12, ifelse( pop_max_headway > 100000, 12, ifelse(pop_max_headway > 50000, 12, 12)))
+    
+    range_tot <- max(recorte_rr_h$headway_medio)-min(recorte_rr_h$headway_medio)
+    extend_h <- 0.1
+    
+    if (range_tot <= 0.5){
+      passo_h <- 0.1
+    } else if (range_tot <= 1) {
+      passo_h <- 0.25
+    } else if (range_tot <= 2.5){
+      passo_h <- 0.5
+    } else if (range_tot <= 5){
+      passo_h <- 1
+    } else {
+      passo_h <- 2.5
+    }
+    
+    range1_h <- floor(ifelse( (min(recorte_rr_h$headway_medio) - extend_h)<0, 0, min(recorte_rr_h$headway_medio) - extend_h))
+    range2_h <- ceiling(ifelse( (max(recorte_rr_h$headway_medio) + extend_h)>break_max_h, 1, max(recorte_rr_h$headway_medio) + extend_h))
     
     
     plot_cleveland_headway <- ggplot(recorte_rr, aes(headway_medio, as.character(quintil_renda))) +
@@ -2487,9 +2586,9 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       guides(fill=guide_legend(title="Gênero e cor")) +
       scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003")
       )+
-      scale_size_continuous( range = c(0,10),
-                             limits = c(1,200000),
-                             breaks = c(0,50000,100000,150000),
+      scale_size_continuous( range = c(0,escala_h),
+                             limits = c(0,break_max_h),
+                             breaks = c(break_leap_h,break_leap_h*2,break_leap_h*3),
                              name = "Habitantes",
                              guide = "legend")
     p_head_bus <- plot_cleveland_headway + scale_color_manual(name = "Gênero e Cor",
@@ -2497,10 +2596,10 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                                                            "Homens Pretos"="#FFB578",
                                                                            "Mulheres Brancos" = "black",
                                                                            "Mulheres Pretos"="#cc3003"),
-                                                                labels = c("Homens Brancos",
-                                                                           "Homens Pretos",
-                                                                           "Mulheres Brancas",
-                                                                           "Mulheres Pretas"))+
+                                                                labels = c("Homens Brancos"="Homens Brancos",
+                                                                           "Homens Pretos"="Homens Negros",
+                                                                           "Mulheres Brancos"="Mulheres Brancas",
+                                                                           "Mulheres Pretos"="Mulheres Negras"))+
       # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
       #                    limits = c(0,5), # baixa complexidade car                   
       #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
@@ -2512,8 +2611,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       xlab("Headway médio (min)") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(25,30),
-                         breaks = seq(25,30, 1)) +
+                         limits = c(range1_h,range2_h),
+                         breaks = seq(range1_h,range2_h, passo_h)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
@@ -2525,13 +2624,13 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                             # face = "bold",
                             size = 20),
         
-        plot.title = element_text(size = 20, margin = margin(b=10), family = "encode_sans_bold"),
+        plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
         plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
-        plot.caption = element_text(size = 18, margin = margin(t=10), color = "grey70", hjust = 0),
-        legend.title = element_text(size = 20, family = "encode_sans_bold"),
-        legend.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.text = element_text(size = 16, family = "encode_sans_light"),
-        axis.title = element_text(size = 18, family = "encode_sans_bold"))
+        plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+        legend.title = element_text(size = 35, family = "encode_sans_bold"),
+        legend.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.text = element_text(size = 30, family = "encode_sans_light"),
+        axis.title = element_text(size = 35, family = "encode_sans_bold"))
     
     
     
@@ -2540,7 +2639,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     ggsave(p_head_bus,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/16-linhasbus_freq_cleveland_%s.png", sigla_muni, sigla_muni),
-           dpi = 200,
+           dpi = 300,
            width = 15, height = 10, units = "cm" )
     
     
