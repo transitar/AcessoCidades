@@ -930,6 +930,41 @@ graficos <- function(munis = "all"){
 # Cleveland Plot de acesso a infra cicloviaria ----------------------------
 
     
+    options(scipen = 10000000)
+    
+    pop_max <- plyr::round_any(max(recorte_rr$n), 50000, f = ceiling)
+    # pop_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
+    break_max <- pop_max
+    # break_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
+    break_leap <- break_max/4
+    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 12, ifelse(pop_max > 50000, 12, 12)))
+    
+    range_tot <- max(recorte_rr$prop)-min(recorte_rr$prop)
+    
+    if (range_tot <= 0.002){
+      passo <- 0.0025
+      extend <- 0.01
+    } else if (range_tot <= 0.05) {
+      passo <- 0.01
+      extend <- 0.01
+    } else if (range_tot <= 0.10){
+      passo <- 0.025
+      extend <- 0.01
+    } else if (range_tot <= 25){
+      passo <- 0.05
+      extend <- 0.01
+    } else {
+      passo <- 0.05
+      extend <- 0.01
+    }
+    
+    range1 <- plyr::round_any(ifelse( (min(recorte_rr$prop) - extend)<0, 0, min(recorte_rr$prop) - extend),
+                              passo, f = floor)
+    # range1 <- round(ifelse( (min(recorte_rr$prop) - extend)<0, 0, min(recorte_rr$prop) - extend), digits = 2)
+    # range2 <- round(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend), digits = 2)
+    range2 <- plyr::round_any(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend),
+                              passo, f=ceiling)
+    
     plot_cleveland_ciclo <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
       geom_point(aes(color = class, size= n), shape = 1, stroke = 1.5) +
@@ -941,9 +976,9 @@ graficos <- function(munis = "all"){
       #            # labels=c("5000","10000","15000"),
       #            name = "Habitantes",
       #            guide="legend") +
-      scale_size_continuous( range = c(0,12),
-                             limits = c(1,70000),
-                             breaks = c(0,10000,25000, 50000),
+      scale_size_continuous( range = c(0,escala),
+                             limits = c(0,pop_max),
+                             breaks = c(break_leap,break_leap*2, break_leap*3),
                              name = "Habitantes",
                              guide = "legend")
     
@@ -953,10 +988,10 @@ graficos <- function(munis = "all"){
                                                                       "Homens Pretos"="#174DE8",
                                                                       "Mulheres Brancos" = "#EBB814",
                                                                       "Mulheres Pretos"="#B39229"),
-                                                           labels = c("Homens Brancos",
-                                                                      "Homens Pretos",
-                                                                      "Mulheres Brancas",
-                                                                      "Mulheres Pretas"))+
+                                                           labels = c("Homens Brancos"="Homens Brancos",
+                                                                      "Homens Pretos"="Homens Negros",
+                                                                      "Mulheres Brancos"="Mulheres Brancas",
+                                                                      "Mulheres Pretos"="Mulheres Negras"))+
       # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
       #                    limits = c(0,5), # baixa complexidade car                   
       #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
@@ -968,8 +1003,8 @@ graficos <- function(munis = "all"){
       xlab("% de habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::percent,
-                         limits = c(0.10,0.40),
-                         breaks = seq(0.10,0.4, 0.05)) +
+                         limits = c(range1,range2),
+                         breaks = seq(range1,range2, passo)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
