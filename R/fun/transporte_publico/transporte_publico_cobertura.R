@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'poa'
+sigla_muni <- 'pal'
 
 
 #gráficos de ciclovias
@@ -135,6 +135,7 @@ graficos <- function(munis = "all"){
       group_by(hex) %>%
       summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
+    
     
     
     # mapview(area_natend300)
@@ -1148,32 +1149,32 @@ graficos <- function(munis = "all"){
     # mapview(teste_recorte_rr)
 # Cleveland Plot Atendidos 300m -------------------------------------------
     options(scipen = 10000000)
-    pop_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
-    break_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
+    pop_max <- pop_max <- plyr::round_any(max(recorte_rr$n), 50000, f = ceiling)
+    break_max <- pop_max
     break_leap <- break_max/4
-    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 15, ifelse(pop_max > 50000, 17, 19)))
+    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 12, ifelse(pop_max > 50000, 12, 12)))
     
     range_tot <- max(recorte_rr$prop)-min(recorte_rr$prop)
+    extend <- 0.01
     
     if (range_tot <= 0.002){
-      passo <- 0.0025
-      extend <- 0.01
-    } else if (range_tot <= 0.05) {
       passo <- 0.005
-      extend <- 0.01
+    } else if (range_tot <= 0.05) {
+      passo <- 0.01
     } else if (range_tot <= 0.10){
-      passo <- 0.02
-      extend <- 0.01
-    } else if (range_tot <= 20){
       passo <- 0.025
-      extend <- 0.01
-    } else {
+    } else if (range_tot <= 25){
       passo <- 0.05
-      extend <- 0.01
+    } else {
+      passo <- 0.5
     }
     
-    range1 <- round(ifelse( (min(recorte_rr$prop) - extend)<0, 0, min(recorte_rr$prop) - extend), digits = 2)
-    range2 <- round(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend), digits = 2)
+    range1 <- plyr::round_any(ifelse( (min(recorte_rr$prop) - extend)<0, 0, min(recorte_rr$prop) - extend),
+                              passo,
+                              f=floor)
+    range2 <- plyr::round_any(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend),
+                              passo,
+                              f=ceiling)
     
     plot_cleveland_bus300 <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -1306,9 +1307,9 @@ graficos <- function(munis = "all"){
       mutate(class = paste(genero, cor))%>%
       mutate(id = paste(class, quintil_renda))
     
-    
-    pop_max_ntad <- round(max(recorte_rr_ntad2$n),digits = -n_int_digits(max(recorte_rr_ntad2$n)))
-    break_max_ntad <- round(max(recorte_rr_ntad2$n),digits = -n_int_digits(max(recorte_rr_ntad2$n)))
+    # ceiling(max(recorte_rr_ntad$n))
+    pop_max_ntad <- plyr::round_any(max(recorte_rr_ntad2$n), 10^(n_int_digits(max(recorte_rr_ntad2$n))), f = ceiling)
+    break_max_ntad <- pop_max_ntad
     break_leap_ntad <- break_max_ntad/4
     escala_ntad <- ifelse(pop_max_ntad > 150000, 12, ifelse( pop_max_ntad > 100000, 12, ifelse(pop_max_ntad > 50000, 12, 12)))
     
@@ -1327,8 +1328,13 @@ graficos <- function(munis = "all"){
       passo_ntad <- 1000
     }
     
-    range1_ntad <- round(ifelse( (min(recorte_rr_ntad2$n) - extend_ntad)<0, 0, min(recorte_rr_ntad2$n) - extend_ntad), digits = -n_int_digits(max(recorte_rr_ntad2$n)))
-    range2_ntad <- round(ifelse( (max(recorte_rr_ntad2$n) + extend_ntad)>break_max_ntad, 1, max(recorte_rr_ntad2$n) + extend_ntad), digits = -n_int_digits(max(recorte_rr_ntad2$n)))
+    range1_ntad <- plyr::round_any(ifelse( (min(recorte_rr_ntad2$n) - extend_ntad)<0, 0, min(recorte_rr_ntad2$n) - extend_ntad),
+                                   passo_ntad,
+                                   f = floor)
+    
+    range2_ntad <- plyr::round_any(ifelse( (max(recorte_rr_ntad2$n) + extend_ntad)>break_max_ntad, 1, max(recorte_rr_ntad2$n) + extend_ntad),
+                                   passo_ntad,
+                                   f = ceiling)
     
     plot_cleveland_bus300_ntad <- ggplot(recorte_rr_ntad2, aes(n, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -2556,8 +2562,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     #   # mutate(class = paste(genero, cor))%>%
     #   mutate(id = paste(class, quintil_renda))
     
-    pop_max_headway <- round(max(recorte_rr_h$n),digits = -n_int_digits(max(recorte_rr_h$n)))
-    break_max_h <- round(max(recorte_rr_h$n),digits = -n_int_digits(max(recorte_rr_h$n)))
+    pop_max_headway <-plyr::round_any(max(recorte_rr_h$n),10^(n_int_digits(max(recorte_rr_h$n))), f = ceiling)
+    break_max_h <- pop_max_headway
     break_leap_h <- break_max_h/4
     escala_h <- ifelse(pop_max_headway > 150000, 12, ifelse( pop_max_headway > 100000, 12, ifelse(pop_max_headway > 50000, 12, 12)))
     
@@ -2572,15 +2578,25 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       passo_h <- 0.5
     } else if (range_tot <= 5){
       passo_h <- 1
-    } else {
+    } else if (range_tot <= 10) {
       passo_h <- 2.5
+    } else {
+      passo_h <- 5
     }
     
-    range1_h <- floor(ifelse( (min(recorte_rr_h$headway_medio) - extend_h)<0, 0, min(recorte_rr_h$headway_medio) - extend_h))
-    range2_h <- ceiling(ifelse( (max(recorte_rr_h$headway_medio) + extend_h)>break_max_h, 1, max(recorte_rr_h$headway_medio) + extend_h))
+    # range1_h <- floor(ifelse( (min(recorte_rr_h$headway_medio) - extend_h)<0, 0, min(recorte_rr_h$headway_medio) - extend_h))
     
+    range1_h <- plyr::round_any(ifelse( (min(recorte_rr_h$headway_medio) - extend_h)<0, 0, min(recorte_rr_h$headway_medio) - extend_h),
+                                passo_h,
+                                f = floor)
     
-    plot_cleveland_headway <- ggplot(recorte_rr, aes(headway_medio, as.character(quintil_renda))) +
+    # range2_h <- ceiling(ifelse( (max(recorte_rr_h$headway_medio) + extend_h)>break_max_h, 1, max(recorte_rr_h$headway_medio) + extend_h))
+    
+    range2_h <- plyr::round_any(ifelse( (max(recorte_rr_h$headway_medio) + extend_h)>break_max_h, 1, max(recorte_rr_h$headway_medio) + extend_h),
+                                passo_h,
+                                f = ceiling)
+    
+    plot_cleveland_headway <- ggplot(recorte_rr_h, aes(headway_medio, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
       geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
       guides(fill=guide_legend(title="Gênero e cor")) +
