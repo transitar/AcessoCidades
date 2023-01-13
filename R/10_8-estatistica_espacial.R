@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'con'
+sigla_muni <- 'dou'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -149,6 +149,8 @@ hex_muni <- read_rds(sprintf('../data/hex_municipio/hex_2019_%s_09.rds',sigla_mu
 
 dados_micro_sf <- hex_muni %>% left_join(data_micro2, by = c("id_hex"="hex"))
 
+#poa -> id
+#outros -> id_g
 
 data_complete <- dados_micro_sf %>% st_drop_geometry() %>%
   drop_na(id_g) %>%
@@ -273,7 +275,7 @@ library(rgeoda)
 queen_w <- queen_weights(data_complete_cor,order = 1)
 
 # calculate LISA as per GEODA
-lisa <- local_moran(queen_w, data_complete_cor["dif_pretos_brancos"])
+lisa <- local_moran(queen_w, data_complete_cor["dif_brancos_pretos"])
 
 data_complete_cor$cluster_bp <- as.factor(lisa$GetClusterIndicators())
 levels(data_complete_cor$cluster_bp) <- lisa$GetLabels()
@@ -299,7 +301,7 @@ tema <- function(base_size) {
     legend.title=element_text(size=35, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.30),
+    legend.position = c(0.22, 0.25),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -344,9 +346,9 @@ tema <- function(base_size) {
 #   geom_sf(aes(fill = cluster_bp), color = NA)
 
 
-# Mapa lisa cor antigo ----------------------------------------------------
+# Mapa lisa cor novo ----------------------------------------------------
 
-
+data_complete_cor <- data_complete_cor %>% filter(cluster_bp != "Undefined")
 
 map_lisa_cor <- ggplot()+
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -356,45 +358,94 @@ map_lisa_cor <- ggplot()+
   new_scale_fill() +
   geom_sf(data = st_transform(data_complete_cor,
                               3857), aes(fill = cluster_bp), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.8) +
-  # geom_sf(data = simplepolys %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "#8E8E8E"),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = .7,
-  #         alpha= .1)  +
+  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
+
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "bairros"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(colour = "white"),
+          aes(colour = "assentamentos"),
+          fill = "#0A7E5C",
+          linewidth = 0.3,
+          alpha = 0.3)+
+  
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "urb"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
           fill = NA,
-          linewidth = 0.8)+
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7)  +
   
-  scale_color_identity(labels = c("white" = "Assentamentos Precários",
-                                  blue = ""), guide = "legend") +
-  labs(color = "")+
+  scale_color_manual(name = "Uso do solo",
+                     breaks = c("assentamentos", "bairros", "urb"),
+                     values = c("assentamentos" = "#0A7E5C",
+                                "urb" = "#FEF3DB",
+                                "bairros" = "grey50"),
+                     label = c("urb" = "Área Urbanizada",
+                               "assentamentos" = "Assentamentos precários",
+                               "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
+  )+
   
-  scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#21367D',
-                               'Low-Low' = '#CC3003'
-                               # 'Low-High' = '#D96E0A'
-                               # 'Low-High' = NA
+  scale_fill_manual(name = "Agrupamentos",
+                    
+                    breaks = c('Not significant',
+                               'High-High',
+                               'Low-Low',
+                               'Low-High',
+                               'High-Low'),
+                    
+                    values = c('Not significant' = 'grey70',
+                               'High-High' = '#CC3003',
+                               'Low-Low' = '#21367D',
+                               'Low-High' = '#8D86C9',
+                               'High-Low' = '#f1ed0c'
                                ),
-                    labels = c('Not significant' = 'Não Significativo',
-                               'High-High' = '> predominância de brancos',
-                               'Low-Low' = '< predominância de brancos'
-                               # 'Low-High' = ''
-                               # 'Low-High' = 'Baixo-Alto'
+                    labels = c('Not significant' = 'Não significativo',
+                               'High-High' = '> Predominância de brancos',
+                               'Low-Low' = '> Predominância de pretos',
+                               'Low-High' = '+ Negros próximos a brancos',
+                               'High-Low' = '+ Brancos próximos a negros'
                                )) +
   
-tema()+
-  labs(fill = "Agrupamento") +
-  aproxima_muni(sigla_muni = sigla_muni)
+  ggspatial::annotation_scale(style = "ticks",
+                              location = "br",
+                              text_family = "encode_sans_bold",
+                              text_cex = 3,
+                              line_width = 1,
+                              width_hint = 0.10,
+                              pad_x = unit(0.35, "cm"),
+                              pad_y = unit(0.35, "cm")
+  ) +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  
+  tema()+
+  
+  theme(legend.position = c(0.22,0.30)) +
+
+  aproxima_muni(sigla_muni = sigla_muni) +
+  
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
+                                                  color = c("#0A7E5C", "grey50", "#fde9be"),
+                                                  linewidth = c(1,1,1)),
+                              order = 2))
+  
 # map_lisa_cor
 
 ggsave(map_lisa_cor,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/3-lisa_cor_%s.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/3-lisa_cor_%s_new.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
@@ -402,49 +453,49 @@ ggsave(map_lisa_cor,
 
 # mapview(data_complete2, zcol = "dif_percent_cor")
 
-data_complete2 <- data_complete_cor %>%
-  mutate(dif_percent_cor = dif_brancos_pretos/Ptot,
-         dif_percent_genero = dif_homens_mulheres/Ptot)
+data_complete2 <- data_complete_cor #%>%
+  # mutate(dif_percent_cor = dif_brancos_pretos/Ptot,
+  #        dif_percent_genero = dif_homens_mulheres/Ptot)
 #histograma de diferenca de pop por cor
 
-hist_difcor <- ggplot(data_complete2, aes(x = dif_brancos_pretos)) +
-  geom_histogram(aes(y = (..count..)/sum(..count..)),
-                 fill = '#d96e0a') + 
-  scale_y_continuous(labels = scales::percent)+
-  xlab("Diferenca absoluta entre habitantes\nde cor branca e de cor preta") +
-  ylab('Porcentagem de hexagonos')+
-  # geom_text(mean(dif_brancos_pretos, na.rm = T))+
-  theme_minimal() +
-  theme(axis.title = element_text(size = rel(1.3)),
-        axis.text = element_text(size = rel(1.3))
-        )
-ggsave(hist_difcor,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/3-hist_diff_cor_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = 10, height = height, units = "cm" )
+# hist_difcor <- ggplot(data_complete2, aes(x = dif_brancos_pretos)) +
+#   geom_histogram(aes(y = (..count..)/sum(..count..)),
+#                  fill = '#d96e0a') + 
+#   scale_y_continuous(labels = scales::percent)+
+#   xlab("Diferenca absoluta entre habitantes\nde cor branca e de cor preta") +
+#   ylab('Porcentagem de hexagonos')+
+#   # geom_text(mean(dif_brancos_pretos, na.rm = T))+
+#   theme_minimal() +
+#   theme(axis.title = element_text(size = rel(1.3)),
+#         axis.text = element_text(size = rel(1.3))
+#         )
+# ggsave(hist_difcor,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/3-hist_diff_cor_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = 10, height = height, units = "cm" )
 
 
-hist_difgenero <- ggplot(data_complete2, aes(x = dif_homens_mulheres)) +
-  geom_histogram(aes(y = (..count..)/sum(..count..)),
-                 fill = '#d96e0a') + 
-  scale_y_continuous(labels = scales::percent)+
-  xlab("Diferenca absoluta entre\nhabitantes homens e mulheres") +
-  ylab('Porcentagem de hexagonos')+
-  # geom_text(mean(dif_brancos_pretos, na.rm = T))+
-  theme_minimal() +
-  theme(axis.title = element_text(size = rel(1.5)),
-        axis.text = element_text(size = rel(1.3))
-  )
+# hist_difgenero <- ggplot(data_complete2, aes(x = dif_homens_mulheres)) +
+#   geom_histogram(aes(y = (..count..)/sum(..count..)),
+#                  fill = '#d96e0a') + 
+#   scale_y_continuous(labels = scales::percent)+
+#   xlab("Diferenca absoluta entre\nhabitantes homens e mulheres") +
+#   ylab('Porcentagem de hexagonos')+
+#   # geom_text(mean(dif_brancos_pretos, na.rm = T))+
+#   theme_minimal() +
+#   theme(axis.title = element_text(size = rel(1.5)),
+#         axis.text = element_text(size = rel(1.3))
+#   )
 
 # hist_difgenero
 # mapview(data_complete2 , zcol  = 'dif_homens_mulheres')
 
 
 
-# LISA MAP diferenca de cor -----------------------------------------------
+# LISA MAP diferenca de cor antigo -----------------------------------------------
 
 
 map_lisa_cor <- ggplot() +
@@ -572,11 +623,11 @@ ggsave(map_lisa_cor,
 # Histograma de diferença de cor ------------------------------------------
 
 
-hist_difcor <- ggplot(data_complete_cor, aes(x = dif_pretos_brancos)) +
+hist_difcor <- ggplot(data_complete_cor, aes(x = dif_brancos_pretos)) +
   geom_histogram(aes(y = (..count..)/sum(..count..)),
                  fill = '#d96e0a') + 
   scale_y_continuous(labels = scales::percent)+
-  xlab("Diferença entre pretos e brancos") +
+  xlab("Diferença entre brancos e negros") +
   ylab('Porcentagem de hexagonos')+
   theme_minimal() +
   theme(
@@ -612,7 +663,7 @@ suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sig
 
 ggsave(hist_difcor,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/3-hist_diff_cor_%s.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/3-hist_diff_cor_%s_new.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
@@ -915,6 +966,9 @@ tema()+
 
 # Mapa Lisa de renda novo ------------------------------------------------------
 
+# mapview(renda, zcol = "cluster_renda")
+
+renda <- renda %>% filter(cluster_renda != "Undefined")
 
 map_lisa_renda <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -931,85 +985,66 @@ map_lisa_renda <- ggplot() +
           alpha=1,
           size = 0)+
   
-  scale_fill_manual(name = "Agrupamentos",
-                    ,values = c('Not significant' = 'grey70',
-                                'High-High' = '#21367D',
-                                'Low-Low' = '#CC3003'
-                                # 'Low-High' = '#D96E0A'
-                                # 'Low-High' = NA
-                    ),
-                    labels = c('Not significant' = 'Não Significativo',
-                               'High-High' = 'Maiores rendas',
-                               'Low-Low' = 'Menores rendas'
-                               # 'Low-High' = ''
-                               # 'Low-High' = 'Baixo-Alto'
-                    )) +
+  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
   
-  # labs(color = 'Infraestrutura Cicloviária',
-  #      fill = 'População') +
-  
-  ggnewscale::new_scale_color() +
-  
-  geom_sf(data = assentamentos,
-          # aes(fill = "#d96e0a"),
-          aes(color = "#0f805e"),
-          
-          # fill = "#d96e0a",
-          linewidth = 1.0,
-          fill = NA,
-          show.legend = "polygon",
-          alpha = 0.9)+
-  
-  # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
-  #         color = NA,alpha = .7, linewidth = 1) +
-  # geom_sf(data = st_transform(dados_linhas, 3857),
-  #         aes(color = '#0f805e'),
-  #         # color = '#0f805e',
-  #         # color = NA,
-  #         alpha = 1,
-  #         linewidth = 1.0) +
-  
-  # scale_color_manual(name = "Uso do solo",
-#                    values = c("##0f805e" = "##0f805e"),
-#                    label = c("##0f805e" = "Assentamentos precários")
-# )+
-geom_sf(data = dados_areas %>% st_transform(3857),
-        # aes(size = 2),
-        aes(color = "grey60"),
-        # color = "grey45",
-        # aes(fill = '#CFF0FF'),
-        fill = NA,
-        # stroke = 2,
-        # size = 2,
-        linewidth = 0.7,
-        alpha= 0.7) +
-  
-  
-  # ggnewscale::new_scale_color() +
-  geom_sf(data = simplepolys %>% st_transform(3857),
+  geom_sf(data = dados_areas %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "grey45"),
+          aes(color = "bairros"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.8,
+          linewidth = 0.3,
+          alpha= 0.7) +
+  
+  geom_sf(data = assentamentos,
+          aes(colour = "assentamentos"),
+          fill = "#0A7E5C",
+          linewidth = 0.3,
+          alpha = 0.3)+
+  
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "urb"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
           alpha= 0.7)  +
   
   scale_color_manual(name = "Uso do solo",
-                     values = c("#0f805e" = "#0f805e",
-                                "grey45" = "grey45",
-                                "grey60" = "grey60"),
-                     label = c("#0f805e" = "Assentamentos precários",
-                               "grey45" = "Área urbana",
-                               "grey60" = "Bairros")) +
-  # scale_color_manual(name = "Área Urbanizada",
-  #                    values = c("grey45" = "grey45"),
-  #                    label = c("grey45" = "Palmas")
-  # )+
+                     breaks = c("assentamentos", "bairros", "urb"),
+                     values = c("assentamentos" = "#0A7E5C",
+                                "urb" = "#FEF3DB",
+                                "bairros" = "grey50"),
+                     label = c("urb" = "Área Urbanizada",
+                               "assentamentos" = "Assentamentos precários",
+                               "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
+  )+
   
-  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+  scale_fill_manual(name = "Agrupamentos",
+                    
+                    breaks = c('Not significant',
+                               'High-High',
+                               'Low-Low',
+                               'Low-High',
+                               'High-Low'),
+                    
+                    values = c('Not significant' = 'grey70',
+                               'High-High' = '#CC3003',
+                               'Low-Low' = '#21367D',
+                               'Low-High' = '#8D86C9',
+                               'High-Low' = '#f1ed0c'),
+                    labels = c('Not significant' = 'Não significativo',
+                               'High-High' = 'Maiores rendas',
+                               'Low-Low' = 'Menores rendas',
+                               'Low-High' = 'Renda menor próximo a maior',
+                               'High-Low' = 'Renda maior próximo a menor')
+                    ) +
+  
   
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
@@ -1021,15 +1056,24 @@ geom_sf(data = dados_areas %>% st_transform(3857),
                               pad_y = unit(0.35, "cm")
   ) +
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  
   tema() +
-  aproxima_muni(sigla_muni = sigla_muni)
+  
+  theme(legend.position = c(0.22,0.30)) +
+  
+  aproxima_muni(sigla_muni = sigla_muni) +
+  
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
+                                                  color = c("#0A7E5C", "grey50", "#fde9be"),
+                                                  linewidth = c(1,1,1)),
+                              order = 2))
 
 
 suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
 
 ggsave(map_lisa_renda,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/5-lisa_renda_%s.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/5-lisa_renda_%s_new.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
@@ -1367,7 +1411,7 @@ tema()+
 
 # Mapa LISA de responsáveis NOVO ------------------------------------------
 
-
+renda_resp_sem_na <- renda_resp_sem_na %>% filter(cluster_mw != "Undefined")
 
 
 map_lisa_responsaveis <- ggplot() +
@@ -1385,86 +1429,69 @@ map_lisa_responsaveis <- ggplot() +
           alpha=1,
           size = 0)+
   
-  scale_fill_manual(name = "Agrupamentos",
-                    ,values = c('Not significant' = 'grey70',
-                                'High-High' = '#21367D',
-                                'Low-Low' = '#CC3003'
-                                # 'Low-High' = '#D96E0A'
-                                # 'Low-High' = NA
-                    ),
-                    labels = c('Not significant' = 'Não Significativo',
-                               'High-High' = '+ Responsáveis Masculinos',
-                               'Low-Low' = '- Responsáveis Masculinos'
-                               # 'Low-High' = ''
-                               # 'Low-High' = 'Baixo-Alto'
-                    )) +
   
-  # labs(color = 'Infraestrutura Cicloviária',
-  #      fill = 'População') +
+  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
   
-  ggnewscale::new_scale_color() +
-  
-  geom_sf(data = assentamentos,
-          # aes(fill = "#d96e0a"),
-          aes(color = "#0f805e"),
-          
-          # fill = "#d96e0a",
-          linewidth = 1.0,
-          fill = NA,
-          show.legend = "polygon",
-          alpha = 0.9)+
-  
-  # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
-  #         color = NA,alpha = .7, linewidth = 1) +
-  # geom_sf(data = st_transform(dados_linhas, 3857),
-  #         aes(color = '#0f805e'),
-  #         # color = '#0f805e',
-  #         # color = NA,
-  #         alpha = 1,
-  #         linewidth = 1.0) +
-  
-  # scale_color_manual(name = "Uso do solo",
-#                    values = c("##0f805e" = "##0f805e"),
-#                    label = c("##0f805e" = "Assentamentos precários")
-# )+
-geom_sf(data = dados_areas %>% st_transform(3857),
-        # aes(size = 2),
-        aes(color = "grey60"),
-        # color = "grey45",
-        # aes(fill = '#CFF0FF'),
-        fill = NA,
-        # stroke = 2,
-        # size = 2,
-        linewidth = 0.7,
-        alpha= 0.7) +
-  
-  
-  # ggnewscale::new_scale_color() +
-  geom_sf(data = simplepolys %>% st_transform(3857),
+  geom_sf(data = dados_areas %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "grey45"),
+          aes(color = "bairros"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.8,
+          linewidth = 0.3,
+          alpha= 0.7) +
+  
+  geom_sf(data = assentamentos,
+          aes(colour = "assentamentos"),
+          fill = "#0A7E5C",
+          linewidth = 0.3,
+          alpha = 0.3)+
+  
+  geom_sf(data = simplepolys %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "urb"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
           alpha= 0.7)  +
   
   scale_color_manual(name = "Uso do solo",
-                     values = c("#0f805e" = "#0f805e",
-                                "grey45" = "grey45",
-                                "grey60" = "grey60"),
-                     label = c("#0f805e" = "Assentamentos precários",
-                               "grey45" = "Área urbana",
-                               "grey60" = "Bairros")) +
-  # scale_color_manual(name = "Área Urbanizada",
-  #                    values = c("grey45" = "grey45"),
-  #                    label = c("grey45" = "Palmas")
-  # )+
+                     breaks = c("assentamentos", "bairros", "urb"),
+                     values = c("assentamentos" = "#0A7E5C",
+                                "urb" = "#FEF3DB",
+                                "bairros" = "grey50"),
+                     label = c("urb" = "Área Urbanizada",
+                               "assentamentos" = "Assentamentos precários",
+                               "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
+  )+
   
-  geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
   
+  scale_fill_manual(name = "Agrupamentos",
+                    
+                    breaks = c('Not significant',
+                               'High-High',
+                               'Low-Low',
+                               'Low-High',
+                               'High-Low'),
+                    
+                    values = c('Not significant' = 'grey70',
+                               'High-High' = '#CC3003',
+                               'Low-Low' = '#21367D',
+                               'Low-High' = '#8D86C9',
+                               'High-Low' = '#f1ed0c'),
+                    labels = c('Not significant' = 'Não significativo',
+                               'High-High' = '+ Responsáveis do gênero masculino',
+                               'Low-Low' = '+ Responsáveis do gênero feminino',
+                               'Low-High' = '+ Resp. fem. próximos a + resp. masc.  ',
+                               'High-Low' = '+ Resp. masc. próximos a + resp. fem.')
+  ) +
+  
+
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
                               text_family = "encode_sans_bold",
@@ -1475,8 +1502,17 @@ geom_sf(data = dados_areas %>% st_transform(3857),
                               pad_y = unit(0.35, "cm")
   ) +
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  
   tema() +
-  aproxima_muni(sigla_muni = sigla_muni)
+  
+  theme(legend.position = c(0.27,0.30)) +
+  
+  aproxima_muni(sigla_muni = sigla_muni) +
+  
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
+                                                  color = c("#0A7E5C", "grey50", "#fde9be"),
+                                                  linewidth = c(1,1,1)),
+                              order = 2))
 
 
 
@@ -1489,7 +1525,7 @@ suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sig
 
 ggsave(map_lisa_responsaveis,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/6-lisa_resp_hm_%s.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/6-lisa_resp_hm_%s_new.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
