@@ -16,12 +16,12 @@ height <- 10
 
 sigla_muni <- 'poa'
 mode1 <- "transit"
-oportunidade <- "empregos"
-titulo_leg <- "Empregos"
-sigla_op <- "TT"
+oportunidade <- "saude"
+titulo_leg <- "Eq. de Saúde"
+sigla_op <- "ST"
 # time <- c(15,30,45,60)
 time <- 45
-type_acc <- "CMA"
+type_acc <- "TMI"
 
 
 
@@ -361,31 +361,36 @@ faz_grafico_e_salva <- function(sigla_muni,
     # geom_sf()
     #faz o plot
     
-    pop_max <- round(max(recorte_rr_acc$n),digits = -4)
-    break_max <- round(max(recorte_rr_acc$n),digits = -5)
+    pop_max <- plyr::round_any(max(recorte_rr_acc$n), 50000, f = ceiling)
+    
+    break_max <- pop_max
     break_leap <- break_max/4
-    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 15, ifelse(pop_max > 50000, 17, 19)))
+    escala <- ifelse(pop_max > 150000, 12, ifelse( pop_max > 100000, 12, ifelse(pop_max > 50000, 12, 12)))
     
     if (type_acc == "CMA"){
       
       range_tot <- max(recorte_rr_acc$opp)-min(recorte_rr_acc$opp)
+      folga <- 0.01
 
       if (range_tot <= 0.002){
         passo <- 0.0025
-        extend <- 0.01
       } else if (range_tot <= 0.05) {
-        passo <- 0.005
-        extend <- 0.01
-      } else if (range_tot <= 0.10){
         passo <- 0.01
-        extend <- 0.01
-      } else {
+      } else if (range_tot <= 0.10){
         passo <- 0.025
-        extend <- 0.01
+      } else if (range_tot <= 25){
+        passo <- 0.05
+      } else {
+        passo <- 0.05
       }
   
-    range1 <- round(ifelse( (min(recorte_rr_acc$opp) - extend)<0, 0, min(recorte_rr_acc$opp) - extend), digits = 2)
-    range2 <- round(ifelse( (max(recorte_rr_acc$opp) + extend)>1, 1, max(recorte_rr_acc$opp) + extend), digits = 2)
+    # range1 <- round(ifelse( (min(recorte_rr_acc$opp) - extend)<0, 0, min(recorte_rr_acc$opp) - extend), digits = 2)
+    range1 <- plyr::round_any(ifelse( (min(recorte_rr_acc$opp) - folga)<0, 0, min(recorte_rr_acc$opp) - folga),
+                              passo, f = floor)
+    range2 <- plyr::round_any(ifelse( (max(recorte_rr_acc$opp) + folga)>1, 1, max(recorte_rr_acc$opp) + folga),
+                              passo, f=ceiling)
+    
+    # rangfolgae2 <- round(ifelse( (max(recorte_rr_acc$opp) + folga)>1, 1, max(recorte_rr_acc$opp) + folga), digits = 2)
     # by1 <- round((range2 -range1)/100, 2)
     plot <- ggplot(recorte_rr_acc, aes(opp, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -418,7 +423,7 @@ faz_grafico_e_salva <- function(sigla_muni,
            # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
       # theme_minimal() +
       xlab(paste0("% de ", titulo_leg, " Acessíveis")) +
-      ylab("Quartil de renda per capta") +
+      ylab("Quartil de renda per capita") +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),
         panel.background = element_blank(),
@@ -445,23 +450,31 @@ faz_grafico_e_salva <- function(sigla_muni,
       
       range_tot <- max(recorte_rr_acc$tempo)-min(recorte_rr_acc$tempo)
       
-      if (range_tot <= 2){
-        passo <- 0.25
-        extend <- 1
-      } else if (range_tot <= 5) {
+      folga <- 0.25
+
+      if (range_tot <= 3){
         passo <- 0.5
-        extend <- 1
-      } else if (range_tot <= 10){
+
+      } else if (range_tot <= 5) {
         passo <- 1
-        extend <- 1
-      } else {
+
+      } else if (range_tot <= 10){
         passo <- 2.5
-        extend <- 1
+
+      } else if (range_tot <= 25){
+        passo <- 5
+
+      } else {
+        passo <- 10
       }
       # library(plyr)
-      range1 <- plyr::round_any(round(ifelse( (min(recorte_rr_acc$tempo) - extend/100)<0, 0, min(recorte_rr_acc$tempo) - extend/100), digits = 0)%/% 1, extend/100)
-      range2 <- plyr::round_any(round(ifelse( (max(recorte_rr_acc$tempo) + extend/100)>180, 180, max(recorte_rr_acc$tempo) + extend/100), digits = 0) %/% 1, extend/100)
-
+      range1 <- plyr::round_any(ifelse( (min(recorte_rr_acc$tempo) - folga)<0, 0, min(recorte_rr_acc$tempo) - folga),
+                                passo, f = floor)
+      # range1 <- plyr::round_any(round(ifelse( (min(recorte_rr_acc$tempo) - extend/100)<0, 0, min(recorte_rr_acc$tempo) - extend/100), digits = 0)%/% 1, extend/100)
+      # range2 <- plyr::round_any(round(ifelse( (max(recorte_rr_acc$tempo) + extend/100)>180, 180, max(recorte_rr_acc$tempo) + extend/100), digits = 0) %/% 1, extend/100)
+      # range2 <- round(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend), digits = 2)
+      range2 <- plyr::round_any(ifelse( (max(recorte_rr_acc$tempo) + folga)>180, 180, max(recorte_rr_acc$tempo) + folga),
+                                passo, f=ceiling)
       
 
       # by1 <- round((range2 -range1)/100, 2)
@@ -482,10 +495,10 @@ faz_grafico_e_salva <- function(sigla_muni,
                                                        "Homens Pretos"="#174DE8",
                                                        "Mulheres Brancos" = "#EBB814",
                                                        "Mulheres Pretos"="#B39229"),
-                                            labels = c("Homens Brancos",
-                                                       "Homens Pretos",
-                                                       "Mulheres Brancas",
-                                                       "Mulheres Pretas"))+
+                                            labels = c("Homens Brancos"="Homens Brancos",
+                                                       "Homens Pretos"="Homens Negros",
+                                                       "Mulheres Brancos"="Mulheres Brancas",
+                                                       "Mulheres Pretos"="Mulheres Negras"))+
         scale_x_continuous(labels = scales::number, # baixa complexidade car
                            limits = c(range1,range2), # baixa complexidade car
                            breaks = seq(range1,range2, by=passo))+ # media complexidade a pé
@@ -497,7 +510,7 @@ faz_grafico_e_salva <- function(sigla_muni,
         # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
         # theme_minimal() +
         xlab(paste0("Tempo Mínimo de Acesso a ", titulo_leg, " (min)")) +
-        ylab("Quartil de renda per capta") +
+        ylab("Quartil de renda per capita") +
         theme(#axis.title = element_blank(),
           panel.grid.minor = element_line(),
           panel.background = element_blank(),
@@ -845,60 +858,60 @@ faz_grafico_e_salva <- function(sigla_muni,
 
 # Aplicacao da funcao para tmi --------------------------------------------
 
-  lista_modos <- c(rep("walk", 9), rep("bike", 9))
+  # lista_modos <- c(rep("walk", 9), rep("bike", 9))
   # lista_modos <- c(rep("transit", 9), rep("walk", 9), rep("bike", 9))
-  # lista_modos <- c(rep("transit", 11), rep("walk", 11), rep("bike", 11))
+  lista_modos <- c(rep("transit", 11), rep("walk", 11), rep("bike", 11))
   
-  lista_oportunidade <- rep(c(
-    
-    rep("escolas", 4),
-    rep("saude", 4),
-    "lazer"),2)
+  # lista_oportunidade <- rep(c(
+  #   
+  #   rep("escolas", 4),
+  #   rep("saude", 4),
+  #   "lazer"),2)
   # lista_oportunidade <- rep(c(
   #   
   #   rep("escolas", 4),
   #   rep("saude", 4),
   #   "lazer"),3)
   
-  # lista_oportunidade <- rep(c(
-  # 
-  #   rep("escolas", 4),
-  #   rep("saude", 4),
-  #   "lazer",
-  #   "bikes_compartilhadas",
-  #   "paraciclos"),3)
+  lista_oportunidade <- rep(c(
+
+    rep("escolas", 4),
+    rep("saude", 4),
+    "lazer",
+    "bikes_compartilhadas",
+    "paraciclos"),3)
   
-  # lista_siglaop <- rep(c(
-  #   "ET", "EI", "EF", "EM",
-  #   "ST", "SB", "SM", "SA",
-  #   "LZ", "BK", "PR"), 3)
   lista_siglaop <- rep(c(
     "ET", "EI", "EF", "EM",
     "ST", "SB", "SM", "SA",
-    "LZ"), 2)
+    "LZ", "BK", "PR"), 3)
+  # lista_siglaop <- rep(c(
+  #   "ET", "EI", "EF", "EM",
+  #   "ST", "SB", "SM", "SA",
+  #   "LZ"), 2)
   # lista_siglaop <- rep(c(
   #   "ET", "EI", "EF", "EM",
   #   "ST", "SB", "SM", "SA",
   #   "LZ"), 3)
   
   
-  lista_titulo_leg <- rep(c(
-    rep("Escolas", 4),
-    rep("Eq. de Saúde", 4),
-    "Eq. de Lazer"), 2)
+  # lista_titulo_leg <- rep(c(
+  #   rep("Escolas", 4),
+  #   rep("Eq. de Saúde", 4),
+  #   "Eq. de Lazer"), 2)
   # lista_titulo_leg <- rep(c(
   #   rep("Escolas", 4),
   #   rep("Eq. de Saúde", 4),
   #   "Eq. de Lazer"), 3)
-  # lista_titulo_leg <- rep(c(
-  #   rep("Escolas", 4),
-  #   rep("Eq. de Saúde", 4),
-  #   "Eq. de Lazer",
-  #   "Est. de B. Comp.",
-  #   "Paraciclos"), 3)
-  lista_tempos <- c(rep(15,9), rep(30, 9))
+  lista_titulo_leg <- rep(c(
+    rep("Escolas", 4),
+    rep("Eq. de Saúde", 4),
+    "Eq. de Lazer",
+    "Est. de B. Comp.",
+    "Paraciclos"), 3)
+  # lista_tempos <- c(rep(15,9), rep(30, 9))
   # lista_tempos <- c(rep(45, 9), rep(15,9), rep(30, 9))
-  # lista_tempos <- c(rep(45, 11), rep(15,11), rep(30, 11))
+  lista_tempos <- c(rep(45, 11), rep(15,11), rep(30, 11))
   
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
