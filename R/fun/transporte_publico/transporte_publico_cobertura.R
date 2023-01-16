@@ -773,7 +773,7 @@ graficos <- function(munis = "all"){
               linewidth = 0.4) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
-                         values = c("buffer300" = "#0f805e"),
+                         values = c("buffer300" = "#2B6CB0"),
                          label = c("buffer300" = "Cobertura de 300m")
       )+
       
@@ -1051,7 +1051,7 @@ graficos <- function(munis = "all"){
               linewidth = 0.4) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
-                         values = c("buffer500" = "#0f805e"),
+                         values = c("buffer500" = "#2B6CB0"),
                          label = c("buffer500" = "Cobertura de 500m")
       )+
       
