@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'dou'
+sigla_muni <- 'pal'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
