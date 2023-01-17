@@ -10,8 +10,8 @@ library(showtext)
 library(ggspatial)
 
 showtext_auto()
-# width <- 16.5
-# height <- 16.5
+width <- 16.5
+height <- 16.5
 # font_add_google("Encode Sans Light 300")
 font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
@@ -56,10 +56,10 @@ graficos <- function(munis = "all"){
     
     #dados_hex <- 
     
-    dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni)) %>%
+    dados_hex <- read_rds(sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)) %>%
       st_as_sf()
     
-    
+    # mapview(dados_hex)
     # path_muni_data_censo <- sprintf('../data-raw/censo_2021_info_muni_treated_v2/muni_%s.rds',sigla_muni)
     # path_muni_hex <- sprintf('../data/hex_municipio/hex_2019_%s_09.rds', sigla_muni)
     # path_muni_setor <- sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',sigla_muni)
@@ -291,7 +291,10 @@ graficos <- function(munis = "all"){
 
 # Mapa de densidade populacional novo -------------------------------------
 
-
+    # cor_ag_densidade <- "#d7b377" #bullywood
+    cor_ag_densidade <- "#e9eb9e" #crayola
+    # cor_ag_densidade <- "#d8f793" #mindaro green
+    
     map_pop_density <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -312,7 +315,7 @@ graficos <- function(munis = "all"){
       
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "grey60"),
+              aes(color = "areas"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
               fill = NA,
@@ -339,19 +342,34 @@ graficos <- function(munis = "all"){
     # ggnewscale::new_scale_color() +
     geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
-            aes(color = "#e1ffce"),
+            aes(color = "urb"),
             # color = "grey45",
             # aes(fill = '#CFF0FF'),
             fill = NA,
             # stroke = 2,
             # size = 2,
-            linewidth = 0.8,
+            linewidth = 0.5,
             alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "ag"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.3,
+              fill = cor_ag_densidade,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
+      
       scale_color_manual(name = "Uso do solo",
-                         values = c("#e1ffce" = "#e1ffce",
-                                    "grey60" = "grey60"),
-                         label = c("#e1ffce" = "Área urbanizada",
-                                   "grey60" = "Bairros")
+                         breaks = c("ag", "urb", "areas"),
+                         values = c("urb" = "#9dd1f1",
+                                    "areas" = "grey45",
+                                    "ag" = cor_ag_densidade),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = "Bairros",
+                                   "ag" = "Algomerados subnormais")
       )+
       
       
@@ -402,7 +420,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = .3) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -457,7 +475,10 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni)
+      aproxima_muni(sigla_muni = sigla_muni) +
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag_densidade, "white", "white"),
+                                                      alpha = c(0.5, rep(0.1,2))),
+                                  order = 1))
     
     
     
@@ -597,6 +618,8 @@ graficos <- function(munis = "all"){
       st_as_sf() %>% drop_na(h3_resolution) %>%
       mutate(renda = ifelse(renda>10, 10, renda))
     
+    # mapview(renda)
+    
     grid_micro <- read_rds(sprintf("../data/microssimulacao/muni_%s/grid_muni_%s.rds",
                                    sigla_muni, sigla_muni))
     
@@ -703,7 +726,9 @@ graficos <- function(munis = "all"){
     #Mapa 3 - Recortes
 
 # Maa de RendaNovo --------------------------------------------------------
-
+# hist(renda$renda)
+    
+    cor_ag <- "#dbad6a"
     map_renda <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -724,7 +749,7 @@ graficos <- function(munis = "all"){
       
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "grey60"),
+              aes(color = "areas"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
               fill = NA,
@@ -751,40 +776,64 @@ graficos <- function(munis = "all"){
     # ggnewscale::new_scale_color() +
     geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
-            aes(color = "#bfa5e7"),
+            aes(color = "urb"),
             # color = "grey45",
             # aes(fill = '#CFF0FF'),
             fill = NA,
             # stroke = 2,
             # size = 2,
-            linewidth = 0.8,
+            linewidth = 0.5,
             alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "ag"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.3,
+              fill = cor_ag,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
       scale_color_manual(name = "Uso do solo",
-                         values = c("#bfa5e7" = "#bfa5e7",
-                                    "grey60" = "grey60"),
-                         label = c("#bfa5e7" = "Área urbanizada",
-                                   "grey60" = "Bairros")
+                         breaks = c("ag", "urb", "areas"),
+                         values = c("urb" = "#9dd1f1",
+                                    "areas" = "grey45",
+                                    "ag" = cor_ag),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = "Bairros",
+                                   "ag" = "Algomerados subnormais")
       )+
+      
+      viridis::scale_fill_viridis(option = "A",
+                                  name = "Renda per capita (SM)",
+                                  breaks = seq(0,10,2),
+                                  labels = c("0","2", "4", "6","8", ">10"),
+                                  limits = c(0,10)) +
       
       
       # scale_fill_gradientn(
-      #   name = "Habitantes",
-      #   colors =colors_acc ,
+      #   name = "Renda per capita (SM)",
+      #   colors =colors_purple ,
       #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
       #   # values = NULL,
       #   space = "Lab",
       #   na.value = NA,
       #   # guide = "colourbar",
       #   aesthetics = "fill",
+      #   breaks = seq(0,10,2),
+      #   labels = c("0","2", "4", "6","8", ">10"),
+      #   limits = c(0,10)
       #   # colors
       # ) +
-    scale_fill_distiller("Renda per capita (SM)",
-                         type = "div",
-                         palette = "GnBu",
-                         direction = 1,
-                         breaks = seq(0,10,2),
-                         labels = c("0","2", "4", "6","8", ">10"),
-                         limits = c(0,10)) +
+      
+    # scale_fill_distiller("Renda per capita (SM)",
+    #                      type = "div",
+    #                      palette = "GnBu",
+    #                      direction = 1,
+    #                      breaks = seq(0,10,2),
+    #                      labels = c("0","2", "4", "6","8", ">10"),
+    #                      limits = c(0,10)) +
       
       # scale_fill_manual(values = c("1" = "#FEF8ED",
       #                              
@@ -875,7 +924,10 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni)    
+      aproxima_muni(sigla_muni = sigla_muni)  +
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white"),
+                                                      alpha = c(0.5, rep(0.1,2))),
+                                  order = 1))
     
     
     
