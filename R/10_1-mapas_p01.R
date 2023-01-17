@@ -17,7 +17,7 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'pal'
 
 tema <- function(base_size) {
   
@@ -1667,7 +1667,7 @@ theme(
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
-#pretos
+#negros
 
 # Mapa Recorte de cor - Pretos --------------------------------------------
 
@@ -1749,7 +1749,7 @@ map_pop_pretos <- ggplot() +
     # limits = c(0,500)
     
   ) +
-  ggtitle("Pretos")+
+  ggtitle("Negros")+
   
   geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
   
@@ -1897,7 +1897,7 @@ geom_sf(data = simplepolys %>% st_transform(3857),
                      # breaks = seq(-200,200,100),labels = c("<-500","-250","0","250",">500"),
                      # limits = c(-200,200)
                      ) +
-  ggtitle("Diferença entre brancos e pretos")+
+  ggtitle("Diferença entre brancos e negros")+
   
   geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
 
