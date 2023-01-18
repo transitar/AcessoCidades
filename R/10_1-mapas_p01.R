@@ -618,7 +618,7 @@ graficos <- function(munis = "all"){
       summarise(renda = mean(Rend_pc, na.rm =T)) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% drop_na(h3_resolution) %>%
       mutate(renda = ifelse(renda>10, 10, renda))
-    mean(renda$renda)
+    # mean(renda$renda)
     
     # mapview(renda, zcol = "renda")
     
@@ -1178,7 +1178,7 @@ map_pop_homens <- ggplot() +
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Assen. precários")
+                               "#2B6CB0" = "Ag. subnormais")
   )+
   
   
@@ -1308,7 +1308,7 @@ map_pop_mulheres <- ggplot() +
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Assen. precários")
+                               "#f6dc8d" = "Ag. subnormais")
   )+
   
   
@@ -1453,7 +1453,7 @@ map_pop_dif_gen <- ggplot() +
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#0f805e" = "Assen. precários")
+                               "#0f805e" = "Ag. subnormais")
   )+
   
   scale_fill_distiller("Habitantes",
@@ -1637,7 +1637,7 @@ map_pop_brancos <- ggplot() +
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Assen. precários")
+                               "#2B6CB0" = "Ag. subnormais")
   )+
   
   
@@ -1774,7 +1774,7 @@ map_pop_pretos <- ggplot() +
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Assen. precários")
+                               "#f6dc8d" = "Ag. subnormais")
   )+
   
   
@@ -1927,7 +1927,7 @@ geom_sf(data = simplepolys %>% st_transform(3857),
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#0f805e" = "Assen. precários")
+                               "#0f805e" = "Ag. subnormais")
   )+
 
   scale_fill_distiller("Habitantes",
@@ -2092,7 +2092,7 @@ map_pop_amarelos <- ggplot() +
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Assen. precários")
+                               "#2B6CB0" = "Ag. subnormais")
   )+
   
   
@@ -2237,7 +2237,7 @@ map_pop_indigenas <- ggplot() +
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Assen. precários")
+                               "#f6dc8d" = "Ag. subnormais")
   )+
   
   
@@ -2427,7 +2427,7 @@ map_pop_resp_homens <- ggplot() +
                                 "#2B6CB0" = "#2B6CB0"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Assen. precários")
+                               "#2B6CB0" = "Ag. subnormais")
   )+
   
   
@@ -2565,7 +2565,7 @@ map_pop_resp_mulheres <- ggplot() +
                                 "#f6dc8d" = "#f6dc8d"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Assen. precários")
+                               "#f6dc8d" = "Ag. subnormais")
   )+
   
   
@@ -2711,7 +2711,7 @@ map_pop_dif_resp_gen <- ggplot() +
                                 "#0f805e" = "#0f805e"),
                      label = c("#8f040e" = "Área urbanizada",
                                "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#0f805e" = "Assen. precários")
+                               "#0f805e" = "Ag. subnormais")
   )+
   
   scale_fill_distiller("Habitantes",
