@@ -18,6 +18,7 @@ font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
 sigla_muni <- 'pal'
+ano <- 2019
 
 tema <- function(base_size) {
   
@@ -55,7 +56,7 @@ graficos <- function(munis = "all"){
     #path hexagonos com os dados
     
     #dados_hex <- 
-    
+    ano <- 2019
     dados_hex <- read_rds(sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)) %>%
       st_as_sf()
     
@@ -369,7 +370,7 @@ graficos <- function(munis = "all"){
                                     "ag" = cor_ag_densidade),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = "Bairros",
-                                   "ag" = "Algomerados subnormais")
+                                   "ag" = "Aglomerados subnormais")
       )+
       
       
@@ -617,8 +618,9 @@ graficos <- function(munis = "all"){
       summarise(renda = mean(Rend_pc, na.rm =T)) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% drop_na(h3_resolution) %>%
       mutate(renda = ifelse(renda>10, 10, renda))
+    mean(renda$renda)
     
-    # mapview(renda)
+    # mapview(renda, zcol = "renda")
     
     grid_micro <- read_rds(sprintf("../data/microssimulacao/muni_%s/grid_muni_%s.rds",
                                    sigla_muni, sigla_muni))
@@ -802,7 +804,7 @@ graficos <- function(munis = "all"){
                                     "ag" = cor_ag),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = "Bairros",
-                                   "ag" = "Algomerados subnormais")
+                                   "ag" = "Aglomerados subnormais")
       )+
       
       viridis::scale_fill_viridis(option = "A",
