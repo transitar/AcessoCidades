@@ -393,8 +393,8 @@ map_lisa_cor <- ggplot()+
                      values = c("assentamentos" = "#0A7E5C",
                                 "urb" = "#FEF3DB",
                                 "bairros" = "grey50"),
-                     label = c("urb" = "Área Urbanizada",
-                               "assentamentos" = "Assentamentos precários",
+                     label = c("urb" = "Área urbanizada",
+                               "assentamentos" = "Aglomerados subnormais",
                                "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
   )+
   
@@ -1020,8 +1020,8 @@ map_lisa_renda <- ggplot() +
                      values = c("assentamentos" = "#0A7E5C",
                                 "urb" = "#FEF3DB",
                                 "bairros" = "grey50"),
-                     label = c("urb" = "Área Urbanizada",
-                               "assentamentos" = "Assentamentos precários",
+                     label = c("urb" = "Área urbanizada",
+                               "assentamentos" = "Aglomerados subnormais",
                                "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
   )+
   
@@ -1465,8 +1465,8 @@ map_lisa_responsaveis <- ggplot() +
                      values = c("assentamentos" = "#0A7E5C",
                                 "urb" = "#FEF3DB",
                                 "bairros" = "grey50"),
-                     label = c("urb" = "Área Urbanizada",
-                               "assentamentos" = "Assentamentos precários",
+                     label = c("urb" = "Área rbanizada",
+                               "assentamentos" = "Aglomerados subnormais",
                                "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
   )+
   
