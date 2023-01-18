@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'pal'
 
 
 #gráficos de ciclovias
@@ -133,6 +133,15 @@ graficos <- function(munis = "all"){
     
     dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                         sigla_muni, sigla_muni))
+    data_micro2 <- data_micro %>%
+      # filter(code_tract %in% lista_tract) %>%
+      select(1:12, V0606, hex) %>%
+      mutate(V0606 = as.factor(V0606))
+    
+    
+    #remocão dos habitantes de cor amarela e indígena
+    levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
+    data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
     
     pop_counts <- dados_simulacao %>%
       group_by(hex) %>%
@@ -2911,10 +2920,494 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
            width = 15, height = 10, units = "cm" )
     
     
+
+# Tarifa - Espacial -------------------------------------------------------
+
+   tarifa <- as.numeric(decisao_muni$tarifa) * 60
+    sm <- 1302
+    
+    renda <- dados_simulacao %>%
+      group_by(hex) %>%
+      summarise(renda = mean(Rend_pc*sm, na.rm =T)) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+      st_as_sf() %>% drop_na(h3_resolution) %>%
+      # mutate(renda = ifelse(renda>10, 10, renda))
+      mutate(tarifa_renda = ifelse(renda == 0, 1, tarifa/renda)) %>%
+      mutate(tarifa_renda2 = case_when(tarifa_renda <= 0.05 ~ "Até 5%",
+                                       tarifa_renda <= 0.10 & tarifa_renda > 0.05 ~ "De 5% a 10%",
+                                       tarifa_renda <= 0.15 & tarifa_renda > 0.10 ~ "De 10% a 15%",
+                                       tarifa_renda <= 0.20 & tarifa_renda > 0.15 ~ "De 15% a 20%",
+                                       tarifa_renda <= 0.25 & tarifa_renda > 0.20 ~ "De 20% a 25%",
+                                       tarifa_renda <= 0.30 & tarifa_renda > 0.25 ~ "Entre 25% e 30%",
+                                       tarifa_renda > 0.30  ~ "Acima de 30%"))
+    
+    renda2 <- dados_simulacao %>%
+      group_by(hex) %>%
+      summarise(renda = mean(Rend_pc*sm, na.rm =T)) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+      st_as_sf() %>% drop_na(h3_resolution) %>%
+      # mutate(renda = ifelse(renda>10, 10, renda))
+      mutate(tarifa_renda = ifelse(renda == 0, 1, tarifa/renda)) %>%
+      mutate(tarifa_renda2 = case_when(tarifa_renda <= 0.05 ~ "Até 5%",
+                                       tarifa_renda <= 0.15 & tarifa_renda > 0.05 ~ "De 5% a 15%",
+                                       tarifa_renda <= 0.25 & tarifa_renda > 0.15 ~ "De 15% a 25%",
+                                       tarifa_renda > 0.25  ~ "Acima de 25%"))
+
+    # mapview(renda, zcol = "tarifa_renda")
+    # verde 0E7F5D
+    # azul #2B6CB0
+    # cor_ag <- "#2B6CB0"
+    # map_tarifa <- ggplot() +
+    #   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+    #   coord_equal() +
+    #   scale_fill_identity()+
+    #   # nova escala
+    #   new_scale_fill() +
+    # 
+    #   geom_sf(data = st_transform(renda, 3857),
+    #           aes(fill = tarifa_renda2),
+    #           colour = NA,
+    #           alpha=.8,
+    #           size = 0)+
+    # 
+    #   geom_sf(data = dados_areas %>% st_transform(3857),
+    #           aes(color = "areas"),
+    #           fill = NA,
+    #           linewidth = 0.7,
+    #           alpha= 0.7) +
+    # 
+    # geom_sf(data = simplepolys %>% st_transform(3857),
+    #         aes(color = "urb"),
+    #         fill = NA,
+    #         linewidth = 0.5,
+    #         alpha= 0.7)  +
+    #   
+    #   geom_sf(data = assentamentos,
+    #           aes(color = "ag"),
+    #           linewidth = 0.3,
+    #           fill = cor_ag,
+    #           # fill = NA,
+    #           show.legend = "polygon",
+    #           alpha = 0.5)+
+    #   
+    #   scale_color_manual(name = "Uso do solo",
+    #                      breaks = c("ag", "urb", "areas"),
+    #                      values = c("urb" = "black",
+    #                                 "areas" = "grey45",
+    #                                 "ag" = cor_ag),
+    #                      label = c("urb" = "Área urbanizada",
+    #                                "areas" =  munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+    #                                "ag" = "Aglomerados subnormais")
+    #   )+
+    #   # "urb" = "#8F040E"
+    #   
+    #   # viridis::scale_fill_viridis(option = "A",
+    #   #                             name = "Renda per capita (SM)",
+    #   #                             breaks = seq(0,10,2),
+    #   #                             labels = c("0","2", "4", "6","8", ">10"),
+    #   #                             limits = c(0,10)) +
+    #   # scale_fill_viridis_d(option = "plasma",
+    #   #                      name = "% da renda",
+    #   #                      direction = 1,
+    #   #                      breaks = c("Até 5%", "De 5% a 10%", "De 10% a 15%", "De 15% a 20%",
+    #   #                                 "De 20% a 25%", "Entre 25% e 30%", "Acima de 30%"),
+    #   #                      labels = c("Até 5%", "De 5% a 10%", "De 10% a 15%", "De 15% a 20%",
+    #   #                                 "De 20% a 25%", "Entre 25% e 30%", "Acima de 30%"))+
+    # # colors_blue <- c("#ecfaff", "#ade7ff", "#73d6ff", "#38c4ff", "#0cb7ff", "#0ba0e0", "#0989c0", "#066891")
+    # # cores escala paired
+    # # c("#1F78B4", "#33A02C", "#E31A1C", "#FF7F00", "#602F94", "#FFFF99", "#B15928")
+    # # cores PuOr
+    # # c("#B45709", "#E2810C", "#FEB863", "#FFFFBF", "#B3ABD4", "#8171AF", "#54288A")
+    # #cores BrBG com PuOr
+    # # c("#02665E", "#369692", "#80CEC1", "#DEEBF7", "#B3ABD4", "#8171AF", "#54288A")
+    # #cores RdYlBu com PuOr
+    # # c("#F76D3F", "#FDAE61", "#FFE090", "#FFFFBF", "#B3ABD4", "#8171AF", "#54288A")
+    # #cores PuOu com mudan;a nos laranjas
+    # # c("#DA8535", "#EDAF71", "#F5CDAA", "#FFFFBF", "#B3ABD4", "#8171AF", "#54288A")
+    # 
+    # #escala azul e roxo da ivys
+    # # c("#f0e1ee", "#e3c9df", "#873286", "#67127c", "#3c1a7d", "#1e1975", "#001459")
+    # 
+    # #escala ylOrRd 
+    # # c("#FFEB8F", "#FDD263", "#FA792F", "#F83521", "#D90017", "#AD001D", "#521A08")
+    # #escala carol oranges
+    # # c("#FFDE59", "#FFBD59", "#FF914B", "#FF5C00", "#C10000", "#B0006A", "#6200B0")
+    # #spectral
+    # # c("#8A0033", "#EE5634", "#FB9E4F", "#FDDA79", "#E1F686", "#2974AF", "#4B3991")
+    # 
+    # #escala carola pastel
+    # # c("#FFE8A4", "#FFBD59", "#F1A26F", "#E36C27", "#DB2C2E", "#960C5F", "#470080")
+    # 
+    # scale_fill_manual(name = "% da renda",
+    #                   breaks = c("Até 5%", "De 5% a 10%", "De 10% a 15%", "De 15% a 20%",
+    #                              "De 20% a 25%", "Entre 25% e 30%", "Acima de 30%"),
+    #                   values = c("#FFE8A4", "#FFBD59", "#F1A26F", "#E36C27", "#DB2C2E", "#960C5F", "#470080"),
+    #                   labels = c("Até 5%", "De 5% a 10%", "De 10% a 15%", "De 15% a 20%",
+    #                              "De 20% a 25%", "Entre 25% e 30%", "Acima de 30%")
+    #                   ) +
+    #   
+    # # scale_fill_gradientn(
+    # #     name = "% da renda",
+    # #     colors = colors_purple ,
+    # #     # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+    # #     # values = NULL,
+    # #     space = "Lab",
+    # #     na.value = NA,
+    # #     # guide = "colourbar",
+    # #     aesthetics = "fill",
+    # #     # colors
+    # #   ) +
+    # 
+    # geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    #   
+    #   ggspatial::annotation_scale(style = "ticks",
+    #                               location = "br",
+    #                               text_family = "encode_sans_bold",
+    #                               text_cex = 3,
+    #                               line_width = 1,
+    #                               width_hint = 0.10,
+    #                               pad_x = unit(0.35, "cm"),
+    #                               pad_y = unit(0.35, "cm")
+    #   ) +
+    #   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+    # 
+    # theme(
+    #   strip.text.x = element_text(size=rel(1.2)),
+    #   strip.background = element_blank(),
+    #   panel.background = element_rect(fill = NA, colour = NA),
+    #   axis.text = element_blank(),
+    #   axis.title = element_blank(),
+    #   axis.ticks = element_blank(), 
+    #   panel.grid = element_blank(),
+    #   plot.margin=unit(c(0,0,0,0),"mm"),
+    #   legend.margin = margin(unit(c(10,10,5,10),"mm")),
+    #   legend.key.width=unit(2,"line"),
+    #   legend.key.height = unit(1,"line"),
+    #   legend.key = element_blank(),
+    #   legend.text=element_text(size=25, family = "encode_sans_light"),
+    #   legend.title=element_text(size=30, family = "encode_sans_bold"),
+    #   plot.title = element_text(hjust = 0, vjust = 4),
+    #   strip.text = element_text(size = 10),
+    #   legend.position = c(0.20, 0.33),
+    #   legend.box.background = element_rect(fill=alpha('white', 0.7),
+    #                                        colour = "#A09C9C",
+    #                                        linewidth = 0.8,
+    #                                        linetype = "solid"),
+    #   legend.background = element_blank(),
+    #   # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+    #   #                                      colour = "#E0DFE3"),
+    #   legend.spacing.y = unit(0.4, 'cm'),
+    #   legend.box.just = "left"
+    #   # legend.margin = margin(t = -80)
+    # ) +
+    #   # guides(fill = guide_legend(byrow = TRUE)) +
+    #   aproxima_muni(sigla_muni = sigla_muni)  +
+    #   guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white"),
+    #                                                   alpha = c(0.5, rep(0.1,2))),
+    #                               order = 1),
+    #          fill = guide_legend(override.aes = list(fill = c("#FFE8A4", "#FFBD59", "#F1A26F", "#E36C27", "#DB2C2E", "#960C5F", "#470080"),
+    #                                                  color = c("#FFE8A4", "#FFBD59", "#F1A26F", "#E36C27", "#DB2C2E", "#960C5F", "#470080")),
+    #                              order = 2)
+    #          )
+    # 
+    # 
+    # 
+    # 
+    # suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+    # 
+    # ggsave(map_tarifa,
+    #        device = "png",
+    #        filename =  sprintf('../data/map_plots_transports/muni_%s/17-tarifa_renda_new8carol_pastel_%s.png',
+    #                            sigla_muni,
+    #                            sigla_muni),
+    #        dpi = 300,
+    #        width = width, height = height, units = "cm" )
     
 
+# Mapa tarifa versal com menos classes ------------------------------------
+
+    cor_ag <- "#2B6CB0"
+    map_tarifa <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      
+      geom_sf(data = st_transform(renda2, 3857),
+              aes(fill = tarifa_renda2),
+              colour = NA,
+              alpha=.8,
+              size = 0)+
+      
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              aes(color = "areas"),
+              fill = NA,
+              linewidth = 0.7,
+              alpha= 0.7) +
+      
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              aes(color = "urb"),
+              fill = NA,
+              linewidth = 0.5,
+              alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              aes(color = "ag"),
+              linewidth = 0.3,
+              fill = cor_ag,
+              # fill = NA,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
+      scale_color_manual(name = "Uso do solo",
+                         breaks = c("ag", "urb", "areas"),
+                         values = c("urb" = "grey25",
+                                    "areas" = "grey45",
+                                    "ag" = cor_ag),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" =  munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                                   "ag" = "Aglomerados subnormais")
+      )+
+      # "urb" = "#8F040E"
+      
+      # viridis::scale_fill_viridis(option = "A",
+      #                             name = "Renda per capita (SM)",
+      #                             breaks = seq(0,10,2),
+      #                             labels = c("0","2", "4", "6","8", ">10"),
+      #                             limits = c(0,10)) +
+      # scale_fill_viridis_d(option = "plasma",
+      #                      name = "% da renda",
+      #                      direction = 1,
+      #                      breaks = c("Até 5%", "De 5% a 10%", "De 10% a 15%", "De 15% a 20%",
+    #                                 "De 20% a 25%", "Entre 25% e 30%", "Acima de 30%"),
+    #                      labels = c("Até 5%", "De 5% a 10%", "De 10% a 15%", "De 15% a 20%",
+    #                                 "De 20% a 25%", "Entre 25% e 30%", "Acima de 30%"))+
+    # colors_blue <- c("#ecfaff", "#ade7ff", "#73d6ff", "#38c4ff", "#0cb7ff", "#0ba0e0", "#0989c0", "#066891")
+    # cores escala paired
+    # c("#1F78B4", "#33A02C", "#E31A1C", "#FF7F00", "#602F94", "#FFFF99", "#B15928")
+    # cores PuOr
+    # c("#B45709", "#E2810C", "#FEB863", "#FFFFBF", "#B3ABD4", "#8171AF", "#54288A")
+    #cores BrBG com PuOr
+    # c("#02665E", "#369692", "#80CEC1", "#DEEBF7", "#B3ABD4", "#8171AF", "#54288A")
+    #cores RdYlBu com PuOr
+    # c("#F76D3F", "#FDAE61", "#FFE090", "#FFFFBF", "#B3ABD4", "#8171AF", "#54288A")
+    #cores PuOu com mudan;a nos laranjas
+    # c("#DA8535", "#EDAF71", "#F5CDAA", "#FFFFBF", "#B3ABD4", "#8171AF", "#54288A")
+    
+    #escala azul e roxo da ivys
+    # c("#f0e1ee", "#e3c9df", "#873286", "#67127c", "#3c1a7d", "#1e1975", "#001459")
+    
+    #escala ylOrRd 
+    # c("#FFEB8F", "#FDD263", "#FA792F", "#F83521", "#D90017", "#AD001D", "#521A08")
+    #escala carol oranges
+    # c("#FFDE59", "#FFBD59", "#FF914B", "#FF5C00", "#C10000", "#B0006A", "#6200B0")
+    #spectral
+    # c("#8A0033", "#EE5634", "#FB9E4F", "#FDDA79", "#E1F686", "#2974AF", "#4B3991")
+    
+    #escala carola pastel
+    # c("#FFE8A4", "#FFBD59", "#F1A26F", "#E36C27", "#DB2C2E", "#960C5F", "#470080")
+    
+    scale_fill_manual(name = "% da renda",
+                      breaks = c("Até 5%", "De 5% a 15%", "De 15% a 25%", "Acima de 25%"),
+                      values = c("#FFE8A4", "#E36C27", "#960C5F", "#470080"),
+                      labels = c("Até 5%", "De 5% a 15%", "De 15% a 25%", "Acima de 25%")
+    ) +
+      
+      # scale_fill_gradientn(
+      #     name = "% da renda",
+      #     colors = colors_purple ,
+      #     # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #     # values = NULL,
+      #     space = "Lab",
+      #     na.value = NA,
+      #     # guide = "colourbar",
+      #     aesthetics = "fill",
+      #     # colors
+    #   ) +
+    
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+      
+      ggspatial::annotation_scale(style = "ticks",
+                                  location = "br",
+                                  text_family = "encode_sans_bold",
+                                  text_cex = 3,
+                                  line_width = 1,
+                                  width_hint = 0.10,
+                                  pad_x = unit(0.35, "cm"),
+                                  pad_y = unit(0.35, "cm")
+      ) +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      
+      theme(
+        strip.text.x = element_text(size=rel(1.2)),
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = NA, colour = NA),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(), 
+        panel.grid = element_blank(),
+        plot.margin=unit(c(0,0,0,0),"mm"),
+        legend.margin = margin(unit(c(10,10,5,10),"mm")),
+        legend.key.width=unit(2,"line"),
+        legend.key.height = unit(1,"line"),
+        legend.key = element_blank(),
+        legend.text=element_text(size=25, family = "encode_sans_light"),
+        legend.title=element_text(size=30, family = "encode_sans_bold"),
+        plot.title = element_text(hjust = 0, vjust = 4),
+        strip.text = element_text(size = 10),
+        legend.position = c(0.20, 0.33),
+        legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                             colour = "#A09C9C",
+                                             linewidth = 0.8,
+                                             linetype = "solid"),
+        legend.background = element_blank(),
+        # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+        #                                      colour = "#E0DFE3"),
+        legend.spacing.y = unit(0.4, 'cm'),
+        legend.box.just = "left"
+        # legend.margin = margin(t = -80)
+      ) +
+      # guides(fill = guide_legend(byrow = TRUE)) +
+      aproxima_muni(sigla_muni = sigla_muni)  +
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white"),
+                                                      alpha = c(0.5, rep(0.1,2))),
+                                  order = 1),
+             fill = guide_legend(override.aes = list(fill = c("#FFE8A4", "#E36C27", "#960C5F", "#470080"),
+                                                     color = c("#FFE8A4", "#E36C27", "#960C5F", "#470080")),
+                                 order = 2)
+      )
     
     
+    
+    
+    suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+    
+    ggsave(map_tarifa,
+           device = "png",
+           filename =  sprintf('../data/map_plots_transports/muni_%s/17-tarifa_renda_new_%s.png',
+                               sigla_muni,
+                               sigla_muni),
+           dpi = 300,
+           width = width, height = height, units = "cm" )    
+    
+    
+
+# Cleveland de peso da tarifa ---------------------------------------------
+
+    recorte_tarifa <- data_micro2 %>%
+      filter(Rend_pc >0) %>%
+      mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
+      # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
+        mutate(
+        quintil_renda = ntile(Rend_pc, 4)) %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      group_by(cor, quintil_renda, genero) %>%
+      summarise(tarifa_grupo = mean(tarifa_renda, na.rm = T),
+                n = n()) %>%
+      mutate(id = paste(genero, cor))
+    
+    
+    pop_max_tarifa <-plyr::round_any(max(recorte_tarifa$n),10^(n_int_digits(max(recorte_tarifa$n))), f = ceiling)
+    break_max_tarifa <- pop_max_tarifa
+    break_leap_tarifa <- pop_max_tarifa/4
+    escala_tarifa <- ifelse(pop_max_tarifa > 150000, 10, ifelse( pop_max_tarifa > 100000, 10, ifelse(pop_max_tarifa > 50000, 10, 10)))
+    
+    range_tot_tarifa <- max(recorte_tarifa$tarifa_grupo)-min(recorte_tarifa$tarifa_grupo)
+    extend_tarifa <- 0.01
+    
+    if (range_tot_tarifa <= 0.005){
+      passo_tarifa <- 0.001
+    } else if (range_tot_tarifa <= 0.01) {
+      passo_tarifa <- 0.0025
+    } else if (range_tot_tarifa <= 0.025){
+      passo_tarifa <- 0.005
+    } else if (range_tot_tarifa <= 0.05) {
+      passo_tarifa <- 0.01
+    } else if (range_tot_tarifa <= 0.10) {
+      passo_tarifa <- 0.025
+    } else {
+      passo_tarifa <- 0.10
+    }
+    
+    range1_tarifa <- plyr::round_any(ifelse( (min(recorte_tarifa$tarifa_grupo) - extend_tarifa)<0, 0, min(recorte_tarifa$tarifa_grupo) - extend_tarifa),
+                                passo_tarifa,
+                                f = floor)
+    
+    range2_tarifa <- plyr::round_any(ifelse( (max(recorte_tarifa$tarifa_grupo) + extend_tarifa)>1, 1, max(recorte_tarifa$tarifa_grupo) + extend_tarifa),
+                                passo_tarifa,
+                                f = ceiling)
+    
+    plot_cleveland_tarifa <- ggplot(recorte_tarifa, aes(tarifa_grupo, as.character(quintil_renda))) +
+      geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
+      geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
+      guides(fill=guide_legend(title="Gênero e cor")) +
+      scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003")
+      )+
+      scale_size_continuous( range = c(0,escala_tarifa),
+                             limits = c(0,break_max_tarifa),
+                             breaks = c(break_leap_tarifa,break_leap_tarifa*2,break_leap_tarifa*3),
+                             name = "Habitantes",
+                             guide = "legend")
+    p_tarifa <- plot_cleveland_tarifa + scale_color_manual(name = "Gênero e Cor",
+                                                              values = c("Homens Brancos"="grey70",
+                                                                         "Homens Pretos"="#FFB578",
+                                                                         "Mulheres Brancos" = "black",
+                                                                         "Mulheres Pretos"="#cc3003"),
+                                                              labels = c("Homens Brancos"="Homens Brancos",
+                                                                         "Homens Pretos"="Homens Negros",
+                                                                         "Mulheres Brancos"="Mulheres Brancas",
+                                                                         "Mulheres Pretos"="Mulheres Negras"))+
+      # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
+      #                    limits = c(0,5), # baixa complexidade car                   
+      #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
+      scale_y_discrete(expand = c(0.4,0.4)) +
+      labs(title = "% da renda mensal gasta para realizar 60 viagens*")+  
+      #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
+      labs(#subtitle = "por mês no transporte público",
+           caption = paste0("*Considerando a tarifa do transporte público em ",
+                            munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)]," de R$ ",
+                                                          decisao_muni$tarifa))+
+      # theme_minimal() +
+      xlab("% da renda") +
+      ylab("Quartil de renda per capita") +
+      scale_x_continuous(labels = scales::percent,
+                         limits = c(range1_tarifa,range2_tarifa),
+                         breaks = seq(range1_tarifa,range2_tarifa, passo_tarifa)) +
+      scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
+      theme(#axis.title = element_blank(),
+        panel.grid.minor = element_line(),
+        legend.background = element_blank(),
+        panel.background = element_blank(),
+        legend.direction = "vertical",
+        legend.position = "bottom",
+        text = element_text(family = "sans",
+                            # face = "bold",
+                            size = 20),
+        
+        plot.title = element_text(size = 33, margin = margin(b=10), family = "encode_sans_bold"),
+        plot.subtitle = element_text(size=20, color = "darkslategrey"
+                                     # margin = margin(b = 25)
+                                     ),
+        plot.caption = element_text(size = 20,
+                                    # margin = margin(t=10),
+                                    color = "darkslategrey",
+                                    hjust = 0,
+                                    family = "encode_sans_light"),
+        legend.title = element_text(size = 33, family = "encode_sans_bold"),
+        legend.text = element_text(size = 27, family = "encode_sans_light"),
+        axis.text = element_text(size = 27, family = "encode_sans_light"),
+        axis.title = element_text(size = 33, family = "encode_sans_bold"))
+    
+    ggsave(p_tarifa,
+           device = "png",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/18-linhasbus_freq_cleveland_%s_new.png", sigla_muni, sigla_muni),
+           dpi = 300,
+           width = 15, height = 10, units = "cm" )
+    
+    # mapview(renda, zcol = "tarifa_renda2")
     
   }
   
