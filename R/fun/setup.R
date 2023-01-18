@@ -124,6 +124,8 @@ colors_orange <- c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
 
 colors_green <- c("#dbede7", "#79b9a6", "#56a68e", "#0f805e", "#0b5e45", "#094d39", "#073b2c")
 
+colors_viridis <- c("#450D54")
+
 # colors_blue <- c("#eff1f6", "#8d97bd", "#6b79a9", "#344889", "#21367d", "#1d306e", "#19295f")
 
 # colors_blue <- c("#DAE5EF", "#b5cadf", "#6a94be", "#3d73aa", "#25619f", "#054a91", "#05376d")
@@ -191,10 +193,10 @@ munis_recorte_limites = tribble(
   "rma",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "noh",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "dou",  "Bairros",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
-  "con",  "Unid. de Planej.",  1500,      200,         1000,         1500,        200,           40,          100,            160,         160,          80,
+  "con",  "Unid. de planej.",  1500,      200,         1000,         1500,        200,           40,          100,            160,         160,          80,
   "vic",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "cit",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "pal",  "Área de Planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
+  "pal",  "Área de planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
   
   
 ) %>% setDT()
