@@ -1,5 +1,5 @@
 #Levar empregos
-rm(list = ls())
+rm(list = ls(all.names = TRUE)); gc()
 
 source('./R/fun/setup.R')
 library(aopdata)
@@ -15,7 +15,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'dou'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm';source_escolas <- "censo_escolar"
+sigla_muni <- 'pal'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm';source_escolas <- "censo_escolar"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -46,9 +46,11 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   
   
+  sigla_municipio <- sigla_muni
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
   
-  
-  
+  epsg <- decisao_muni$epsg
   
   
   
@@ -58,7 +60,9 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   file <- sprintf('../data-raw/empregos/%s_empregos%s.gpkg', sigla_muni, ano)
   empregos <- read_sf(file)
+  empregos <- empregos %>% rename(jobs = EMPREGOS)
   sum(empregos$jobs)
+  # sum(empregos$EMPREGOS)
   # mapview(empregos)
   #leitura dos hexágonos
   
@@ -78,7 +82,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   # plot(polygon, graticule = st_crs(4326), key.pos = 1)
   
   
-  join_jobs_hex <- sf::st_join(empregos, hex)
+  join_jobs_hex <- sf::st_join(st_transform(empregos, epsg), st_transform(hex, epsg))
   
   hex2 <- join_jobs_hex %>%
     st_drop_geometry() %>%
@@ -88,7 +92,9 @@ infos_to_hex <- function(sigla_muni, ano) {
   hex3 <- left_join(hex, hex2, by = "id_hex") %>%
     mutate(n_jobs = ifelse(is.na(n_jobs)==T,
                            0,
-                           n_jobs)) %>% st_drop_geometry()
+                           n_jobs)) %>%
+    # filter(n_jobs > 0) %>%
+    st_drop_geometry() 
   
 
   # mapview(hex3, zcol = 'n_jobs')
@@ -105,7 +111,7 @@ infos_to_hex <- function(sigla_muni, ano) {
       select(S001, S002 = health_low, S003 = health_med, S004 = health_hig)
     # dados_saude2 <- read_sf(file_saude, layer = "saude_cnes")
     # dados_saude2 <- dados_saude2 %>% filter(health_med == 1)
-    
+    # mapview(dados_saude)
     join_saude_hex <- sf::st_join(dados_saude, hex)
     
     hex2 <- join_saude_hex %>%
@@ -144,6 +150,10 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   join_saude_hex <- sf::st_join(dados_saude %>% st_transform(decisao_muni$epsg),
                                 st_transform(hex, decisao_muni$epsg))
+  
+  # join_saude_hex <- sf::st_join(dados_saude %>% left_join(hex %>% select(id_hex)) %>%
+  #                                 st_as_sf() %>% st_transform(decisao_muni$epsg),
+  #                               st_transform(hex, decisao_muni$epsg) %>% select(geometry)) %>% distinct(id_hex)
   
   hex2 <- join_saude_hex %>%
     st_drop_geometry() %>%
@@ -413,9 +423,13 @@ infos_to_hex <- function(sigla_muni, ano) {
                            n_bikes)) %>% st_drop_geometry()
   
 
-  sum(hex_total_sf$n_jobs)
+  # sum(hex_total_sf$n_jobs)
   hex_total_sf <- left_join(hex_total, hex_empty, by = "id_hex") %>% st_as_sf()
-  # mapview(hex_total_sf)
+  
+  hex_total_sf <- hex_total
+  
+  teste <- hex_total_sf 
+  # mapview(teste, zcol = "S004")
   #
   
   # teste <- hex_jobs %>% filter(h3_resolution > 0)
