@@ -414,7 +414,7 @@ map_lisa_cor <- ggplot()+
                                ),
                     labels = c('Not significant' = 'Não significativo',
                                'High-High' = '> Predominância de brancos',
-                               'Low-Low' = '> Predominância de pretos',
+                               'Low-Low' = '> Predominância de negros',
                                'Low-High' = '+ Negros próximos a brancos',
                                'High-Low' = '+ Brancos próximos a negros'
                                )) +
