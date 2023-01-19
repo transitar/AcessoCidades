@@ -1,4 +1,4 @@
-# rm(list = ls(all.names=T))
+# rm(list = ls(all.names=T)); gc()
 source('./R/fun/setup.R')
 # library(patchwork)
 library(showtext)
@@ -12,7 +12,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'poa'
+sigla_muni <- 'pal'
 # library(elementalist)
 # rm(list = ls())
 # width <- 14
@@ -23,7 +23,7 @@ mode1 <- "bike"
 oportunidade <- "empregos"
 titulo_leg <- "Empregos"
 sigla_op <- "TT"
-time <- 15
+time <- 30
 # time <- c(15,30,45,60)
 type_acc <- "CMA"
 
@@ -130,7 +130,7 @@ tema_CMA <- function(base_size) {
     legend.title=element_text(size=35, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.25),
+    legend.position = c(0.22, 0.30),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -436,8 +436,8 @@ mapas_cma <- function(sigla_muni,
                          values = c("assentamentos" = "#0A7E5C",
                                     "urb" = "#fefedf",
                                     "bairros" = "grey60"),
-                         label = c("urb" = "Área Urbanizada",
-                                   "assentamentos" = "Assentamentos precários",
+                         label = c("urb" = "Área urbanizada",
+                                   "assentamentos" = "Aglomerados subnormais",
                                    "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
                          )+
       
@@ -784,4 +784,40 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
 #                      width = 14,
 #                      height = 10
 # )
+
+
+# Aplicação da função - todos os modos e todos os tempos ------------------
+
+lista_modos <- c(rep("transit", 56), rep("walk", 56), rep("bike", 56))
+
+lista_tempos <- rep(c(rep(15, 14), rep(30,14), rep(45, 14),  rep(60, 14)),3)
+
+lista_oportunidade <- rep(rep(c("empregos",
+                            rep("matriculas",4),
+                            rep("escolas", 4),
+                            rep("saude", 4),
+                            "lazer"),4),3)
+
+lista_siglaop <- rep(rep(c("TT",
+                       "MT", "MI", "MF", "MM",
+                       "ET", "EI", "EF", "EM",
+                       "ST", "SB", "SM", "SA",
+                       "LZ"), 4),3)
+
+lista_titulo_leg <- rep(rep(c("Empregos",
+                          rep("Matrículas",4),
+                          rep("Escolas", 4),
+                          rep("Eq. de Saúde", 4),
+                          "Eq. de Lazer"), 4),3)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
+                    sigla_muni = 'pal',
+                    type_acc = "CMA",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
+
 
