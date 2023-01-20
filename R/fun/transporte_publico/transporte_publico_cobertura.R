@@ -133,7 +133,7 @@ graficos <- function(munis = "all"){
     
     dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                         sigla_muni, sigla_muni))
-    data_micro2 <- data_micro %>%
+    data_micro2 <- dados_simulacao %>%
       # filter(code_tract %in% lista_tract) %>%
       select(1:12, V0606, hex) %>%
       mutate(V0606 = as.factor(V0606))
@@ -302,7 +302,7 @@ graficos <- function(munis = "all"){
                                     "aglomerados" = "#0f805e"),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados Subnormais")
+                                   "aglomerados" = "Aglomerados subnormais")
       )+
       #8F040E vermelho bordas
       # geom_sf(data = dados_areas %>% st_transform(3857),
@@ -414,7 +414,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_linhas_tp,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s_new3.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -525,7 +525,7 @@ graficos <- function(munis = "all"){
                                     "aglomerados" = "#0f805e"),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados Subnormais")
+                                   "aglomerados" = "Aglomerados subnormais")
       )+
       guides(#fill = guide_legend(byrow = TRUE),
         colour = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e")
@@ -762,7 +762,7 @@ graficos <- function(munis = "all"){
                                     "aglomerados" = "#0f805e"),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados Subnormais")
+                                   "aglomerados" = "Aglomerados subnormais")
       )+
       
       guides(#fill = guide_legend(byrow = TRUE),
@@ -1040,7 +1040,7 @@ graficos <- function(munis = "all"){
                                     "aglomerados" = "#0f805e"),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados Subnormais")
+                                   "aglomerados" = "Aglomerados subnormais")
       )+
       
       guides(#fill = guide_legend(byrow = TRUE),
@@ -1315,7 +1315,7 @@ graficos <- function(munis = "all"){
     
     #intersect com hex
 
-# Hex atendidos -----------------------------------------------------------
+# Hex atendidos 300-----------------------------------------------------------
 
     
     
@@ -1399,6 +1399,8 @@ graficos <- function(munis = "all"){
       summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
       mutate(class = paste(genero, cor))%>%
       mutate(id = paste(class, quintil_renda))
+    
+    resumo.infra_tp300 <- weighted.mean(recorte_rr$prop, w = recorte_rr$n)
     
     # teste_recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects_bus), "OK","N")) %>%
     #   filter(teste == "OK") %>%
@@ -1493,13 +1495,100 @@ graficos <- function(munis = "all"){
     
     ggsave(p_b300_bus,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new2.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
     
     
 
+    
+
+# Pessoas atendidas 500m --------------------------------------------------
+
+    dados_hex_intersect_500 <- dados_hex %>%
+      st_as_sf() %>%
+      st_transform(decisao_muni$epsg) %>%
+      st_intersection(dados_peds_buffer_500)
+    dados_hex_intersect_500 <- dados_hex_intersect_500 %>%
+      mutate(area = st_area(.)) %>%
+      mutate(area = as.numeric(area)) %>%
+      filter(area >= 60000)
+    
+    
+    # mapview(dados_hex_intersect_300)
+    id_hex_intersects_bus500 <- dados_hex_intersect_500$id_hex %>% unique()
+    
+    #dados da microssimulação
+    
+    data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+                                   sigla_muni, sigla_muni)) %>%  mutate(V0606 = case_when(V0606 == 1 ~ "Brancos",
+                                                                                          V0606 == 2 ~ "Pretos",
+                                                                                          V0606 == 3 ~ "Amarelos",
+                                                                                          V0606 == 4 ~ "Pardos",
+                                                                                          V0606 == 5 ~ "Indígenas"))
+    #ajeitar o formato
+    grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+                                   sigla_muni, sigla_muni))
+    # aaaa <- data_micro %>% st_drop_geometry() %>%
+    #   group_by(hex) %>%
+    #   summarise(n = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+    #   st_as_sf()
+    # 
+    # mapview(aaaa)
+    
+    
+    #checar setores com todos os renda_class_pc == n_col
+    
+    # lista_tract <- data_micro %>% group_by(code_tract, renda_class_pc) %>%
+    #   summarise(n = n()) %>% ungroup() %>%
+    #   group_by(code_tract) %>% summarise(n_classes = length(code_tract), 
+    #                                      n_classes_col = length(code_tract[renda_class_pc == "n_col"])) %>%
+    #   filter(n_classes > n_classes_col) %>% pull(code_tract)
+    
+    
+    
+    # data_micro2 <- data_micro %>% filter(code_tract %in% lista_tract) %>% select(1:12, V0606, hex) %>%
+    #   mutate(V0606 = as.factor(V0606))
+    
+    data_micro2 <- data_micro %>% select(1:12, V0606, hex) %>%
+      mutate(V0606 = as.factor(V0606))
+    
+    
+    
+    # aaaa <- data_micro2 %>% st_drop_geometry() %>%
+    #   group_by(hex) %>%
+    #   summarise(n = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+    #   st_as_sf()
+    # 
+    # mapview(aaaa)
+    
+    
+    # levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
+    data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+    
+    data_micro_bus <- data_micro2 %>% filter(hex %in% id_hex_intersects_bus)
+    # mapview(data_micro_bus)
+    #recorte nos dados da microssimulacao
+    
+    recorte_rr500 <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects_bus500), "OK","N"))  %>% 
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      mutate(
+        quintil_renda = ntile(Rend_pc, 4)) %>%
+      group_by(cor, quintil_renda, genero, teste) %>% summarise(n = n()) %>% 
+      ungroup() %>% group_by(cor, quintil_renda, genero) %>% 
+      summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
+      mutate(class = paste(genero, cor))%>%
+      mutate(id = paste(class, quintil_renda))
+    
+    resumo.infra_tp500 <- weighted.mean(recorte_rr500$prop, recorte_rr500$n)    
+    
+    
+    
 # Pessoas não atendidas 300 m----------------------------------------------------
 
     dados_hex_intersect_ntad300 <- dados_hex %>%
@@ -2236,7 +2325,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               color = NA,
               alpha = 1,
               size = 1) +
-      viridis::scale_fill_viridis(option = "rocket", direction = -1, name = "Headway médio (min)"
+      viridis::scale_fill_viridis(option = "rocket", direction = -1, name = "Intervalo médio (min)"
                                   
       ) +
       
@@ -2401,7 +2490,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.20, 0.33),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2416,7 +2505,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
       guides(color = guide_legend(override.aes = list(fill = c("white", "white", "white", cor_ntad),
-                                                      color = c("grey50", "#fdfc99", "#0F805E", cor_ntad))))
+                                                      color = c("grey50", "#fdfc99", "#0F805E", cor_ntad)),
+                                  order = 1))
     #511277 roxo
     #142577 azul
     #957A03 amarelo queimado
@@ -2885,7 +2975,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
       # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
       # theme_minimal() +
-      xlab("Headway médio (min)") +
+      xlab("Intervalo médio (min)") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
                          limits = c(range1_h,range2_h),
@@ -2950,6 +3040,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                        tarifa_renda <= 0.15 & tarifa_renda > 0.05 ~ "De 5% a 15%",
                                        tarifa_renda <= 0.25 & tarifa_renda > 0.15 ~ "De 15% a 25%",
                                        tarifa_renda > 0.25  ~ "Acima de 25%"))
+    
 
     # mapview(renda, zcol = "tarifa_renda")
     # verde 0E7F5D
@@ -3308,6 +3399,23 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       summarise(tarifa_grupo = mean(tarifa_renda, na.rm = T),
                 n = n()) %>%
       mutate(id = paste(genero, cor))
+    
+    
+    recorte_tarifa_quartis <- data_micro2 %>%
+      # filter(Rend_pc >0) %>%
+      # mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
+      # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
+      mutate(
+        quintil_renda = ntile(Rend_pc, 4)) %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      group_by(quintil_renda) %>%
+      summarise(min = min(Rend_pc, na.rm = T),
+                mediana = median(Rend_pc, na.rm = T),
+                max = max(Rend_pc, na.rm = T))
     
     
     pop_max_tarifa <-plyr::round_any(max(recorte_tarifa$n),10^(n_int_digits(max(recorte_tarifa$n))), f = ceiling)
