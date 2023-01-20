@@ -17,7 +17,7 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 ano <- 2019
 
 tema <- function(base_size) {
@@ -296,6 +296,31 @@ graficos <- function(munis = "all"){
     cor_ag_densidade <- "#e9eb9e" #crayola
     # cor_ag_densidade <- "#d8f793" #mindaro green
     
+    
+    #limite de população (caso seja necessário fixar um valor máximo)
+    pop_max_limite <- F
+    
+    if (pop_max_limite == F){
+      
+      pop_mapas <- pop_counts
+      pop_max <- plyr::round_any(max(pop_mapas$pop_total), 10^(n_int_digits(max(pop_mapas$pop_total))), f = ceiling)
+      break_leap <- pop_max/4
+      labels <- seq(0,pop_max, break_leap)
+      breaks <- seq(0,pop_max, break_leap)
+      limits <- c(0,pop_max)
+      
+    } else {
+      
+      pop_mapas <- pop_counts %>% mutate(pop_total = ifelse(pop_total > pop_max_limite, pop_max_limite, pop_total))
+      pop_max <- plyr::round_any(max(pop_mapas$pop_total), 10^(n_int_digits(max(pop_mapas$pop_total))), f = ceiling)
+      break_leap <- pop_max/4
+      labels <- c(seq(0,pop_max-break_leap, break_leap),paste0(">",pop_max))
+      breaks <- seq(0,pop_max, break_leap)
+      limits <- c(0,pop_max)
+      
+    }
+    
+    
     map_pop_density <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -305,7 +330,7 @@ graficos <- function(munis = "all"){
       
       
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
-      geom_sf(data = st_transform(pop_counts, 3857),
+      geom_sf(data = st_transform(pop_mapas, 3857),
               aes(fill = pop_total),
               colour = NA,
               alpha=.8,
@@ -383,6 +408,9 @@ graficos <- function(munis = "all"){
         na.value = NA,
         # guide = "colourbar",
         aesthetics = "fill",
+        labels = labels,
+        breaks = breaks,
+        limits = limits
         # colors
       ) +
       
@@ -463,7 +491,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.20, 0.31),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -731,6 +759,29 @@ graficos <- function(munis = "all"){
 # hist(renda$renda)
     
     cor_ag <- "#dbad6a"
+    # hist(renda$renda)
+    renda_max_limite <- 4
+    
+    if (renda_max_limite == F){
+      
+      renda_mapas <- renda
+      renda_max <- plyr::round_any(max(renda_mapas$renda), 10^(n_int_digits(max(renda_mapas$renda))), f = ceiling)
+      break_renda <- renda_max/4
+      labels_r <- seq(0,renda_max, break_renda)
+      breaks_r <- seq(0,renda_max, break_renda)
+      limits_r <- c(0,renda_max)
+      
+    } else {
+      
+      renda_mapas <- renda %>% mutate(renda = ifelse(renda > renda_max_limite, renda_max_limite, renda))
+      renda_max <- plyr::round_any(max(renda_mapas$renda), 10^(n_int_digits(max(renda_mapas$renda))), f = ceiling)
+      break_renda <- renda_max/4
+      labels_r <- c(seq(0,renda_max-break_renda, break_renda),paste0(">",renda_max))
+      breaks_r <- seq(0,renda_max, break_renda)
+      limits_r <- c(0,renda_max)
+      
+    }
+    
     map_renda <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -740,7 +791,7 @@ graficos <- function(munis = "all"){
       
       
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
-      geom_sf(data = st_transform(renda, 3857),
+      geom_sf(data = st_transform(renda_mapas, 3857),
               aes(fill = renda),
               colour = NA,
               alpha=.8,
@@ -809,9 +860,9 @@ graficos <- function(munis = "all"){
       
       viridis::scale_fill_viridis(option = "A",
                                   name = "Renda per capita (SM)",
-                                  breaks = seq(0,10,2),
-                                  labels = c("0","2", "4", "6","8", ">10"),
-                                  limits = c(0,10)) +
+                                  breaks = breaks_r,
+                                  labels = labels_r,
+                                  limits = limits_r) +
       
       
       # scale_fill_gradientn(
