@@ -884,6 +884,11 @@ graficos <- function(munis = "all"){
       summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
       mutate(class = paste(genero, cor))%>%
       mutate(id = paste(class, quintil_renda))
+    
+    #% da população total atendida
+    
+    resumo.infra_clico <- weighted.mean(recorte_rr$prop, w = recorte_rr$n)
+    
     # library(BAMMtools)
     # aaa <- BAMMtools::getJenksBreaks(data_micro2$Rend_pc, 4, subset = NULL)
     #teswte na renda per capita

@@ -369,7 +369,7 @@ graficos <- function(munis = "all"){
                                     "areas" = "grey45",
                                     "ag" = cor_ag_densidade),
                          label = c("urb" = "Área urbanizada",
-                                   "areas" = "Bairros",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                    "ag" = "Aglomerados subnormais")
       )+
       
@@ -803,7 +803,7 @@ graficos <- function(munis = "all"){
                                     "areas" = "grey45",
                                     "ag" = cor_ag),
                          label = c("urb" = "Área urbanizada",
-                                   "areas" = "Bairros",
+                                   "areas" =  munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                    "ag" = "Aglomerados subnormais")
       )+
       
@@ -913,7 +913,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.20, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -942,7 +942,7 @@ graficos <- function(munis = "all"){
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
-           width = width, height = height, units = "cm" )
+           width = 16.5, height = 16.5, units = "cm" )
     
     
     

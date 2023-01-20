@@ -1,4 +1,5 @@
 #10_6-mapas_tmi_all
+# rm(list = ls(all.names = T))
 
 source('./R/fun/setup.R')
 library(patchwork)
@@ -8,16 +9,16 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'poa'
-mode1 <- "walk"
-oportunidade <- "saude"
-titulo_leg <- "Eq. de Saúde"
-sigla_op <- "ST"
-time <- 15
+sigla_muni <- 'pal'
+mode1 <- "transit"
+oportunidade <- "escolas"
+titulo_leg <- "Escolas"
+sigla_op <- "EF"
+time <- 30
 # time <- c(15,30,45,60)
 type_acc <- "TMI"
 
-#não funciona ainda para tmi
+
 #oportunidade = nome da pasta para salvar
 
 # theme_for_TMI <- function(base_size) {
@@ -136,7 +137,7 @@ tema_TMI <- function(base_size) {
     legend.key.height = unit(1,"line"),
     legend.key = element_blank(),
     legend.text=element_text(size=30, family = "encode_sans_light"),
-    legend.title=element_text(size=35, family = "encode_sans_bold"),
+    legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
     legend.position = c(0.22, 0.26),
@@ -147,7 +148,7 @@ tema_TMI <- function(base_size) {
     legend.background = element_blank(),
     # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
     #                                      colour = "#E0DFE3"),
-    legend.spacing.y = unit(0.2, 'cm'),
+    legend.spacing.y = unit(0.1, 'cm'),
     legend.box.just = "left"
     # legend.margin = margin(t = -80)
   )
@@ -398,6 +399,18 @@ mapas_tmi <- function(sigla_muni,
     labels <- c(seq(0,time-time/4,time/4), paste0("> ", time))
   }
   
+  if (mode1 == "bike"){
+    modo <- "bicicleta"
+    legenda_text <- "por bicicleta"
+  } else if (mode1 == "transit"){
+    modo <- "transporte_publico"
+    legenda_text <- "por transporte público"
+  } else if (mode1 == "walk"){
+    modo <- "caminhada"
+    legenda_text <- "por caminhada"
+  }
+  
+  
   
   plot3 <- ggplot()+
     geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
@@ -424,6 +437,9 @@ mapas_tmi <- function(sigla_muni,
     # facet_wrap(~ind, ncol = 2)+
 
     labs(fill = sprintf("TMI a %s", titulo_leg)) +
+    labs(fill = sprintf("<span style = 'color :#000000;'>Tempo mínimo de acesso<br>a %s %s</span>",
+                        titulo_leg,
+                        legenda_text)) +
     
     ggnewscale::new_scale_fill() +
     
@@ -464,8 +480,8 @@ mapas_tmi <- function(sigla_muni,
                        values = c("urb" = "#fdfdc1",
                                   "assentamentos" = "#f1886e",
                                   "bairros" = "grey60"),
-                       label = c("urb" = "Área Urbanizada",
-                                 "assentamentos" = "Assentamentos precários",
+                       label = c("urb" = "Área urbanizada",
+                                 "assentamentos" = "Aglomerados subnormais",
                                  "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
     )+
     
@@ -736,14 +752,7 @@ mapas_tmi <- function(sigla_muni,
   #               widths = c(4, 4 , 4 ))
   
   
-  if (mode1 == "bike"){
-    modo <- "bicicleta"
-  } else if (mode1 == "transit"){
-    modo <- "transporte_publico"
-  } else if (mode1 == "walk"){
-    modo <- "caminhada"
-  }
-  
+
   
   suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/%s/%s/%s/', sigla_muni, modo, type_acc ,oportunidade)))
   
@@ -950,3 +959,41 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
                     cols = 1,
                     width = 16.5,
                     height = 16.5)
+
+
+
+# Aplicação para todos os tempos ------------------------------------------
+
+lista_modos <- c(rep(rep("transit", 9),4), rep(rep("walk", 9),4), rep(rep("bike", 9),4))
+
+lista_tempos <- rep(c(rep(15, 9), rep(30,9), rep(45, 9), rep(60, 9)),3)
+
+lista_oportunidade <- rep(rep(c(
+  rep("escolas", 4),
+  rep("saude", 4),
+  "lazer"),4),3)
+
+lista_siglaop <- rep(rep(c(
+  "ET", "EI", "EF", "EM",
+  "ST", "SB", "SM", "SA",
+  "LZ"), 4),3)
+
+lista_titulo_leg <- rep(rep(c(
+  rep("escolas", 4),
+  rep("Eq. de saúde", 4),
+  "Eq. de lazer"), 4),3)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+library("future")
+seed = TRUE
+plan(multisession)
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
+                    sigla_muni = 'pal',
+                    type_acc = "TMI",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
+
+

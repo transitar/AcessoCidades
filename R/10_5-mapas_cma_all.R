@@ -20,9 +20,9 @@ sigla_muni <- 'pal'
 
 # sigla_muni <- 'dou'
 mode1 <- "bike"
-oportunidade <- "empregos"
-titulo_leg <- "Empregos"
-sigla_op <- "TT"
+oportunidade <- "saude"
+titulo_leg <- "Eq. de Saúde"
+sigla_op <- "SA"
 time <- 30
 # time <- c(15,30,45,60)
 type_acc <- "CMA"
@@ -126,11 +126,12 @@ tema_CMA <- function(base_size) {
     legend.key.width=unit(2,"line"),
     legend.key.height = unit(1,"line"),
     legend.key = element_blank(),
-    legend.text=element_text(size=30, family = "encode_sans_light"),
-    legend.title=element_text(size=35, family = "encode_sans_bold"),
+    legend.key.size = unit(10, "cm"),
+    legend.text=element_text(size=27, family = "encode_sans_light"),
+    legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.30),
+    legend.position = c(0.23, 0.30),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -138,7 +139,7 @@ tema_CMA <- function(base_size) {
     legend.background = element_blank(),
     # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
     #                                      colour = "#E0DFE3"),
-    legend.spacing.y = unit(0.2, 'cm'),
+    legend.spacing.y = unit(0.1, 'cm'),
     legend.box.just = "left"
     # legend.margin = margin(t = -80)
   )
@@ -344,6 +345,17 @@ mapas_cma <- function(sigla_muni,
                           levels = paste0(type_acc,sigla_op, time),
                           labels = paste0(time, " Minutos")))
     
+    if (mode1 == "bike"){
+      modo <- "bicicleta"
+      legenda_text <- "por<br>bicicleta em até"
+    } else if (mode1 == "transit"){
+      modo <- "transporte_publico"
+      legenda_text <- "por<br>transporte público em até"
+    } else if (mode1 == "walk"){
+      modo <- "caminhada"
+      legenda_text <- "por<br>caminhada em até"
+    }
+    
     #definição do tema
     # if (type_acc == "CMA") {
     #   
@@ -395,7 +407,10 @@ mapas_cma <- function(sigla_muni,
                                   # , labels = c(0, "35", "70%")
       ) +
       
-      labs(fill = sprintf("%s acessíveis", titulo_leg)) +
+      labs(fill = sprintf("<span style = 'color :#000000;'> %s acessíveis %s %s min</span>",
+                          titulo_leg,
+                          legenda_text,
+                          time)) +
       
       ggnewscale::new_scale_fill() +
       
@@ -631,13 +646,13 @@ mapas_cma <- function(sigla_muni,
     # #               widths = c(4, 4 , 4 ))
     
     
-    if (mode1 == "bike"){
-      modo <- "bicicleta"
-    } else if (mode1 == "transit"){
-      modo <- "transporte_publico"
-    } else if (mode1 == "walk"){
-      modo <- "caminhada"
-    }
+    # if (mode1 == "bike"){
+    #   modo <- "bicicleta"
+    # } else if (mode1 == "transit"){
+    #   modo <- "transporte_publico"
+    # } else if (mode1 == "walk"){
+    #   modo <- "caminhada"
+    # }
     
     
     suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/%s/%s/%s/', sigla_muni, modo, type_acc ,oportunidade)))
@@ -805,10 +820,34 @@ lista_siglaop <- rep(rep(c("TT",
                        "LZ"), 4),3)
 
 lista_titulo_leg <- rep(rep(c("Empregos",
-                          rep("Matrículas",4),
-                          rep("Escolas", 4),
-                          rep("Eq. de Saúde", 4),
-                          "Eq. de Lazer"), 4),3)
+                          c("Matrículas",
+                            "Matrículas",
+                            "Matrículas",
+                            "Matrículas"),
+                          c("Escolas",
+                            "Escolas",
+                            "Escolas",
+                            "Escolas"),
+                          c("Eq. de saúde",
+                            "Eq. de Saúde",
+                            "Eq. de Saúde",
+                            "Eq. de Saúde"),
+                          "Eq. de lazer"), 4),3)
+
+# lista_titulo_leg <- rep(rep(c("Empregos",
+#                               c("Matrículas totais",
+#                                 "Matrículas em E. infantil<br>",
+#                                 "Matrículas em E. fundamental<br>",
+#                                 "Matrículas em E. médio<br>"),
+#                               c("Escolas totais",
+#                                 "Escolas de E. infantil<br>",
+#                                 "Escolas de E. fundamental<br>",
+#                                 "Escolas de E. médio<br>"),
+#                               c("Eq. de saúde totais<br>",
+#                                 "Eq. de Saúde básica<br>",
+#                                 "Eq. de Saúde média complexidade<br>",
+#                                 "Eq. de Saúde alta complexidade<br>"),
+#                               "Eq. de Lazer"), 4),3)
 
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
 
@@ -820,4 +859,74 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
                     width = 16.5,
                     height = 16.5)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+lista_modos <- rep("bike", 56)
+
+lista_tempos <- c(rep(15, 14), rep(30,14), rep(45, 14),  rep(60, 14))
+
+lista_oportunidade <- rep(c("empregos",
+                                rep("matriculas",4),
+                                rep("escolas", 4),
+                                rep("saude", 4),
+                                "lazer"),4)
+
+lista_siglaop <- rep(c("TT",
+                           "MT", "MI", "MF", "MM",
+                           "ET", "EI", "EF", "EM",
+                           "ST", "SB", "SM", "SA",
+                           "LZ"), 4)
+
+lista_titulo_leg <- rep(c("Empregos",
+                              c("Matrículas",
+                                "Matrículas",
+                                "Matrículas",
+                                "Matrículas"),
+                              c("Escolas",
+                                "Escolas",
+                                "Escolas",
+                                "Escolas"),
+                              c("Eq. de saúde",
+                                "Eq. de Saúde",
+                                "Eq. de Saúde",
+                                "Eq. de Saúde"),
+                              "Eq. de lazer"), 4)
+
+# lista_titulo_leg <- rep(rep(c("Empregos",
+#                               c("Matrículas totais",
+#                                 "Matrículas em E. infantil<br>",
+#                                 "Matrículas em E. fundamental<br>",
+#                                 "Matrículas em E. médio<br>"),
+#                               c("Escolas totais",
+#                                 "Escolas de E. infantil<br>",
+#                                 "Escolas de E. fundamental<br>",
+#                                 "Escolas de E. médio<br>"),
+#                               c("Eq. de saúde totais<br>",
+#                                 "Eq. de Saúde básica<br>",
+#                                 "Eq. de Saúde média complexidade<br>",
+#                                 "Eq. de Saúde alta complexidade<br>"),
+#                               "Eq. de Lazer"), 4),3)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
+                    sigla_muni = 'pal',
+                    type_acc = "CMA",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
 

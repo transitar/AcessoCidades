@@ -252,47 +252,48 @@ graficos <- function(munis = "all"){
               alpha= 0.7)  +
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
-              aes(color = "assentamentos"),
+              aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.5,
+              linewidth = 0.3,
               fill = "#0F805E",
               show.legend = "polygon",
-              alpha = 0.7)+
+              alpha = 0.5)+
       
       scale_color_manual(name = "Uso do solo",
-                         breaks = c("assentamentos", "urb", "areas"),
-                         values = c("urb" = "grey45",
-                                    "areas" = "grey70",
-                                    "assentamentos" = "#0F805E"),
+                         breaks = c("ag", "urb", "areas"),
+                         values = c("urb" = "#8F040E",
+                                    "areas" = "grey45",
+                                    "ag" = "#0F805E"),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "assentamentos" = "Aglomerados subnormais")
+                                   "ag" = "Aglomerados subnormais")
       )+
       
-      viridis::scale_fill_viridis(option = 'A',
-                         direction = 1,
-                           name = "Nº de Empregos",
-                           breaks = breaks,
 
-                           labels = labels,
-                         limits = limits)+
+      # viridis::scale_fill_viridis(option = 'A',
+      #                    direction = 1,
+      #                      name = "Nº de Empregos",
+      #                      breaks = breaks,
+      # 
+      #                      labels = labels,
+      #                    limits = limits)+
       
       
-      # scale_fill_gradientn(
-      #   name = "Nº de Empregos",
-      #   colors =colors_purple ,
-      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-      #   # values = NULL,
-      #   space = "Lab",
-      #   na.value = NA,
-      #   # guide = "colourbar",
-      #   aesthetics = "fill",
-      #   breaks = breaks,
-      #   limits = limits,
-      #   labels = labels
-      #   # colors
-      # ) +
+      scale_fill_gradientn(
+        name = "Nº de Empregos",
+        colors =colors_orange ,
+        # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+        # values = NULL,
+        space = "Lab",
+        na.value = NA,
+        # guide = "colourbar",
+        aesthetics = "fill",
+        breaks = breaks,
+        limits = limits,
+        labels = labels
+        # colors
+      ) +
       
       
       # scale_fill_manual(values = c("1" = "#FEF8ED",
@@ -371,7 +372,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.20, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -385,7 +386,9 @@ graficos <- function(munis = "all"){
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("#0F805E", "white", "white")),
+      guides(color = guide_legend(override.aes = list(fill = c("#0F805E", "white", "white"),
+                                                      linewidth = c(1,1,1),
+                                                      alpha = c(0.5,0.5,0.5)),
                                   order = 1))
     
     
@@ -394,9 +397,9 @@ graficos <- function(munis = "all"){
     # map_empregos
     ggsave(map_empregos,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/1-empregos_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/1-empregos_%s_new2.png", sigla_muni, sigla_muni),
            dpi = 300,
-           width = width, height = height, units = "cm" )
+           width = 16.5, height = 16.5, units = "cm" )
     
 
 # Mapa de Eq. de lazer Antigo ----------------------------------------------------
@@ -478,9 +481,20 @@ graficos <- function(munis = "all"){
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
+      # geom_sf(data = dados_areas %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         aes(color = "grey70"),
+      #         # color = "grey45",
+      #         # aes(fill = '#CFF0FF'),
+      #         fill = NA,
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.5,
+      #         alpha= 0.7) +
+      
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "grey70"),
+              aes(color = "areas"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
               fill = NA,
@@ -507,7 +521,7 @@ graficos <- function(munis = "all"){
     # ggnewscale::new_scale_color() +
     geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
-            aes(color = "grey45"),
+            aes(color = "urb"),
             # color = "grey45",
             # aes(fill = '#CFF0FF'),
             fill = NA,
@@ -518,7 +532,7 @@ graficos <- function(munis = "all"){
       
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
-              aes(color = "#d96e0a"),
+              aes(color = "ag"),
               
               # fill = "#d96e0a",
               linewidth = 0.9,
@@ -527,14 +541,17 @@ graficos <- function(munis = "all"){
               alpha = 0.7)+
       
       scale_color_manual(name = "Uso do solo",
-                         values = c("grey45" = "grey45",
-                                    "grey70" = "grey70",
-                                    "#d96e0a" = "#d96e0a"),
-                         label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Bairros",
-                                   "#d96e0a" = "Aglomerados subnormais")
+                         breaks = c("ag", "urb", "areas"),
+                         values = c("urb" = "#8F040E",
+                                    "areas" = "grey45",
+                                    "ag" = "#d96e0a"),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                                   "ag" = "Aglomerados subnormais")
       )+
       
+      
+
       
       scale_fill_gradientn(
         name = "Nº de Eq. de lazer",
@@ -641,7 +658,7 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni) +
+      aproxima_muni(sigla_muni = sigla_muni)+
       guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white")),
                                   order = 1))
     
@@ -659,7 +676,7 @@ graficos <- function(munis = "all"){
            device = "png",
            filename =  sprintf("../data/map_plots_amenities/muni_%s/2-lazer_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
-           width = width, height = height, units = "cm" )
+           width = 16.5, height = 16.5, units = "cm" )
     # width = 16; height = 16
     
 
@@ -1109,7 +1126,7 @@ graficos <- function(munis = "all"){
 
     dados_saude_basico <- dados_hex %>% filter(S002 >0) %>%
       mutate(S002 = ifelse(S002 > 5, 5, S002))
-    
+    total_saude_basico <- sum(dados_saude_basico$E002)
     
     map_saude_basico <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1166,7 +1183,7 @@ graficos <- function(munis = "all"){
                                    "ag" = "Aglomerados subnormais")
       )+
       scale_fill_viridis_d(option = "viridis",
-                           name = "Eq. de saúde totais",
+                           name = "Eq. de saúde básica",
                            direction = 1,
                            breaks = seq(1,5,1),
                            labels = seq(1,5,1)) +
@@ -1251,11 +1268,159 @@ graficos <- function(munis = "all"){
 
     ggsave(map_saude_basico,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/3-saude-baixa_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/4-saude-baixa_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 16.5, height = 16.5, units = "cm" )
 
+# Saude médio novo --------------------------------------------------------
 
+    dados_saude_medio <- dados_hex %>% filter(S003 >0) %>%
+      mutate(S003 = ifelse(S003 > 5, 5, S003))
+    
+    
+    map_saude_medio <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
+      
+      # ggnewscale::new_scale_color() +
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "urb"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.8,
+              alpha= 0.7)  +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "ag"),
+              
+              # fill = "#d96e0a",
+              linewidth = 0.5,
+              fill = "#d96e0a",
+              show.legend = "polygon",
+              alpha = 0.7)+
+      
+      geom_sf(data = st_transform(dados_saude_basico, 3857),
+              aes(fill = as.factor(S002)),
+              colour = "grey70",
+              alpha=.8,
+              size = 0)+
+      
+      scale_color_manual(name = "Uso do solo",
+                         values = c("urb" = "#8F040E",
+                                    "areas" = "grey45",
+                                    "ag" = "#d96e0a"),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                                   "ag" = "Aglomerados subnormais")
+      )+
+      scale_fill_viridis_d(option = "viridis",
+                           name = "Eq. de saúde de média complexidade",
+                           direction = 1,
+                           breaks = seq(1,5,1),
+                           labels = seq(1,5,1)) +
+      
+      
+      # scale_fill_manual(name = "Eq. de saúde baixa complexidade",
+      #                   values = c(
+      #                     # "1" = "#b5b9fb",
+      #                              
+      #                              "1" = "#969cf8",
+      #                              # "3" = "#767DCE",
+      #                              # "4" = "#2b47a4",
+      #                              "2" = "#1A295B"
+      #                     ),
+    #                   label = c("1" = "1",
+    #                             
+    #                             "2" = "2"
+    #                             # "3" = "3",
+    #                             # "4" = "4",
+    #                             # "#33b099" = "Cobertura de 300m",
+    #                             # "5" = "5"
+    #                             )) +
+    
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
+      
+      ggspatial::annotation_scale(style = "ticks",
+                                  location = "br",
+                                  text_family = "encode_sans_bold",
+                                  text_cex = 3,
+                                  line_width = 1,
+                                  width_hint = 0.10,
+                                  pad_x = unit(0.35, "cm"),
+                                  pad_y = unit(0.35, "cm")
+      ) +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      
+      theme(
+        strip.text.x = element_text(size=rel(1.2)),
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = NA, colour = NA),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(), 
+        panel.grid = element_blank(),
+        plot.margin=unit(c(0,0,0,0),"mm"),
+        legend.margin = margin(unit(c(10,10,5,10),"mm")),
+        legend.key.width=unit(2,"line"),
+        legend.key.height = unit(1,"line"),
+        legend.key = element_blank(),
+        legend.text=element_text(size=25, family = "encode_sans_light"),
+        legend.title=element_text(size=30, family = "encode_sans_bold"),
+        plot.title = element_text(hjust = 0, vjust = 4),
+        strip.text = element_text(size = 10),
+        legend.position = c(0.22, 0.30),
+        legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                             colour = "#A09C9C",
+                                             linewidth = 0.8,
+                                             linetype = "solid"),
+        legend.background = element_blank(),
+        # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+        #                                      colour = "#E0DFE3"),
+        legend.spacing.y = unit(0.3, 'cm'),
+        legend.box.just = "left"
+        # legend.margin = margin(t = -80)
+      ) +
+      # guides(fill = guide_legend(byrow = TRUE)) +
+      aproxima_muni(sigla_muni = sigla_muni) +
+      
+      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",2))
+                                                      # color = c("#d96e0a", rep("#A09C9C", 2))
+      ),
+      order = 1)
+      # fill = guide_legend(override.aes = list(fill = c("#c4c9ed",
+      #                                                  
+      #                                                  "#96a0df",
+      #                                                  "#5766cc",
+      #                                                  # "4" = "#3b458a",
+      #                                                  "#1f2447"),
+      #                                         color = rep("#A09C9C", 4)),
+      # order = 2)
+      )
+    
+    ggsave(map_saude_medio,
+           device = "png",
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/5-saude-baixa_%s_new.png", sigla_muni, sigla_muni),
+           dpi = 300,
+           width = 16.5, height = 16.5, units = "cm" )
 
 # alta complexidade -------------------------------------------------------
 
@@ -1318,7 +1483,7 @@ graficos <- function(munis = "all"){
       )+
       
       scale_fill_viridis_d(option = "viridis",
-                           name = "Eq. de saúde totais",
+                           name = "Eq. de saúde de alta complexidade",
                            direction = 1,
                            breaks = seq(1,5,1),
                            labels = seq(1,5,1)) +
@@ -1403,7 +1568,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_saude_alta,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/3-saude-alta_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/6-saude-alta_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 16.5, height = 16.5, units = "cm" )
     
@@ -1785,7 +1950,7 @@ graficos <- function(munis = "all"){
 
     ggsave(map_matriculas,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/4-matriculas_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/7-matriculas_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
     
@@ -1911,7 +2076,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_matriculas_infantil,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/4.1-matriculas_infantil_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/8-matriculas_infantil_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
 
@@ -2036,7 +2201,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_matriculas_fundamental,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/4.2-matriculas_fundamental_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/9-matriculas_fundamental_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )    
 
@@ -2160,7 +2325,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_matriculas_medio,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/4.3-matriculas_medio_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/10-matriculas_medio_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
 
@@ -2288,13 +2453,14 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/5-escolas_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/11-escolas_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
 
 # Escolas Infantil --------------------------------------------------------
 
     dados_escolas_infantil <- dados_hex %>% filter(E002 >0)
+    total_escolas_infantil <- sum(dados_escolas_infantil$E002)
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_infantil <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2416,13 +2582,14 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas_infantil,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/6-escolas_infantis_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/12-escolas_infantis_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
 
 # Escolasde ensino fundamental --------------------------------------------
 
     dados_escolas_fundamental <- dados_hex %>% filter(E003 >0)
+    total_escolas_fundamental <- sum(dados_escolas_fundamental$E003)
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_fundamental <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2544,7 +2711,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas_fundamental,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/7-escolas_fundamental_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/13-escolas_fundamental_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
     
@@ -2552,6 +2719,7 @@ graficos <- function(munis = "all"){
 # Escolas ensino médio novo -----------------------------------------------
 
     dados_escolas_medio <- dados_hex %>% filter(E004 >0)
+    total_escolas_medio <- sum(dados_escolas_medio$E004)
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_medio <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2673,7 +2841,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas_medio,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/8-escolas_medio_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/14-escolas_medio_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )    
 

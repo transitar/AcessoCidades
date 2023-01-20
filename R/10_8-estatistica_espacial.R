@@ -1543,7 +1543,7 @@ hist_resp_dif_hm <- ggplot(renda_resp_sem_na, aes(x = dif_resp_hm)) +
                  position= "identity",
                  fill = "#d96e0a") + 
   scale_y_continuous(labels = scales::percent)+
-  xlab("Diferença absoluta") +
+  xlab("Nº de responsáveis homens - mulheres") +
   ylab('Porcentagem de hexagonos') +
   # geom_text(mean(dif_brancos_pretos, na.rm = T))+
   theme_minimal() +
@@ -1574,7 +1574,7 @@ hist_resp_dif_hm <- ggplot(renda_resp_sem_na, aes(x = dif_resp_hm)) +
   )
 ggsave(hist_resp_dif_hm,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/6-hist_responsaveis_%s.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/7-hist_responsaveis_%s.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
