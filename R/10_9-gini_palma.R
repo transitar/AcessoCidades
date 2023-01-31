@@ -3,7 +3,7 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 width <- 16
 height <- 10
 
@@ -156,12 +156,12 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
   
 }
 
-
+#é preciso modificar na função os tempos de cada modo, se for necessário alterá-los
 # Aplicação da Função para CMA -----------------------------------------------------
 
 
 
-desigualdade_function(sigla_muni = "pal",
+desigualdade_function(sigla_muni = "con",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
               type_acc = "CMA")
@@ -170,7 +170,7 @@ gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "pal",
+desigualdade_function(sigla_muni = "con",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -179,7 +179,7 @@ gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "pal",
+desigualdade_function(sigla_muni = "con",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -219,11 +219,12 @@ write.xlsx(desigualdade_all_cma, sprintf('../data/ind_desigualdade/muni_%s/muni_
                                      sigla_muni, sigla_muni))
 write.xlsx(desigualdade_select_cma, sprintf('../data/ind_desigualdade/muni_%s/muni_%s_desigualdade_cma_select.xlsx',
                                      sigla_muni, sigla_muni))
-
+# desigualdade_all_cma <- read_xlsx(sprintf('../data/ind_desigualdade/muni_%s/muni_%s_desigualdade_cma_all.xlsx',
+#                                           sigla_muni, sigla_muni))
 
 # TMI ---------------------------------------------------------------------
 
-desigualdade_function(sigla_muni = "poa",
+desigualdade_function(sigla_muni = "con",
                       mode1 = "transit",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -236,7 +237,7 @@ palma_temp_transit_selec <- palma_selec
 # mode1 <- "bike"
 # type_acc <- "TMI"
 ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR")
-desigualdade_function(sigla_muni = "poa",
+desigualdade_function(sigla_muni = "con",
                       mode1 = "bike",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -250,7 +251,7 @@ palma_temp_bike_selec <- palma_selec
 # type_acc <- "TMI"
 # ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR")
 
-desigualdade_function(sigla_muni = "poa",
+desigualdade_function(sigla_muni = "con",
                       mode1 = "walk",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -299,37 +300,74 @@ write.xlsx(desigualdade_all_tmi, sprintf('../data/ind_desigualdade/muni_%s/muni_
 
 # mode1 <- "bike"
 dados_cma <- desigualdade_all_cma %>% filter(indicador %in% ifelse(mode == "transit", c(
+  # "CMATT45",
   "CMALZ45",
-  "CMAMT45",
+  # "CMAMT45",
+  "CMAEI45",
+  "CMAEF45",
+  "CMAEM45",
   "CMASB45",
-  "CMASA45",
+  "CMASM45",
+  "CMASA45"#,
   
   # "CMAST45",
-  "CMATT45"
+  # "CMATT45"
   ), ifelse(mode == "bike", c(
+    # "CMATT30",
     "CMALZ30",
-    "CMAMT30",
-    # "CMASB30",
-    # "CMASA30",
+    # "CMAMT30",
+    "CMAEI30",
+    "CMAEF30",
+    "CMAEM30",
+    "CMASB30",
+    "CMASA30",
+    "CMASM30"
     # "CMAST30",
-    "CMATT30"
-    ), c(
+    # "CMATT30"
+    ),c(
+      # "CMATT15",
       "CMALZ15",
-      "CMAMT15",
+      # "CMAMT15",
+      "CMAEI15",
+      "CMAEF15",
+      "CMAEM15",
       "CMASB15",
-      # "CMASA15",
+      "CMASM15",
+      "CMASA15"
       # "CMAST15",
-      "CMATT15"
+      # "CMATT15"
       )))) %>%
-  mutate(indicador = substr(indicador, start = 1L, stop = 5L))
+  
+  mutate(indicador = substr(indicador, start = 1L, stop = 5L),
+         largura = ifelse(indicador == "CMASA" | indicador == "CMASM", 1,
+                          ifelse(indicador == "CMASB", 1,1))) #%>%
+  
+  # mutate(indicador = substr(indicador, start = 1L, stop = 5L),
+  #        largura = ifelse(indicador == "CMASA" | indicador == "CMASM", 1/3,
+  #                         ifelse(indicador == "CMASB", 2/3,1))) %>%
+  # filter(mode != "bike" | indicador != "CMASB")
 
 dados_cma <- dados_cma %>% mutate(mode = case_when(mode=="transit" ~ "Transporte Público (45 min)",
                                                    mode=="bike" ~ "Bicicleta (30 min)",
                                                    mode=="walk" ~ "Caminhada (15 min)"))
+dados_cma$mode <- factor(dados_cma$mode, levels = c("Caminhada (15 min)", "Bicicleta (30 min)","Transporte Público (45 min)"))
+
+dados_cma$indicador <- factor(dados_cma$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+# enchimento <- data.frame(indicador = c("CMASA", "CMASA", "CMASB"),
+#                          mode = c("Bicicleta (30 min)", "Caminhada (15 min)" ,"Bicicleta (30 min)"),
+#                          gini = c(0,0,0),
+#                          palma = c(0,0,0)
+#                          )
+# 
+# dados_cma <- dados_cma %>% rbind(enchimento)
+
 plot_gini_cma <- ggplot(dados_cma,
        aes(y = gini, x = indicador, fill = mode)) +
-  geom_col(position = position_dodge(),
-           width = .7) +
+  # geom_col(position = position_dodge(preserve = "single"),
+  #          width = .7) +
+  geom_col(position = position_dodge(width = 0.7),
+           # stat = "identity",
+           width = dados_cma$largura*0.7) +
   scale_y_continuous(
                      breaks = seq(0,1,0.1),
                      limits = c(0,1)) +
@@ -342,7 +380,7 @@ plot_gini_cma <- ggplot(dados_cma,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 4.5,
+            size = 3.5,
             colour = "black",
             fontface = "bold",
             family = "encode_sans_bold",
@@ -358,20 +396,48 @@ plot_gini_cma <- ggplot(dados_cma,
   #                              "#5766cc" = "Transporte Publico",
   #                              "#d96e0a" = "Caminhada")
   # ) +
-    scale_x_discrete(breaks = c(
-                                "CMATT",
-                                "CMASB",
-                                "CMASA",
-                                "CMAMT",
-                                "CMALZ"
-                                ),
-                     labels = c(
-                                "CMALZ"="Lazer",
-                                "CMAMT"="Matrículas Totais",
-                                "CMASB"="Saúde Básica",
-                                "CMASA"="Saúde Alta Complex.",
-                                "CMATT"="Empregos")) +
+    # scale_x_discrete(breaks = c(
+    #                             "CMATT",
+    #                             "CMASB",
+    #                             "CMASA",
+    #                             "CMAMT",
+    #                             "CMALZ"
+    #                             ),
+    #                  labels = c(
+    #                             "CMALZ"="Lazer",
+    #                             "CMAMT"="Matrículas Totais",
+    #                             "CMASB"="Saúde Básica",
+    #                             "CMASA"="Saúde Alta Complex.",
+    #                             "CMATT"="Empregos")) +
+  
+  
+  scale_x_discrete(breaks = c(
+    # "TMIBK",
+    "CMATT",
+    "CMASB",
+    "CMASM",
+    "CMASA",
+    "CMAEI",
+    "CMAEF",
+    "CMAEM",
+    "CMALZ"
+    # "CMAMT",
+  ),
+  labels = c(
+    "CMATT"="Empregos",
+    # "CMAMT"="Matrículas",
+    "CMAEI"="Ensino\nInfantil",
+    "CMAEF"="Ensino\nFundamental",
+    "CMAEM"="Ensino\nMédio",
+    "CMASB"="Saúde\nBásica",
+    "CMASM"="Saúde\nde Média\nComplexidade",
+    "CMASA"="Sáude\nde Alta\nComplexidade",
+    "CMALZ"="Lazer"
+    
+  )) +
+  
   ylab("Índice de Gini\nMedida Cumulativa de Oportunidades") +
+  # ylab("<span style = 'color :#000000;'>Índice de Gini<br>Medida Cumulativa de Oportunidades</span>") +
   xlab("Oportunidade") +
   theme_light() +
   theme(#axis.title = element_blank(),
@@ -389,13 +455,16 @@ plot_gini_cma <- ggplot(dados_cma,
     plot.title = element_text(size = 12, margin = margin(b=10)),
     plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
+    
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
-    axis.text = element_text(size = 14, family = "encode_sans_light"),
-    axis.title = element_text(size = 18, family = "encode_sans_bold"))
+    axis.text = ggtext::element_markdown(size=14, family = "encode_sans_light", lineheight = 0.5),
+    # axis.text = element_text(size = 14, family = "encode_sans_light"),
+    # axis.title = element_text(size = 18, family = "encode_sans_bold",)
+    axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_gini_cma, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/7-muni_%s_grafico_desigualdade_cma.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/7-muni_%s_grafico_desigualdade_cma_new.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = width, height = height, units = "cm")
 
@@ -445,28 +514,25 @@ plot_gini_tmi <- ggplot(dados_tmi,
   #                              "#d96e0a" = "Caminhada")
   # ) +
   scale_x_discrete(breaks = c(
-    # "TMIST",
-    "TMISB",
-    "TMISA",
-    "TMIEI",
-    "TMIEF",
-    "TMIEM"
-    # # "TMILZ",
     # "TMIBK",
-    # "TMIPR"
-    ),
-    labels = c(
-      "TMISB"= "Saúde Básica",
-      "TMISA"= "Saúde Alta Complex.",
-      
-      "TMIEI"="Escolas E. Infantil",
-      "TMIEF"="Escolas E. Fundamental",
-      "TMIEM"="Escolas E. Médio"
-      # "TMILZ"="Lazer",
-      # "TMIST"="Saúde",
-      # "TMIBK" = "B. Compartilhadas",
-      # "TMIPR" = "Paraciclos"
-      )) +
+    "CMATT",
+    "CMASB",
+    "CMASA",
+    "CMAEI",
+    "CMAEM",
+    "CMALZ"
+    # "CMAMT",
+  ),
+  labels = c(
+    "CMALZ"="Lazer",
+    # "CMAMT"="Matrículas",
+    "CMAEI"="Ensino Infantil",
+    "CMAEM" = "Ensino Médio",
+    "CMASA"="Sáude Alta Complex",
+    "CMASB"="Saúde Básica",
+    "CMATT"="Empregos"
+    
+  )) +
   ylab("Índice de Gini\nMedida de Tempo Mínimo de Acesso") +
   xlab("Oportunidade") +
   theme_light() +
@@ -501,12 +567,15 @@ ggsave(plot_gini_tmi,
 
 plot_palma_cma <- ggplot(dados_cma,
                          aes(y = palma, x = indicador, fill = mode)) +
-  geom_col(position = position_dodge(),
-           width = .7) +
+  # geom_col(position = position_dodge(),
+  #          width = .7) +
+  geom_col(position = position_dodge(width = 0.7),
+           # stat = "identity",
+           width = dados_cma$largura*0.7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,3.5,0.25),
-    limits = c(0,3.5)) +
+    breaks = seq(0,3,0.5),
+    limits = c(0,3)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -516,7 +585,7 @@ plot_palma_cma <- ggplot(dados_cma,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 4.5,
+            size = 3.5,
             colour = "black",
             fontface = "bold",
             family = "encode_sans_bold",
@@ -544,22 +613,34 @@ plot_palma_cma <- ggplot(dados_cma,
   #     "Saúde",
   #     "Empregos")) +
   
-  scale_x_discrete(breaks = c(
-    "CMATT",
-    "CMASB",
-    "CMASA",
-    "CMAMT",
-    "CMALZ"
-  ),
-  labels = c(
-    "CMALZ"="Lazer",
-    "CMAMT"="Matrículas Totais",
-    "CMASB"="Saúde Básica",
-    "CMASA"="Saúde Alta Complex.",
-    "CMATT"="Empregos")) +
+scale_x_discrete(breaks = c(
+  # "TMIBK",
+  "CMATT",
+  "CMASB",
+  "CMASM",
+  "CMASA",
+  "CMAEI",
+  "CMAEF",
+  "CMAEM",
+  "CMALZ"
+  # "CMAMT",
+),
+labels = c(
+  "CMATT"="Empregos",
+  # "CMAMT"="Matrículas",
+  "CMAEI"="Ensino\nInfantil",
+  "CMAEF"="Ensino\nFundamental",
+  "CMAEM"="Ensino\nMédio",
+  "CMASB"="Saúde\nBásica",
+  "CMASM"="Saúde\nde Média\nComplexidade",
+  "CMASA"="Sáude\nde Alta\nComplexidade",
+  "CMALZ"="Lazer"
+  
+)) +
   
   
-  ylab("Razão de Palma\nMedida Cumulativa") +
+  # ylab("Razão de Palma\nMedida Cumulativa") +
+  ylab("Índice de Palma\nMedida Cumulativa de Oportunidades") +
   xlab("Oportunidade") +
   theme_light() +
   theme(#axis.title = element_blank(),
@@ -579,8 +660,10 @@ plot_palma_cma <- ggplot(dados_cma,
     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
-    axis.text = element_text(size = 14, family = "encode_sans_light"),
-    axis.title = element_text(size = 18, family = "encode_sans_bold"))
+    axis.text = ggtext::element_markdown(size=14, family = "encode_sans_light", lineheight = 0.5),
+    # axis.title = element_text(size = 18, family = "encode_sans_bold"),
+    axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5)
+    )
 
 ggsave(plot_palma_cma, 
        file= sprintf('../data/ind_desigualdade/muni_%s/9-muni_%s_grafico_razao_palma_cma_select.png',
@@ -626,17 +709,26 @@ plot_palma_tmi <- ggplot(dados_tmi,
   # ) +
   scale_x_discrete(breaks = c(
     # "TMIBK",
-    "TMIET",
-    "TMILZ",
-    # "TMIPR",
-    "TMIST"),
-    labels = c(
-      # "Bicicletas\nCompartilhadas",
-      "Escolas",
-      "Lazer",
-      # "Paraciclos",
-      "Saúde")) +
-  ylab("Razão de Palma\nMedida de Tempo Mínimo de Acesso") +
+    "CMATT",
+    "CMASB",
+    "CMASA",
+    "CMAEI",
+    "CMAEM",
+    "CMALZ"
+    # "CMAMT",
+  ),
+  labels = c(
+    "CMALZ"="Lazer",
+    # "CMAMT"="Matrículas",
+    "CMAEI"="Ensino Infantil",
+    "CMAEM" = "Ensino Médio",
+    "CMASA"="Sáude Alta Complex",
+    "CMASB"="Saúde Básica",
+    "CMATT"="Empregos"
+    
+  )) +
+  # ylab("Razão de Palma\nMedida de Tempo Mínimo de Acesso") +
+  ylab("Índice de Palma\nMedida de Tempo Mínimo de Acesso") +
   xlab("Oportunidade") +
   theme_light() +
   theme(#axis.title = element_blank(),
@@ -657,7 +749,9 @@ plot_palma_tmi <- ggplot(dados_tmi,
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
     axis.text = element_text(size = 14, family = "encode_sans_light"),
-    axis.title = element_text(size = 18, family = "encode_sans_bold"))
+    # axis.title = element_text(size = 18, family = "encode_sans_bold"),
+    axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5)
+    )
 
 ggsave(plot_palma_tmi, 
        file= sprintf('../data/ind_desigualdade/muni_%s/10-muni_%s_grafico_razao_palma_tmi.png',
@@ -672,8 +766,9 @@ ggsave(plot_palma_tmi,
 
 # Razão de Medias por Cor CMA - Valores ----------------------------------------------------------
 
+times <- c("45", "30", "15")
 
-razao_medias_function_cor <- function(sigla_muni, type_acc){
+razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
   message(paste("Rodando",sigla_muni, "\n"))
   
@@ -750,11 +845,11 @@ razao_medias_function_cor <- function(sigla_muni, type_acc){
   
     if (type_acc == "CMA"){
     if (i == "transit"){
-  names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "45")]
+  names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% times[1])]
     } else if (i == "bike"){
-      names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "30")]
+      names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% times[2])]
     } else if (i == "walk"){
-      names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "15")]
+      names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% times[3])]
     }
       } else {
       names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc)]
@@ -916,7 +1011,7 @@ razao_medias_function_cor <- function(sigla_muni, type_acc){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "dou", "CMA", times = c("45","30","15"))
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
@@ -931,31 +1026,117 @@ medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 #   mutate(modo = case_when(modo == "transit" ~ "Transporte Público",
 #                           modo == "bike" ~ "Bicicleta",
 #                           modo == "walk" ~ "Caminhada"))
+# medias_razoes_acc_cor2_transit <- medias_razoes_acc %>%
+#   filter(recorte == "cor" & modo == "transit") %>%
+#   
+#   filter(indicador %in% c(
+#     # "CMATT",
+#     "CMASA30",
+#     "CMASB30",
+#     "CMAEI30",
+#     "CMAEM30",
+#     "CMALZ30"
+  # ))
+
+
 medias_razoes_acc_cor2 <- medias_razoes_acc %>%
   filter(recorte == "cor") %>%
-  # filter(modo != "transit") %>%
-  filter(indicador %like% paste0("CMATT", "|CMASA", "|CMASB", "|CMAMT", "|CMALZ")) %>%
-  filter(!indicador %in% c("CMASA15", "CMASA30", "CMASB30")) %>%
-  # filter(indicador %in% c("CMATT45", "CMALZ45", "CMAMT45", "CMASA45", "CMASB45",
-  #                         "CMATT30", "CMALZ30", "CMAMT30",
-  #                         "CMATT15", "CMALZ15", "CMAMT15",            "CMASA15")) %>%
-  mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT",
-                            ifelse(indicador %like% "CMALZ", "CMALZ",
-                                   ifelse(indicador %like% "CMAMT", "CMAMT",
-                                          ifelse(indicador %like% "CMASA", "CMASA",
-                                                 "CMASB"))))) %>%
-  mutate(modo = case_when(modo == "transit" ~ "Transporte Público (45 min)",
-                          modo == "bike" ~ "Bicicleta (30 min)",
-                          modo == "walk" ~ "Caminhada (15 min)"))
+  
+  
+  filter(indicador %in% ifelse(modo == "transit", c(
+    # "CMATT45",
+    paste0("CMALZ", times[1]),
+    # "CMAMT45",
+    paste0("CMAEI", times[1]),
+    paste0("CMAEF", times[1]),
+    paste0("CMAEM", times[1]),
+    paste0("CMASB", times[1]),
+    paste0("CMASM", times[1]),
+    paste0("CMASA", times[1])
+    # "CMAST45",
+    # "CMATT45"
+  ), ifelse(modo == "bike", c(
+    # "CMATT30",
+    paste0("CMALZ", times[2]),
+    paste0("CMAEI", times[2]),
+    paste0("CMAEF", times[2]),
+    paste0("CMAEM", times[2]),
+    paste0("CMASB", times[2]),
+    paste0("CMASM", times[2]),
+    paste0("CMASA", times[2])
+    # "CMAMT30",
+    # "CMAST30",
+    # "CMATT30"
+  ),c(
+    # "CMATT15",
+    paste0("CMALZ", times[3]),
+    paste0("CMAEI", times[3]),
+    paste0("CMAEF", times[3]),
+    paste0("CMAEM", times[3]),
+    paste0("CMASB", times[3]),
+    paste0("CMASM", times[3]),
+    paste0("CMASA", times[3])
+
+    # "CMAST15",
+    # "CMATT15"
+  )))) %>%
+  mutate(indicador = substr(indicador, start = 1L, stop = 5L),
+         largura = ifelse(indicador == "CMASA", 1,
+                          ifelse(indicador == "CMASB", 1,1)))# %>%
+  # filter(modo != "bike" | indicador != "CMASB") %>%
+  
+  
+  
+  
+  
+  
+  # filter(indicador %like% paste0(
+  #   # "CMATT",
+  #                                "CMASA",
+  #                                "|CMASB",
+  #                                "|CMAEI",
+  #                                "|CMAEM",
+  #                                "|CMALZ"
+  #                                )) %>%
+  # 
+  # filter(!indicador %in% c("CMASA15", "CMASA30", "CMASB30")) %>%
+  # # filter(indicador %in% c("CMATT45", "CMALZ45", "CMAMT45", "CMASA45", "CMASB45",
+  # #                         "CMATT30", "CMALZ30", "CMAMT30",
+  # #                         "CMATT15", "CMALZ15", "CMAMT15",            "CMASA15")) %>%
+  # mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT",
+  #                           ifelse(indicador %like% "CMALZ", "CMALZ",
+  #                                  ifelse(indicador %like% "CMAEI", "CMAEI",
+  #                                         ifelse(indicador %like% "CMASA", "CMASA",
+  #                                                ifelse(indicador %like% "CMAEM", "CMAEM",
+  #                                                       "CMASB")))))) %>%
+
+  # mutate(modo = case_when(modo == "transit" ~ "Transporte Público (30 min)",
+  #                         modo == "bike" ~ "Bicicleta (15 min)",
+  #                         modo == "walk" ~ "Caminhada (15 min)"))
+  medias_razoes_acc_cor2$modo <- factor(medias_razoes_acc_cor2$modo,
+                                        levels = c("walk", "bike", "transit"),
+                                        labels = c(paste0("Caminhada (",times[1]," min)"),
+                                                   paste0("Bicicleta (",times[1]," min)"),
+                                                   paste0("Transporte Público (",times[1]," min)")))
+  medias_razoes_acc_cor2$indicador <- factor(medias_razoes_acc_cor2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+# medias_razoes_acc_cor2 <- medias_razoes_acc_cor2 %>%
+#   mutate(largura = ifelse(indicador == "CMASA", 1/3,
+#                           ifelse(indicador == "CMASB", 2/3,1)))
+
 
 plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
                          aes(y = media, x = indicador, fill = modo)) +
-  geom_col(position = position_dodge(),
-           width = .7) +
+  # geom_col(position = position_dodge(),
+  #          width = .7) +
+  
+  geom_col(position = position_dodge(width = 0.7),
+           # stat = "identity",
+           width = medias_razoes_acc_cor2$largura*0.7) +
+  
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,2,0.25),
-    limits = c(0,2)) +
+    breaks = seq(0,2.5,0.5),
+    limits = c(0,2.5)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -965,7 +1146,7 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 4.5,
+            size = 3.5,
             colour = "black",
             fontface = "bold",
             angle = 0) +
@@ -978,20 +1159,28 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
   # ) +
   scale_x_discrete(breaks = c(
     # "TMIBK",
-    "CMALZ",
-    "CMAMT",
-    "CMASA",
+    "CMATT",
     "CMASB",
-    "CMATT"
-),
-    labels = c(
-      "CMALZ"="Lazer",
-      "CMAMT"="Matrículas",
-      "CMASA"="Sáude Alta Complex",
-      "CMASB"="Saúde Básica",
-      "CMATT"="Empregos"
-
-      )) +
+    "CMASM",
+    "CMASA",
+    "CMAEI",
+    "CMAEF",
+    "CMAEM",
+    "CMALZ"
+    # "CMAMT",
+  ),
+  labels = c(
+    "CMATT"="Empregos",
+    # "CMAMT"="Matrículas",
+    "CMAEI"="Ensino\nInfantil",
+    "CMAEF"="Ensino\nFundamental",
+    "CMAEM"="Ensino\nMédio",
+    "CMASB"="Saúde\nBásica",
+    "CMASM"="Saúde\nde Média\nComplexidade",
+    "CMASA"="Sáude\nde Alta\nComplexidade",
+    "CMALZ"="Lazer"
+    
+  )) +
   ylab("Razão de Médias de\nAcessibilidade CMA de brancos / negros") +
   xlab("Oportunidade") +
   theme_light() +
@@ -1012,8 +1201,10 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
-    axis.text = element_text(size = 14, family = "encode_sans_light"),
-    axis.title = element_text(size = 18, family = "encode_sans_bold"))
+    axis.text = ggtext::element_markdown(size=14, family = "encode_sans_light", lineheight = 0.5),
+    # axis.title = element_text(size = 18, family = "encode_sans_bold"),
+    axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5)
+    )
 
 ggsave(plot_razoes_cma_cor, 
        file= sprintf('../data/ind_desigualdade/muni_%s/1-muni_%s_grafico_razoes_cor_cma.png',
@@ -1032,25 +1223,65 @@ ggsave(plot_razoes_cma_cor,
 
 medias_razoes_acc_gen2 <- medias_razoes_acc %>%
   filter(recorte == "genero") %>%
-  # filter(modo != "transit") %>%
-  filter(indicador %like% paste0("CMATT", "|CMASA", "|CMASB", "|CMAMT", "|CMALZ")) %>%
-  filter(!indicador %in% c("CMASA15", "CMASA30", "CMASB30")) %>%
-  # filter(indicador %in% c("CMATT45", "CMALZ45", "CMAMT45", "CMASA45", "CMASB45",
-  #                         "CMATT30", "CMALZ30", "CMAMT30",
-  #                         "CMATT15", "CMALZ15", "CMAMT15",            "CMASA15")) %>%
-  mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT",
-                            ifelse(indicador %like% "CMALZ", "CMALZ",
-                                   ifelse(indicador %like% "CMAMT", "CMAMT",
-                                          ifelse(indicador %like% "CMASA", "CMASA",
-                                                 "CMASB"))))) %>%
-  mutate(modo = case_when(modo == "transit" ~ "Transporte Público (45 min)",
-                          modo == "bike" ~ "Bicicleta (30 min)",
-                          modo == "walk" ~ "Caminhada (15 min)"))
+  
+  
+  filter(indicador %in% ifelse(modo == "transit", c(
+    # "CMATT45",
+    paste0("CMALZ", times[1]),
+    # "CMAMT45",
+    paste0("CMAEI", times[1]),
+    paste0("CMAEF", times[1]),
+    paste0("CMAEM", times[1]),
+    paste0("CMASB", times[1]),
+    paste0("CMASM", times[1]),
+    paste0("CMASA", times[1])
+    # "CMAST45",
+    # "CMATT45"
+  ), ifelse(modo == "bike", c(
+    # "CMATT30",
+    paste0("CMALZ", times[2]),
+    paste0("CMAEI", times[2]),
+    paste0("CMAEF", times[2]),
+    paste0("CMAEM", times[2]),
+    paste0("CMASB", times[2]),
+    paste0("CMASM", times[2]),
+    paste0("CMASA", times[2])
+    # "CMAMT30",
+    # "CMAST30",
+    # "CMATT30"
+  ),c(
+    # "CMATT15",
+    paste0("CMALZ", times[3]),
+    paste0("CMAEI", times[3]),
+    paste0("CMAEF", times[3]),
+    paste0("CMAEM", times[3]),
+    paste0("CMASB", times[3]),
+    paste0("CMASM", times[3]),
+    paste0("CMASA", times[3])
+    
+    # "CMAST15",
+    # "CMATT15"
+  )))) %>%
+  mutate(indicador = substr(indicador, start = 1L, stop = 5L),
+         largura = ifelse(indicador == "CMASA", 1,
+                          ifelse(indicador == "CMASB", 1,1)))# %>%
+
+medias_razoes_acc_gen2$modo <- factor(medias_razoes_acc_gen2$modo,
+                                      levels = c("walk", "bike", "transit"),
+                                      labels = c(paste0("Caminhada (",times[1]," min)"),
+                                                 paste0("Bicicleta (",times[1]," min)"),
+                                                 paste0("Transporte Público (",times[1]," min)")))
+
+medias_razoes_acc_gen2$indicador <- factor(medias_razoes_acc_gen2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+
 
 plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
                               aes(y = media, x = indicador, fill = modo)) +
-  geom_col(position = position_dodge(),
-           width = .7) +
+  geom_col(position = position_dodge(width = 0.7),
+           # stat = "identity",
+           width = medias_razoes_acc_cor2$largura*0.7) +
+  # geom_col(position = position_dodge(),
+  #          width = .7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
     breaks = seq(0,1.5,0.25),
@@ -1064,7 +1295,7 @@ plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 5,
+            size = 3.5,
             colour = "black",
             fontface = "bold",
             angle = 0) +
@@ -1077,18 +1308,26 @@ plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
   # ) +
   scale_x_discrete(breaks = c(
     # "TMIBK",
-    "CMALZ",
-    "CMAMT",
-    "CMASA",
+    "CMATT",
     "CMASB",
-    "CMATT"
+    "CMASM",
+    "CMASA",
+    "CMAEI",
+    "CMAEF",
+    "CMAEM",
+    "CMALZ"
+    # "CMAMT",
   ),
   labels = c(
-    "CMALZ"="Lazer",
-    "CMAMT"="Matrículas",
-    "CMASA"="Sáude Alta Complex",
-    "CMASB"="Saúde Básica",
-    "CMATT"="Empregos"
+    "CMATT"="Empregos",
+    # "CMAMT"="Matrículas",
+    "CMAEI"="Ensino\nInfantil",
+    "CMAEF"="Ensino\nFundamental",
+    "CMAEM"="Ensino\nMédio",
+    "CMASB"="Saúde\nBásica",
+    "CMASM"="Saúde\nde Média\nComplexidade",
+    "CMASA"="Sáude\nde Alta\nComplexidade",
+    "CMALZ"="Lazer"
     
   )) +
   
@@ -1128,8 +1367,8 @@ plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
-    axis.text = element_text(size = 14, family = "encode_sans_light"),
-    axis.title = element_text(size = 18, family = "encode_sans_bold"))
+    axis.text = ggtext::element_markdown(size=14, family = "encode_sans_light", lineheight = 0.5),
+    axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_razoes_cma_gen, 
        file= sprintf('../data/ind_desigualdade/muni_%s/2-muni_%s_grafico_razoes_genero_cma.png',
@@ -1149,25 +1388,65 @@ ggsave(plot_razoes_cma_gen,
 
 medias_razoes_acc_resp2 <- medias_razoes_acc %>%
   filter(recorte == "responsavel") %>%
-  # filter(modo != "transit") %>%
-  filter(indicador %like% paste0("CMATT", "|CMASA", "|CMASB", "|CMAMT", "|CMALZ")) %>%
-  filter(!indicador %in% c("CMASA15", "CMASA30", "CMASB30")) %>%
-  # filter(indicador %in% c("CMATT45", "CMALZ45", "CMAMT45", "CMASA45", "CMASB45",
-  #                         "CMATT30", "CMALZ30", "CMAMT30",
-  #                         "CMATT15", "CMALZ15", "CMAMT15",            "CMASA15")) %>%
-  mutate(indicador = ifelse(indicador %like% "CMATT", "CMATT",
-                            ifelse(indicador %like% "CMALZ", "CMALZ",
-                                   ifelse(indicador %like% "CMAMT", "CMAMT",
-                                          ifelse(indicador %like% "CMASA", "CMASA",
-                                                 "CMASB"))))) %>%
-  mutate(modo = case_when(modo == "transit" ~ "Transporte Público (45 min)",
-                          modo == "bike" ~ "Bicicleta (30 min)",
-                          modo == "walk" ~ "Caminhada (15 min)"))
+
+  filter(indicador %in% ifelse(modo == "transit", c(
+    # "CMATT45",
+    paste0("CMALZ", times[1]),
+    # "CMAMT45",
+    paste0("CMAEI", times[1]),
+    paste0("CMAEF", times[1]),
+    paste0("CMAEM", times[1]),
+    paste0("CMASB", times[1]),
+    paste0("CMASM", times[1]),
+    paste0("CMASA", times[1])
+    # "CMAST45",
+    # "CMATT45"
+  ), ifelse(modo == "bike", c(
+    # "CMATT30",
+    paste0("CMALZ", times[2]),
+    paste0("CMAEI", times[2]),
+    paste0("CMAEF", times[2]),
+    paste0("CMAEM", times[2]),
+    paste0("CMASB", times[2]),
+    paste0("CMASM", times[2]),
+    paste0("CMASA", times[2])
+    # "CMAMT30",
+    # "CMAST30",
+    # "CMATT30"
+  ),c(
+    # "CMATT15",
+    paste0("CMALZ", times[3]),
+    paste0("CMAEI", times[3]),
+    paste0("CMAEF", times[3]),
+    paste0("CMAEM", times[3]),
+    paste0("CMASB", times[3]),
+    paste0("CMASM", times[3]),
+    paste0("CMASA", times[3])
+    
+    # "CMAST15",
+    # "CMATT15"
+  )))) %>%
+  mutate(indicador = substr(indicador, start = 1L, stop = 5L),
+         largura = ifelse(indicador == "CMASA", 1,
+                          ifelse(indicador == "CMASB", 1,1)))# %>%
+
+medias_razoes_acc_resp2$modo <- factor(medias_razoes_acc_resp2$modo,
+                                      levels = c("walk", "bike", "transit"),
+                                      labels = c(paste0("Caminhada (",times[1]," min)"),
+                                                 paste0("Bicicleta (",times[1]," min)"),
+                                                 paste0("Transporte Público (",times[1]," min)")))
+medias_razoes_acc_resp2$indicador <- factor(medias_razoes_acc_resp2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+
 
 plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
                               aes(y = media, x = indicador, fill = modo)) +
-  geom_col(position = position_dodge(),
-           width = .7) +
+  # geom_col(position = position_dodge(),
+  #          width = .7) +
+  
+  geom_col(position = position_dodge(width = 0.7),
+           # stat = "identity",
+           width = medias_razoes_acc_cor2$largura*0.7) +
+  
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
     breaks = seq(0,1.5,0.25),
@@ -1181,7 +1460,7 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 5,
+            size = 3.5,
             colour = "black",
             fontface = "bold",
             angle = 0) +
@@ -1194,18 +1473,26 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
   # ) +
   scale_x_discrete(breaks = c(
     # "TMIBK",
-    "CMALZ",
-    "CMAMT",
-    "CMASA",
+    "CMATT",
     "CMASB",
-    "CMATT"
+    "CMASM",
+    "CMASA",
+    "CMAEI",
+    "CMAEF",
+    "CMAEM",
+    "CMALZ"
+    # "CMAMT",
   ),
   labels = c(
-    "CMALZ"="Lazer",
-    "CMAMT"="Matrículas",
-    "CMASA"="Sáude Alta Complex",
-    "CMASB"="Saúde Básica",
-    "CMATT"="Empregos"
+    "CMATT"="Empregos",
+    # "CMAMT"="Matrículas",
+    "CMAEI"="Ensino\nInfantil",
+    "CMAEF"="Ensino\nFundamental",
+    "CMAEM"="Ensino\nMédio",
+    "CMASB"="Saúde\nBásica",
+    "CMASM"="Saúde\nde Média\nComplexidade",
+    "CMASA"="Sáude\nde Alta\nComplexidade",
+    "CMALZ"="Lazer"
     
   )) +
   
@@ -1225,7 +1512,7 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
   #     "Empregos (45 min)")) +
   
   
-  ylab("Razão de médias de\nacessibilidade CMA de eesponsavéis homens / mulheres") +
+  ylab("Razão de médias de acessibilidade CMA\nde responsavéis homens / mulheres") +
   xlab("Oportunidade") +
   theme_light() +
   theme(#axis.title = element_blank(),
@@ -1245,8 +1532,8 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
     legend.title = element_text(size = 18, family = "encode_sans_bold"),
     legend.text = element_text(size = 14, family = "encode_sans_regular"),
-    axis.text = element_text(size = 14, family = "encode_sans_light"),
-    axis.title = element_text(size = 18, family = "encode_sans_bold"))
+    axis.text = ggtext::element_markdown(size=14, family = "encode_sans_light", lineheight = 0.5),
+    axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_razoes_cma_resp, 
        file= sprintf('../data/ind_desigualdade/muni_%s/3-muni_%s_grafico_razoes_responsavel_cma.png',
@@ -1692,9 +1979,9 @@ dados_acc_hex <- dados_acc %>%
 
 quadras <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
                            sigla_muni, sigla_muni),
-                   layer = "quadras")
+                   layer = "areas")
 # mapview(quadras)
-quadras <- quadras %>% st_transform(4083) %>% mutate(area = QUADRAS)
+quadras <- quadras %>% st_transform(4083) %>% mutate(area = area)
 
 quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
 # mapview(quadras_acc)
@@ -1708,7 +1995,7 @@ quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
   summarise(acc_med_cmatt45 = mean(med_acc_cmatt45, na.rm = T),
             acc_med_cmast45 = mean(med_acc_cmast45, na.rm = T),
             acc_med_cmaet45 = mean(med_acc_cmamt45, na.rm = T)) %>%
-  left_join(quadras, by = c("area"= "QUADRAS")) %>%
+  left_join(quadras, by = c("area"= "area")) %>%
   st_as_sf() %>% arrange(acc_med_cmatt45) %>%
   mutate(ranking = seq(1, length(area)))
 
@@ -1781,7 +2068,8 @@ mapview(quadras_percentil)
       st_drop_geometry() %>%
       group_by(id_hex) %>%
       summarise(med_acc_tmist = mean(TMIST, na.rm = T),
-                med_acc_tmiet = mean(TMIET, na.rm = T)) %>%
+                med_acc_tmiet = mean(TMIET, na.rm = T),
+                med_acc_tmilz = mean(TMILZ, na.rm =T)) %>%
       left_join(dados_hex, by = c("id_hex"="id_hex")) %>%
       st_as_sf() %>%
       st_transform(4083)
@@ -1798,12 +2086,13 @@ mapview(quadras_percentil)
   # mapview(quadras_acc)
   
   quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
-    group_by(area) %>%
+    group_by(bairro) %>%
     summarise(acc_med_tmist = mean(med_acc_tmist, na.rm = T),
-              acc_med_tmiet = mean(med_acc_tmiet, na.rm = T)) %>%
+              acc_med_tmiet = mean(med_acc_tmiet, na.rm = T),
+              acc_med_tmilz = mean(med_acc_tmilz, na.rm = T)) %>%
     left_join(quadras) %>%
     st_as_sf() %>% arrange(acc_med_tmist) %>%
-    mutate(ranking = seq(1, length(area)))
+    mutate(ranking = seq(1, length(bairro)))
   
   # mapview(quadras_acc_med, zcol = "acc_med_tmist")
   
@@ -1814,7 +2103,7 @@ mapview(quadras_percentil)
   
   pop_quadras <- pop_counts %>% st_transform(4083) %>%
     st_join(quadras) %>% st_drop_geometry() %>%
-    group_by(area) %>%
+    group_by(bairro) %>%
     summarise(pop_quadra = sum(pop_total)) %>%
     left_join(quadras) %>%
     st_as_sf()
@@ -1823,10 +2112,10 @@ mapview(quadras_percentil)
   
   quadras_final <- quadras_acc_med %>% left_join(pop_quadras %>% st_drop_geometry())
   
-  quadras_acc_med2 <- quadras_final %>% filter(acc_med_tmist > 0 & is.na(pop_quadra)==F) %>%
+  quadras_acc_med2 <- quadras_final %>% filter(acc_med_tmist > 0 & is.na(pop_quadra)==F & pop_quadra > 100) %>%
     arrange(-acc_med_tmist)
   
-  quadras10 <- quadras_acc_med2[1:10,]
+  quadras10 <- quadras_acc_med2[1:11,]
   
   teste <- left_join(quadras, quadras10 %>% st_drop_geometry()) %>%
     filter(is.na(acc_med_tmist)==F) %>%
@@ -2031,13 +2320,13 @@ ggspatial::annotation_scale(style = "ticks",
     plot.margin=unit(c(0,0,0,0),"mm"),
     legend.margin = margin(unit(c(10,10,10,10),"mm")),
     legend.key.width=unit(1.5,"line"),
-    legend.key.height = unit(1,"line"),
+    legend.key.height = unit(0.75,"line"),
     legend.key = element_blank(),
     legend.text=element_text(size=25, family = "encode_sans_light"),
     legend.title=element_text(size=30, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.19, 0.29),
+    legend.position = c(0.20, 0.32),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -2065,10 +2354,27 @@ ggspatial::annotation_scale(style = "ticks",
 aproxima_muni(sigla_muni = sigla_muni) +
   guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white")),
                               byrow = T,
-                              order = 1),
-         fill = guide_legend(keyheight = unit(1, "line")))
+                              order = 1,
+                              keyheight = unit(0.75,"line")),
+         fill = guide_legend(keyheight = unit(0.5, "line")))
 
 # plot3
+
+
+# library(gtable)
+# # Data transformation
+# data <- ggplot_build(plot3)
+# gtable <- ggplot_gtable(data)
+# # Determining index of legends table
+# lbox <- which(sapply(gtable$grobs, paste) == "gtable[guide-box]")
+# # changing the space between the 2 legends: here -0.5 lines
+# guide <- gtable$grobs[[lbox]]
+# gtable$grobs[[lbox]]$heights <- unit.c(guide$heights[1:2],
+#                                        unit(-.5,'lines'),  ## you can the GAP here
+#                                        guide$heights[4:5])
+# # Plotting
+# grid.draw(gtable)
+
 
 ggsave(plot3,
        device = "png",
@@ -2076,7 +2382,7 @@ ggsave(plot3,
                      sigla_muni,
                      sigla_muni),
              
-       dpi = 300, width = width, height = height, units = "cm")
+       dpi = 400, width = width, height = height, units = "cm")
 
 assentamentos_bairros <- st_join(st_transform(quadras10, decisao_muni$epsg),
                                   st_transform(assentamentos, decisao_muni$epsg)) %>%
