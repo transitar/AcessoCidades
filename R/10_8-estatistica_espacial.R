@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'con'
+sigla_muni <- 'poa'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -153,13 +153,13 @@ dados_micro_sf <- hex_muni %>% left_join(data_micro2, by = c("id_hex"="hex"))
 #outros -> id_g
 
 data_complete <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id_g) %>%
+  drop_na(id) %>%
   group_by(id_hex, genero, cor) %>%
   summarise(n = n(), renda_per_capita = mean(Rend_pc))
 
 
 data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id_g) %>%
+  drop_na(id) %>%
   group_by(id_hex, genero) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc))  %>%
@@ -175,7 +175,7 @@ data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
 
 
 data_complete_cor <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id_g) %>%
+  drop_na(id) %>%
   group_by(id_hex, cor) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc)) %>%
@@ -432,7 +432,7 @@ map_lisa_cor <- ggplot()+
   
   tema()+
   
-  theme(legend.position = c(0.22,0.30)) +
+  theme(legend.position = c(0.23,0.25)) +
 
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1059,7 +1059,7 @@ map_lisa_renda <- ggplot() +
   
   tema() +
   
-  theme(legend.position = c(0.23,0.30)) +
+  theme(legend.position = c(0.24,0.25)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1505,7 +1505,7 @@ map_lisa_responsaveis <- ggplot() +
   
   tema() +
   
-  theme(legend.position = c(0.27,0.30)) +
+  theme(legend.position = c(0.27,0.25)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
