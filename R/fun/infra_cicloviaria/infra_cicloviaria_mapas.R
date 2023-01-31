@@ -1637,7 +1637,7 @@ graficos <- function(munis = "all"){
               size = 0.8) +
       
       scale_color_manual(name = "Infraestrutura Cicloviária",
-                         values = c("bk" = "#2B6CB0"),
+                         values = c("bk" = "#21367D"),
                          label = c("bk" = "Bicicletas Compartilhadas")
       )+
       
@@ -1918,7 +1918,7 @@ graficos <- function(munis = "all"){
               size = 0.8) +
       
       scale_color_manual(name = "Infraestrutura Cicloviária",
-                         values = c("bk" = "#2B6CB0"),
+                         values = c("bk" = "#21367D"),
                          label = c("bk" = "Bicicletas Compartilhadas")
       )+
       
@@ -2155,12 +2155,11 @@ graficos <- function(munis = "all"){
       
       scale_color_manual(name = "Infraestrutura Cicloviária",
                          values = c(
-                                    "Público" = "grey30",
-                                    "Privado" = "#2B6CB0"),
+                           "Público" = "#E9D906",
+                           "Privado" = "#21367D"),
                          label = c("Público" = "Paraciclo Público",
                                    "Privado" = "Paraciclo Privado")
       )+
-      
       guides(#fill = guide_legend(byrow = TRUE),
         color = guide_legend(override.aes = list(fill = c("white", "white")))) +
     
@@ -2222,7 +2221,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_paraciclos,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/3-paraciclos_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/3-paraciclos_%s_new2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
     
