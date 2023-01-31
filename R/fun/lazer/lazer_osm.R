@@ -4,7 +4,7 @@ source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 
 create_diretorios <- function(sigla_muni){
   
@@ -52,19 +52,19 @@ lazer_osm <- function(munis = 'all'){
     # mapview(q_leisure_park_sf)
     
     #golf_course: contém campos de golfe
-    q_leisure_golf <- opq(bbox = box)%>%
-      add_osm_feature(key = 'leisure', value = 'golf_course') %>% osmdata_sf()
-    
-    q_leisure_golf_sf <- q_leisure_golf$osm_multipolygons %>% st_as_sf() %>%
-      st_centroid()
+    # q_leisure_golf <- opq(bbox = box)%>%
+    #   add_osm_feature(key = 'leisure', value = 'golf_course') %>% osmdata_sf()
+    # 
+    # q_leisure_golf_sf <- q_leisure_golf$osm_multipolygons %>% st_as_sf() %>%
+    #   st_centroid()
     
     #dog_park
-    q_leisure_dog <- opq(bbox = box)%>%
-      add_osm_feature(key = 'leisure', value = 'dog_park') %>% osmdata_sf()
-    
-    q_leisure_dog_sf <- q_leisure_dog$osm_polygons %>% st_as_sf() %>%
-      st_centroid()
-    # mapview(q_leisure_dog_sf)
+    # q_leisure_dog <- opq(bbox = box)%>%
+    #   add_osm_feature(key = 'leisure', value = 'dog_park') %>% osmdata_sf()
+    # 
+    # q_leisure_dog_sf <- q_leisure_dog$osm_polygons %>% st_as_sf() %>%
+    #   st_centroid()
+    # # mapview(q_leisure_dog_sf)
     
     #garden: jardins
     

@@ -9,7 +9,7 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 mode1 <- "transit"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
@@ -140,7 +140,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.26),
+    legend.position = c(0.19, 0.32),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -990,7 +990,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'pal',
+                    sigla_muni = 'dou',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,

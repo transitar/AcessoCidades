@@ -17,7 +17,7 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'poa'
 ano <- 2019
 
 tema <- function(base_size) {
@@ -296,9 +296,9 @@ graficos <- function(munis = "all"){
     cor_ag_densidade <- "#e9eb9e" #crayola
     # cor_ag_densidade <- "#d8f793" #mindaro green
     
-    
+    hist(pop_counts$pop_total)
     #limite de população (caso seja necessário fixar um valor máximo)
-    pop_max_limite <- F
+    pop_max_limite <- 2500
     
     if (pop_max_limite == F){
       
@@ -491,7 +491,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.31),
+      legend.position = c(0.19, 0.27),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -638,14 +638,85 @@ graficos <- function(munis = "all"){
       st_as_sf() %>% drop_na(h3_resolution)
       # mutate(renda = ifelse(renda>10, 10, renda))
     
+    
+    
     st_write(renda_escrita,sprintf("../data/microssimulacao/muni_%s/renda_%s.gpkg",
                                 sigla_muni, sigla_muni), append = F)
+    
+    
+    #rendas por grupo
+    mean(dados_simulacao$Rend_pc)
+    
+    median(dados_simulacao$Rend_pc)
+    
+    renda_recorte <- data_micro2 %>%
+      mutate(
+        quintil_renda = ntile(Rend_pes, 4)) %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens")) %>%
+      group_by(cor, quintil_renda, genero) %>%
+      summarise(#tarifa_grupo = mean(tarifa_renda, na.rm = T),
+        n = n(),
+        renda_pes_media = mean(Rend_pes, na.rm = T),
+        renda_pc_media = mean(Rend_pc, na.rm=T),
+        min_pc = min(Rend_pc, na.rm =T),
+        max_pc = max(Rend_pc, na.rm=T))
+    
+    renda_quartis <- data_micro2 %>%
+      mutate(
+        quintil_renda = ntile(Rend_pc, 4)) %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens")) %>%
+      group_by(quintil_renda) %>%
+      summarise(#tarifa_grupo = mean(tarifa_renda, na.rm = T),
+        n = n(),
+        renda_pc_media_sm = mean(Rend_pc, na.rm=T),
+        min_pc_sm = min(Rend_pc, na.rm =T),
+        renda_pc_mediana_sm = median(Rend_pc, na.rm=T),
+        max_pc_sm = max(Rend_pc, na.rm=T)) %>%
+      mutate(min_pc =  min_pc_sm*1302,
+        renda_pc_mediana = renda_pc_mediana_sm*1302,
+        max_pc = max_pc_sm *1302)
+    
+    
+    
+    
+    
+    
+    
     
     renda <- dados_simulacao %>%
       group_by(hex) %>%
       summarise(renda = mean(Rend_pc, na.rm =T)) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
-      st_as_sf() %>% drop_na(h3_resolution) %>%
-      mutate(renda = ifelse(renda>10, 10, renda))
+      st_as_sf() %>% drop_na(h3_resolution)
+    
+    
+    
+    hist(renda$renda)
+    #limite de população (caso seja necessário fixar um valor máximo)
+    # renda_max_limite <- 10
+    # 
+    # if (pop_max_limite == F){
+    #   
+    #   renda_mapas <- renda
+    #   renda_max <- plyr::round_any(max(renda_mapas$renda), 10^(n_int_digits(max(renda$renda))), f = ceiling)
+    #   break_leap_renda <- renda_max/4
+    #   labels <- seq(0,renda_max, break_leap_renda)
+    #   breaks <- seq(0,renda_max, break_leap_renda)
+    #   limits <- c(0,renda_max)
+    #   
+    # } else {
+    #   
+    #   renda_mapas <- renda %>% mutate(renda = ifelse(renda > renda_max_limite, renda_max_limite, renda))
+    #   renda_max <- plyr::round_any(max(renda_mapas$renda), 10^(n_int_digits(max(renda$renda))), f = ceiling)
+    #   break_leap_renda <- renda_max/4
+    #   labels <- c(seq(0,renda_max-break_leap_renda, break_leap_renda), paste0(">", renda_max))
+    #   breaks <- seq(0,renda_max, break_leap_renda)
+    #   limits <- c(0,renda_max)
+    #   
+    # }
+    
+  # hist(renda_mapas$renda)
     # mean(renda$renda)
     
     # mapview(renda, zcol = "renda")
@@ -664,7 +735,7 @@ graficos <- function(munis = "all"){
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
-      geom_sf(data = st_transform(renda, 3857), aes(fill = renda), colour = NA, alpha=.6, size = 0)+
+      geom_sf(data = st_transform(renda_mapas, 3857), aes(fill = renda), colour = NA, alpha=.6, size = 0)+
       geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
@@ -688,9 +759,9 @@ graficos <- function(munis = "all"){
                            type = "div",
                            palette = "GnBu",
                            direction = 1,
-                           breaks = seq(0,10,2),
-                           labels = c("0","2", "4", "6","8", ">10"),
-                           limits = c(0,10)) +
+                           breaks = breaks,
+                           labels = labels,
+                           limits = limits) +
 
       
       # scale_fill_gradientn(
@@ -760,7 +831,7 @@ graficos <- function(munis = "all"){
     
     cor_ag <- "#dbad6a"
     # hist(renda$renda)
-    renda_max_limite <- 4
+    renda_max_limite <- 10
     
     if (renda_max_limite == F){
       
@@ -964,7 +1035,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.30),
+      legend.position = c(0.20, 0.27),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2087,7 +2158,7 @@ ggsave(map_cor,
 #amarelos
 
 amarelos <- data_recorte_cor %>% filter(V0606 == "Amarelos")
-amarelos2 <- amarelos %>% 
+amarelos2 <- amarelos %>% drop_na(h3_resolution) %>%
   mutate(n = ifelse(n > munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                     munis_recorte_limites$rec_amarelos[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                     n))
@@ -2235,6 +2306,7 @@ map_pop_amarelos <- ggplot() +
 indigenas <- data_recorte_cor %>% filter(V0606 == "Indígenas")
 # boxplot(indigenas$n)
 indigenas2 <- indigenas %>%
+  drop_na(h3_resolution) %>%
   mutate(n = ifelse(n > munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                     munis_recorte_limites$rec_indigenas[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                     n))

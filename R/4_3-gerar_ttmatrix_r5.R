@@ -1,10 +1,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###### 0.3.3 Calcula matriz de tempo de viagem com o R5
 
+rm(list = ls(all.names = T)); gc()
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-Xmx6G')
+options(java.parameters = '-5XmxG')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -24,7 +25,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'con'; ano <- 2022; modo <- c("WALK", "TRANSIT")
+sigla_munii <- 'dou'; ano <- 2022; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -67,6 +68,10 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     date <- '2022-08-11'
   }
   if (sigla_munii == 'con') {
+    date <- '2022-12-08'
+  }
+  
+  if (sigla_munii == 'dou') {
     date <- '2022-12-08'
   }
   
@@ -273,7 +278,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   time_ttmatrix_bike <- Sys.time() - a
   print(paste0("Reading and biding bike files took:", time_ttmatrix_bike))
   
-  setDT(ttm_walk)
+  # ttm_bike <- read_csv("../r5r/routing/2022/muni_dou/ttmatrix_bike_2022_dou_r5_pico.csv")
+  
+  setDT(ttm_bike)
 
   
   

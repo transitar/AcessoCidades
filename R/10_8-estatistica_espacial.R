@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'pal'
+sigla_muni <- 'con'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -1059,7 +1059,7 @@ map_lisa_renda <- ggplot() +
   
   tema() +
   
-  theme(legend.position = c(0.22,0.30)) +
+  theme(legend.position = c(0.23,0.30)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1465,7 +1465,7 @@ map_lisa_responsaveis <- ggplot() +
                      values = c("assentamentos" = "#0A7E5C",
                                 "urb" = "#FEF3DB",
                                 "bairros" = "grey50"),
-                     label = c("urb" = "Área rbanizada",
+                     label = c("urb" = "Área urbanizada",
                                "assentamentos" = "Aglomerados subnormais",
                                "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
   )+

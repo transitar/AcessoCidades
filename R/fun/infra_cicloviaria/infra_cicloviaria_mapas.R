@@ -18,7 +18,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 
 #gráficos de ciclovias
 
@@ -296,6 +296,8 @@ graficos <- function(munis = "all"){
       summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
     
+    dados_areas <- bairros2
+    
 
 # Mapa de ciclovias -------------------------------------------------------
 
@@ -462,7 +464,7 @@ graficos <- function(munis = "all"){
             legend.title=element_text(size=28, family = "encode_sans_bold"),
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10),
-            legend.position = c(0.20, 0.30),
+            legend.position = c(0.18, 0.31),
             legend.box.background = element_rect(fill=alpha('white', 0.7),
                                                  colour = "#A09C9C",
                                                  linewidth = 0.8,
@@ -641,7 +643,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=28, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.25, 0.30),
+      legend.position = c(0.18, 0.31),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -980,7 +982,7 @@ graficos <- function(munis = "all"){
     
     options(scipen = 10000000)
     
-    pop_max <- plyr::round_any(max(recorte_rr$n), 10^(n_int_digits(max(recorte_rr_ntad2$n))), f = ceiling)
+    pop_max <- plyr::round_any(max(recorte_rr$n), 10^(n_int_digits(max(recorte_rr$n))), f = ceiling)
     # pop_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
     break_max <- pop_max
     # break_max <- round(max(recorte_rr$n),digits = -n_int_digits(max(recorte_rr$n)))
@@ -1097,7 +1099,7 @@ graficos <- function(munis = "all"){
     
     
 
-# POPULAÇÃO NÃO ATENDIDA --------------------------------------------------
+# POPULAÇÃO NÃO ATENDIDA Não automatizado--------------------------------------------------
 
     
     dados_hex_intersect_ntad300 <- dados_hex %>%
@@ -1136,8 +1138,8 @@ graficos <- function(munis = "all"){
       scale_fill_manual(values = c("grey70", "#FFB578", "black", "#cc3003"),
       )+
       scale_size_continuous( range = c(0,11),
-                             limits = c(1,150000),
-                             breaks = c(0,10000,50000,100000),
+                             limits = c(1,12000),
+                             breaks = c(0,1000,5000,10000),
                              name = "Habitantes",
                              guide = "legend")
     p_b300_bike_ntad <- plot_cleveland_bike300_ntad + scale_color_manual(name = "Gênero e Cor",
@@ -1160,8 +1162,9 @@ graficos <- function(munis = "all"){
       xlab("Habitantes do recorte") +
       ylab("Quartil de renda per capita") +
       scale_x_continuous(labels = scales::number,
-                         limits = c(0,150000),
-                         breaks = seq(20000,140000, 20000)) +
+                         limits = c(0,12000),
+                         # breaks = seq(1000,140000, 20000),
+                         breaks = c(1000,5000, 10000)) +
       scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
       theme(#axis.title = element_blank(),
         panel.grid.minor = element_line(),

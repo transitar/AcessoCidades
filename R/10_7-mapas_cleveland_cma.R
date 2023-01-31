@@ -14,7 +14,7 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 mode1 <- "transit"
 oportunidade <- "saude"
 titulo_leg <- "Eq. de saúde"
@@ -799,8 +799,8 @@ faz_grafico_e_salva <- function(sigla_muni,
   }
   
   
-  mapas_cma_clev(sigla_muni = 'pal',type_acc = "TMI", mode1 = "walk", oportunidade = "escolas",
-                 sigla_op = "EM", titulo_leg = "Escolas", time = 15,
+  mapas_cma_clev(sigla_muni = 'dou',type_acc = "TMI", mode1 = "bike", oportunidade = "lazer",
+                 sigla_op = "LZ", titulo_leg = "Lazer", time = 30,
   cols = 1,
   width = 15,
   height = 10)
@@ -876,14 +876,49 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'pal',
+                      sigla_muni = 'dou',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
                       height = 10)
   
+
+# Aplicação para CMA todos os tempos e modos ------------------------------
+  library("future")
+  plan(multisession)
   
+  lista_modos <- c(rep("transit", 56), rep("walk", 56), rep("bike", 56))
   
+  lista_tempos <- rep(c(rep(15, 14), rep(30,14), rep(45, 14), rep(60,14)),3)
+
+  lista_oportunidade <- rep(rep(c("empregos",
+                              rep("matriculas",4),
+                              rep("escolas", 4),
+                              rep("saude", 4),
+                              "lazer"),4),3)
+
+  lista_siglaop <- rep(rep(c("TT",
+                         "MT", "MI", "MF", "MM",
+                         "ET", "EI", "EF", "EM",
+                         "ST", "SB", "SM", "SA",
+                         "LZ"), 4),3)
+
+  lista_titulo_leg <- rep(rep(c("Empregos",
+                            rep("Matrículas",4),
+                            rep("Escolas", 4),
+                            rep("Eq. de Saúde", 4),
+                            "Eq. de Lazer"), 4),3)
+
+
+  
+  lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+  
+  furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
+                      sigla_muni = 'dou',
+                      type_acc = "CMA",
+                      cols = 1,
+                      width = 15,
+                      height = 10)
 
 # Aplicacao da funcao para tmi --------------------------------------------
 
@@ -947,7 +982,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   seed = TRUE
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'pal',
+                      sigla_muni = 'dou',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
@@ -991,7 +1026,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'pal',
+                      sigla_muni = 'con',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,

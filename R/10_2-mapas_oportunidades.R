@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'pal'
+sigla_muni <- 'dou'
 
 
 graficos <- function(munis = "all"){
@@ -186,7 +186,8 @@ graficos <- function(munis = "all"){
 
 # Mapa de empregos --------------------------------------------------------
 
-    max_jobs <- 4000
+    hist(dados_hex$n_jobs)
+    max_jobs <- 500
     dados_empregos <- dados_hex %>% filter(n_jobs >0) %>%
       mutate(n_jobs = ifelse(n_jobs > max_jobs, max_jobs, n_jobs))
     
@@ -372,7 +373,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.30),
+      legend.position = c(0.19, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -645,7 +646,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.19, 0.31),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -653,14 +654,15 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.1, 'cm'),
+      legend.spacing.y = unit(0.05, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)+
       guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white")),
-                                  order = 1))
+                                  order = 1,
+                                  byrow = T))
     
     
     
@@ -1124,8 +1126,8 @@ graficos <- function(munis = "all"){
 
 # saude básico novo  ------------------------------------------------------
 
-    dados_saude_basico <- dados_hex %>% filter(S002 >0) %>%
-      mutate(S002 = ifelse(S002 > 5, 5, S002))
+    dados_saude_basico <- dados_hex %>% filter(S002 >0)# %>%
+      # mutate(S002 = ifelse(S002 > 5, 5, S002))
     total_saude_basico <- sum(dados_saude_basico$E002)
     
     map_saude_basico <- ggplot() +
@@ -1237,7 +1239,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.19, 0.26),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1387,7 +1389,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.30),
+        legend.position = c(0.22, 0.24),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -1424,9 +1426,9 @@ graficos <- function(munis = "all"){
 
 # alta complexidade -------------------------------------------------------
 
-    dados_saude_alta <- dados_hex %>% filter(S004 >0) %>%
-      mutate(S004 = ifelse(S004 > 2, 2, S004))
-    # sum(dados_saude$S004)
+    dados_saude_alta <- dados_hex %>% filter(S004 >0) #%>%
+      # mutate(S004 = ifelse(S004 > 2, 2, S004))
+    # sum(dados_saude_alta$S004)
     # hist(dados_saude_alta$S004)
     map_saude_alta <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1535,7 +1537,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.22, 0.24),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2432,7 +2434,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.23),
+      legend.position = c(0.20, 0.24),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2519,9 +2521,9 @@ graficos <- function(munis = "all"){
       scale_fill_gradientn(
         name = "Nº de escolas infantis",
         colors =colors_orange[2:length(colors_orange)],
-        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        limits = c(1,max(dados_escolas %>% distinct(E001))),
+        breaks = seq(1,max(dados_escolas_infantil %>% distinct(E002)),1),
+        labels = seq(1,max(dados_escolas_infantil %>% distinct(E002)),1),
+        limits = c(1,max(dados_escolas_infantil %>% distinct(E002))),
         # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
         # values = NULL,
         space = "Lab",
@@ -2561,7 +2563,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.19, 0.23),
+        legend.position = c(0.20, 0.25),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2648,9 +2650,9 @@ graficos <- function(munis = "all"){
       scale_fill_gradientn(
         name = "Nº de escolas de ensino fundamental",
         colors =colors_orange[2:length(colors_orange)],
-        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        limits = c(1,max(dados_escolas %>% distinct(E001))),
+        breaks = seq(1,max(dados_escolas_fundamental %>% distinct(E003)),1),
+        labels = seq(1,max(dados_escolas_fundamental %>% distinct(E003)),1),
+        limits = c(1,max(dados_escolas_fundamental %>% distinct(E003))),
         # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
         # values = NULL,
         space = "Lab",
@@ -2690,7 +2692,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.23, 0.23),
+        legend.position = c(0.24, 0.23),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2778,9 +2780,9 @@ graficos <- function(munis = "all"){
       scale_fill_gradientn(
         name = "Nº de escolas de ensino médio",
         colors =colors_orange[2:length(colors_orange)],
-        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        limits = c(1,max(dados_escolas %>% distinct(E001))),
+        breaks = seq(1,max(dados_escolas_medio %>% distinct(E004)),1),
+        labels = seq(1,max(dados_escolas_medio %>% distinct(E004)),1),
+        limits = c(1,max(dados_escolas_medio %>% distinct(E004))),
         # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
         # values = NULL,
         space = "Lab",
@@ -2820,7 +2822,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.19, 0.23),
+        legend.position = c(0.20, 0.22),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
