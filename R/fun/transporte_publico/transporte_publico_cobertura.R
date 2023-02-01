@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'con'
+sigla_muni <- 'poa'
 
 
 #gráficos de ciclovias
@@ -319,7 +319,8 @@ graficos <- function(munis = "all"){
       guides(#fill = guide_legend(byrow = TRUE),
         colour = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e")
                                                  # colour = c("grey25", "white", "white")
-                                                 ))
+                                                 ),
+                              oder = 2)
         # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
         #                     order = 1)
         ) +
@@ -396,7 +397,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.23, 0.31),
+      legend.position = c(0.26, 0.31),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -409,7 +410,8 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       guides(#fill = guide_legend(byrow = TRUE),
-             color = guide_legend(override.aes = list(fill = c("white")))) +
+             color = guide_legend(override.aes = list(fill = c("white")),
+                                  order = 3)) +
       aproxima_muni(sigla_muni = sigla_muni)
     
     ggsave(map_linhas_tp,
@@ -599,7 +601,8 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       guides(#fill = guide_legend(byrow = TRUE),
-        color = guide_legend(override.aes = list(fill = c("white")))) +
+        color = guide_legend(override.aes = list(fill = c("white")),
+                             order = 3)) +
       aproxima_muni_zoom(sigla_muni = sigla_muni)
     
     ggsave(map_linhas_tp_sem_zoom,
@@ -814,7 +817,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.23, 0.31),
+      legend.position = c(0.26, 0.31),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1092,7 +1095,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.23, 0.31),
+        legend.position = c(0.26, 0.31),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2025,7 +2028,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.27),
+      legend.position = c(0.23, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2205,6 +2208,13 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                         '15-30 minutos',
                                         '30-60 minutos',
                                         '>60 minutos')))
+viagens <- read_rds(sprintf('../data/tp_frequencias/muni_%s/rotas_viagens_%s.rds',
+                            sigla_muni, sigla_muni)) %>% mutate(headway_medio = 60/n_viagens_h) %>%
+  mutate(headway_medio = ifelse(headway_medio >30 , 30, headway_medio))
+labels_freq <- c(seq(0,25,5),">30")
+breaks_freq <- seq(0,30,5)
+limits_freq <- c(0,30)
+
     # mapview(frequencias2)
 
     # map_frequencias <- ggplot() +
@@ -2318,14 +2328,17 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
               size = 0)+
 
       ggnewscale::new_scale_fill() +
-      geom_sf(data = st_transform(frequencias2, 3857),
+      geom_sf(data = st_transform(viagens, 3857),
               aes(fill = headway_medio),
               # fill = '#21367d',
               # fill = NA,
               color = NA,
               alpha = 1,
               size = 1) +
-      viridis::scale_fill_viridis(option = "rocket", direction = -1, name = "Intervalo médio (min)"
+      viridis::scale_fill_viridis(option = "rocket", direction = -1, name = "Intervalo médio (min)",
+                                  labels = labels_freq,
+                                  breaks = breaks_freq,
+                                  limits = limits_freq
                                   
       ) +
       
@@ -2874,7 +2887,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     
     recorte_rr_h <- data_micro2 %>%
       # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
-      left_join(frequencias2 %>% st_drop_geometry(), by = c("hex"="id_hex")) %>%
+      left_join(viagens %>% st_drop_geometry(), by = c("hex"="id_hex")) %>%
       drop_na(headway_medio) %>%
       mutate(
         quintil_renda = ntile(Rend_pc, 4))%>%
@@ -3005,7 +3018,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     
     ggsave(p_head_bus,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/16-linhasbus_freq_cleveland_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/16-linhasbus_freq_cleveland_%s_new2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
@@ -3345,7 +3358,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.20, 0.29),
+        legend.position = c(0.19, 0.25),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -3398,7 +3411,49 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
       group_by(cor, quintil_renda, genero) %>%
       summarise(tarifa_grupo = mean(tarifa_renda, na.rm = T),
                 n = n()) %>%
-      mutate(id = paste(genero, cor))
+      mutate(id = paste(genero, cor),
+             ID_juntar = paste(genero, cor, quintil_renda))
+    
+    
+    
+    # dados da PNADC
+    
+    renda_pnad <- read.csv('../data/pnadc/rendas_medias_quartil_capitais_pnadc_2022_2.csv')
+    
+    renda_pnad <- renda_pnad %>% filter(Capital == "Município de Porto Alegre (RS)") %>%
+      mutate(Quartil = case_when(Quartil == "q1" ~ 1,
+                                 Quartil == "q2" ~ 2,
+                                 Quartil == "q3" ~ 3,
+                                 Quartil == "q4" ~ 4),
+             Raca = case_when(Raca == "Branca" ~ "Brancos",
+                              Raca == "Negra" ~ "Pretos"),
+             Genero = case_when(Genero == "Homem" ~ "Homens",
+                              Genero == "Mulher" ~ "Mulheres")) %>%
+      mutate(ID_juntar = paste(Genero, Raca, Quartil),
+             tarifa_grupo = tarifa/mean) %>%
+      select(genero = Genero, cor = Raca, quintil_renda = Quartil, tarifa_grupo, ID_juntar)
+      
+    
+    
+    recorte_tarifa <- data_micro2 %>%
+      filter(Rend_pc >0) %>%
+      mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
+      # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
+      mutate(
+        quintil_renda = ntile(Rend_pc, 4)) %>%
+      # mutate(total = "total") %>% 
+      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                             cor == "pretos" ~ "Pretos",
+                             cor == "brancos" ~ "Brancos")) %>%
+      group_by(cor, quintil_renda, genero) %>%
+      summarise(tarifa_grupo = mean(tarifa_renda, na.rm = T),
+                n = n()) %>%
+      mutate(id = paste(genero, cor),
+             ID_juntar = paste(genero, cor, quintil_renda)) %>%
+      ungroup() %>%
+      select(ID_juntar, id, n) %>% left_join(renda_pnad, by = "ID_juntar")
+    
     
     
     recorte_tarifa_quartis <- data_micro2 %>%
@@ -3511,7 +3566,7 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
     
     ggsave(p_tarifa,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/18-linhasbus_freq_cleveland_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/19-linhasbus_freq_cleveland_%s_new_pnadc.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
