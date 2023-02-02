@@ -3,7 +3,7 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'con'
+sigla_muni <- 'sou'
 width <- 16
 height <- 10
 
@@ -86,9 +86,9 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
   if (type_acc == "CMA"){
     
     if (mode1 == "transit"){
-  names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "45")]
+  names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "30")]
   } else if (mode1 == "bike"){
-    names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "30")]
+    names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "15")]
   } else if (mode1 == "walk"){
     names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "15")]
   }
@@ -161,7 +161,7 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
 
 
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "dou",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
               type_acc = "CMA")
@@ -170,7 +170,7 @@ gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "dou",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -179,7 +179,7 @@ gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "dou",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -299,44 +299,48 @@ write.xlsx(desigualdade_all_tmi, sprintf('../data/ind_desigualdade/muni_%s/muni_
 # Graficos CMA ---------------------------------------------------------------
 
 # mode1 <- "bike"
-dados_cma <- desigualdade_all_cma %>% filter(indicador %in% ifelse(mode == "transit", c(
-  # "CMATT45",
-  "CMALZ45",
-  # "CMAMT45",
-  "CMAEI45",
-  "CMAEF45",
-  "CMAEM45",
-  "CMASB45",
-  "CMASM45",
-  "CMASA45"#,
+
+times <- c("30", "15", "15")
+
+dados_cma <- desigualdade_all_cma %>%
   
-  # "CMAST45",
-  # "CMATT45"
+  filter(indicador %in% ifelse(mode == "transit", c(
+    # "CMATT45",
+    paste0("CMALZ", times[1]),
+    # "CMAMT45",
+    paste0("CMAEI", times[1]),
+    paste0("CMAEF", times[1]),
+    paste0("CMAEM", times[1]),
+    paste0("CMASB", times[1]),
+    paste0("CMASM", times[1]),
+    paste0("CMASA", times[1])
+    # "CMAST45",
+    # "CMATT45"
   ), ifelse(mode == "bike", c(
     # "CMATT30",
-    "CMALZ30",
+    paste0("CMALZ", times[2]),
+    paste0("CMAEI", times[2]),
+    paste0("CMAEF", times[2]),
+    paste0("CMAEM", times[2]),
+    paste0("CMASB", times[2]),
+    paste0("CMASM", times[2]),
+    paste0("CMASA", times[2])
     # "CMAMT30",
-    "CMAEI30",
-    "CMAEF30",
-    "CMAEM30",
-    "CMASB30",
-    "CMASA30",
-    "CMASM30"
     # "CMAST30",
     # "CMATT30"
-    ),c(
-      # "CMATT15",
-      "CMALZ15",
-      # "CMAMT15",
-      "CMAEI15",
-      "CMAEF15",
-      "CMAEM15",
-      "CMASB15",
-      "CMASM15",
-      "CMASA15"
-      # "CMAST15",
-      # "CMATT15"
-      )))) %>%
+  ),c(
+    # "CMATT15",
+    paste0("CMALZ", times[3]),
+    paste0("CMAEI", times[3]),
+    paste0("CMAEF", times[3]),
+    paste0("CMAEM", times[3]),
+    paste0("CMASB", times[3]),
+    paste0("CMASM", times[3]),
+    paste0("CMASA", times[3])
+    
+    # "CMAST15",
+    # "CMATT15"
+  )))) %>%
   
   mutate(indicador = substr(indicador, start = 1L, stop = 5L),
          largura = ifelse(indicador == "CMASA" | indicador == "CMASM", 1,
@@ -347,10 +351,14 @@ dados_cma <- desigualdade_all_cma %>% filter(indicador %in% ifelse(mode == "tran
   #                         ifelse(indicador == "CMASB", 2/3,1))) %>%
   # filter(mode != "bike" | indicador != "CMASB")
 
-dados_cma <- dados_cma %>% mutate(mode = case_when(mode=="transit" ~ "Transporte Público (45 min)",
-                                                   mode=="bike" ~ "Bicicleta (30 min)",
-                                                   mode=="walk" ~ "Caminhada (15 min)"))
-dados_cma$mode <- factor(dados_cma$mode, levels = c("Caminhada (15 min)", "Bicicleta (30 min)","Transporte Público (45 min)"))
+# dados_cma <- dados_cma %>% mutate(mode = case_when(mode=="transit" ~ "Transporte Público (45 min)",
+#                                                    mode=="bike" ~ "Bicicleta (30 min)",
+#                                                    mode=="walk" ~ "Caminhada (15 min)"))
+dados_cma$mode <- factor(dados_cma$mode,
+                         levels = c("walk", "bike", "transit"),
+                         labels = c(paste0("Caminhada (",times[3]," min)"),
+                                    paste0("Bicicleta (",times[2]," min)"),
+                                    paste0("Transporte Público (",times[1]," min)")))
 
 dados_cma$indicador <- factor(dados_cma$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
 # enchimento <- data.frame(indicador = c("CMASA", "CMASA", "CMASB"),
@@ -478,6 +486,8 @@ dados_tmi <- desigualdade_all_tmi %>%
                            # "TMIBK", "TMIPR"
                            # "TMILZ"
                            ))
+
+
 dados_tmi <- dados_tmi %>% mutate(mode = case_when(mode=="transit" ~ "Transporte Público",
                                                    mode=="bike" ~ "Bicicleta",
                                                    mode=="walk" ~ "Caminhada"))
@@ -574,8 +584,8 @@ plot_palma_cma <- ggplot(dados_cma,
            width = dados_cma$largura*0.7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,3,0.5),
-    limits = c(0,3)) +
+    breaks = seq(0,8,0.5),
+    limits = c(0,8)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -766,7 +776,7 @@ ggsave(plot_palma_tmi,
 
 # Razão de Medias por Cor CMA - Valores ----------------------------------------------------------
 
-times <- c("45", "30", "15")
+times <- c("30", "15", "15")
 
 razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
@@ -1011,7 +1021,7 @@ razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "dou", "CMA", times = c("45","30","15"))
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "dou", "CMA", times = c("30","15","15"))
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
@@ -1115,8 +1125,8 @@ medias_razoes_acc_cor2 <- medias_razoes_acc %>%
   #                         modo == "walk" ~ "Caminhada (15 min)"))
   medias_razoes_acc_cor2$modo <- factor(medias_razoes_acc_cor2$modo,
                                         levels = c("walk", "bike", "transit"),
-                                        labels = c(paste0("Caminhada (",times[1]," min)"),
-                                                   paste0("Bicicleta (",times[1]," min)"),
+                                        labels = c(paste0("Caminhada (",times[3]," min)"),
+                                                   paste0("Bicicleta (",times[2]," min)"),
                                                    paste0("Transporte Público (",times[1]," min)")))
   medias_razoes_acc_cor2$indicador <- factor(medias_razoes_acc_cor2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
 # medias_razoes_acc_cor2 <- medias_razoes_acc_cor2 %>%
@@ -1268,8 +1278,8 @@ medias_razoes_acc_gen2 <- medias_razoes_acc %>%
 
 medias_razoes_acc_gen2$modo <- factor(medias_razoes_acc_gen2$modo,
                                       levels = c("walk", "bike", "transit"),
-                                      labels = c(paste0("Caminhada (",times[1]," min)"),
-                                                 paste0("Bicicleta (",times[1]," min)"),
+                                      labels = c(paste0("Caminhada (",times[3]," min)"),
+                                                 paste0("Bicicleta (",times[2]," min)"),
                                                  paste0("Transporte Público (",times[1]," min)")))
 
 medias_razoes_acc_gen2$indicador <- factor(medias_razoes_acc_gen2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
@@ -1432,8 +1442,8 @@ medias_razoes_acc_resp2 <- medias_razoes_acc %>%
 
 medias_razoes_acc_resp2$modo <- factor(medias_razoes_acc_resp2$modo,
                                       levels = c("walk", "bike", "transit"),
-                                      labels = c(paste0("Caminhada (",times[1]," min)"),
-                                                 paste0("Bicicleta (",times[1]," min)"),
+                                      labels = c(paste0("Caminhada (",times[3]," min)"),
+                                                 paste0("Bicicleta (",times[2]," min)"),
                                                  paste0("Transporte Público (",times[1]," min)")))
 medias_razoes_acc_resp2$indicador <- factor(medias_razoes_acc_resp2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
 
@@ -1961,9 +1971,9 @@ dados_acc_hex <- dados_acc %>%
   dados_acc_hex <- dados_acc %>%
     st_drop_geometry() %>%
     group_by(id_hex) %>%
-    summarise(med_acc_cmatt45 = mean(CMATT45, na.rm = T),
-              med_acc_cmast45 = mean(CMAST45, na.rm = T),
-              med_acc_cmamt45 = mean(CMAMT45, na.rm = T)) %>%
+    summarise(med_acc_cmatt45 = mean(CMATT60, na.rm = T),
+              med_acc_cmast45 = mean(CMAST60, na.rm = T),
+              med_acc_cmamt45 = mean(CMAMT60, na.rm = T)) %>%
     left_join(dados_hex, by = c("id_hex"="id_hex")) %>%
     st_as_sf() %>%
     st_transform(4083)
@@ -1981,7 +1991,7 @@ quadras <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_
                            sigla_muni, sigla_muni),
                    layer = "areas")
 # mapview(quadras)
-quadras <- quadras %>% st_transform(4083) %>% mutate(area = area)
+quadras <- quadras %>% st_transform(4083) %>% mutate(area = NOME)
 
 quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
 # mapview(quadras_acc)
@@ -1998,6 +2008,17 @@ quadras_acc_med <- quadras_acc %>% st_drop_geometry() %>%
   left_join(quadras, by = c("area"= "area")) %>%
   st_as_sf() %>% arrange(acc_med_cmatt45) %>%
   mutate(ranking = seq(1, length(area)))
+
+quadras_acc_med_melhores <- quadras_acc %>% st_drop_geometry() %>%
+  drop_na(area) %>%
+  group_by(area) %>%
+  summarise(acc_med_cmatt45 = mean(med_acc_cmatt45, na.rm = T),
+            acc_med_cmast45 = mean(med_acc_cmast45, na.rm = T),
+            acc_med_cmaet45 = mean(med_acc_cmamt45, na.rm = T)) %>%
+  left_join(quadras, by = c("area"= "area")) %>%
+  st_as_sf() %>% arrange(desc(acc_med_cmatt45)) %>%
+  mutate(ranking = seq(1, length(area)))
+
 
 quadras_acc_med <- quadras_acc_med %>% filter(is.na(area)==F & is.nan(acc_med_cmatt45)==F)
 
@@ -2031,15 +2052,23 @@ mapview(pop_quadras, zcol =  "pop_quadra")
 
 quadras_final <- quadras_acc_med  %>% left_join(pop_quadras %>% st_drop_geometry()) %>% filter(pop_quadra>100)
 
+quadras_final_melhores <- quadras_acc_med_melhores  %>% left_join(pop_quadras %>% st_drop_geometry()) %>% filter(pop_quadra>100)
+
 quadras_final %>% filter(pop_quadra>100) %>% mapview()
 
 quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
   arrange(acc_med_cmatt45)
 
+quadras_acc_med2_melhores <- quadras_final_melhores %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
+  arrange(desc(acc_med_cmatt45))
+
 quadras10 <- quadras_acc_med2[1:10,] %>% mutate(acc_med_cmatt45 = acc_med_cmatt45*100,
                                                 acc_med_cmast45 = acc_med_cmast45*100,
                                                 acc_med_cmaet45 = acc_med_cmaet45*100)
 
+quadras10mais <- quadras_acc_med2_melhores[1:10,] %>% mutate(acc_med_cmatt45 = acc_med_cmatt45*100,
+                                                acc_med_cmast45 = acc_med_cmast45*100,
+                                                acc_med_cmaet45 = acc_med_cmaet45*100)
 # mapview(quadras10)
 
 teste <- left_join(quadras, quadras10 %>% st_drop_geometry()) %>%
