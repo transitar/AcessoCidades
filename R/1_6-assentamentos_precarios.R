@@ -21,7 +21,7 @@ assentamentos <- read_sf('../data-raw/assentamentos_precarios/brasil/AGSN_2019/A
 
 assentamentos <- st_make_valid(assentamentos)
 
-mapview(assentamentos)
+# mapview(assentamentos)
 muni_path <- sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds', sigla_muni)
 muni_shape <- read_rds(muni_path) %>% st_transform(4326)
 
@@ -42,6 +42,9 @@ assentamentos_muni <- st_join(assentamentos, muni_shape) %>% drop_na(code_state)
 
 write_rds(assentamentos_muni,
           sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
+                  sigla_muni, sigla_muni))
+write_sf(assentamentos_muni,
+          sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.gpkg',
                   sigla_muni, sigla_muni))
 
 
