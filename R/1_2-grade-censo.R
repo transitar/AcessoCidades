@@ -20,17 +20,17 @@ library(geobr)
 
 ### Funcao
 
-munis_ref <- read_excel(path = '../../munis_ref.xlsx')
+munis_ref <- read_excel(path = '../munis_ref.xlsx')
 
 muni.teste <- munis_ref[1,]
 
-munis <- sigla <- "for"; ano <- 2017
+munis <- sigla <- "rma"; ano <- 2017
 
 criar_grade_muni_all <- function(ano, munis = "all") {
   
   
   # Criar pasta para salvar arquivos
-  dir.create(sprintf("../../data-raw/grade_municipio/%s", ano),recursive = T)
+  dir.create(sprintf("../data-raw/grade_municipio/%s", ano),recursive = T)
 
   
   # funcao para criar grade por municipio
