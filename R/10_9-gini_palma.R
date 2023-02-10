@@ -3,7 +3,7 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'sou'
+sigla_muni <- 'poa'
 width <- 16
 height <- 10
 
@@ -161,7 +161,7 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
 
 
 
-desigualdade_function(sigla_muni = "dou",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
               type_acc = "CMA")
@@ -170,7 +170,7 @@ gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "dou",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -179,7 +179,7 @@ gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "dou",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -224,7 +224,7 @@ write.xlsx(desigualdade_select_cma, sprintf('../data/ind_desigualdade/muni_%s/mu
 
 # TMI ---------------------------------------------------------------------
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
                       mode1 = "transit",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -237,7 +237,7 @@ palma_temp_transit_selec <- palma_selec
 # mode1 <- "bike"
 # type_acc <- "TMI"
 ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR")
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
                       mode1 = "bike",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -251,7 +251,7 @@ palma_temp_bike_selec <- palma_selec
 # type_acc <- "TMI"
 # ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR")
 
-desigualdade_function(sigla_muni = "con",
+desigualdade_function(sigla_muni = "poa",
                       mode1 = "walk",
                       ind_select = c("TMIST", "TMIET", "TMILZ", "TMIBK", "TMIPR"),
                       type_acc = "TMI")
@@ -300,12 +300,12 @@ write.xlsx(desigualdade_all_tmi, sprintf('../data/ind_desigualdade/muni_%s/muni_
 
 # mode1 <- "bike"
 
-times <- c("30", "15", "15")
+times <- c("60", "30", "15")
 
 dados_cma <- desigualdade_all_cma %>%
   
   filter(indicador %in% ifelse(mode == "transit", c(
-    # "CMATT45",
+    paste0("CMATT", times[1]),
     paste0("CMALZ", times[1]),
     # "CMAMT45",
     paste0("CMAEI", times[1]),
@@ -317,7 +317,7 @@ dados_cma <- desigualdade_all_cma %>%
     # "CMAST45",
     # "CMATT45"
   ), ifelse(mode == "bike", c(
-    # "CMATT30",
+    paste0("CMATT", times[2]),
     paste0("CMALZ", times[2]),
     paste0("CMAEI", times[2]),
     paste0("CMAEF", times[2]),
@@ -329,7 +329,7 @@ dados_cma <- desigualdade_all_cma %>%
     # "CMAST30",
     # "CMATT30"
   ),c(
-    # "CMATT15",
+    paste0("CMATT", times[3]),
     paste0("CMALZ", times[3]),
     paste0("CMAEI", times[3]),
     paste0("CMAEF", times[3]),
@@ -360,7 +360,14 @@ dados_cma$mode <- factor(dados_cma$mode,
                                     paste0("Bicicleta (",times[2]," min)"),
                                     paste0("Transporte Público (",times[1]," min)")))
 
-dados_cma$indicador <- factor(dados_cma$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+dados_cma$indicador <- factor(dados_cma$indicador, levels = c("CMATT",
+                                                              "CMAEI",
+                                                              "CMAEF",
+                                                              "CMAEM",
+                                                              "CMASB",
+                                                              "CMASM",
+                                                              "CMASA",
+                                                              "CMALZ"))
 # enchimento <- data.frame(indicador = c("CMASA", "CMASA", "CMASB"),
 #                          mode = c("Bicicleta (30 min)", "Caminhada (15 min)" ,"Bicicleta (30 min)"),
 #                          gini = c(0,0,0),
@@ -388,7 +395,7 @@ plot_gini_cma <- ggplot(dados_cma,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 3.5,
+            size = 3.0,
             colour = "black",
             fontface = "bold",
             family = "encode_sans_bold",
@@ -482,7 +489,11 @@ ggsave(plot_gini_cma,
 
 # mode1 <- "bike"
 dados_tmi <- desigualdade_all_tmi %>%
-  filter(indicador %in%  c("TMISB", "TMISA", "TMIEI","TMIEF","TMIEM"
+  filter(indicador %in%  c("TMISB",
+                           "TMISA",
+                           "TMIEI",
+                           "TMIEF",
+                           "TMIEM"
                            # "TMIBK", "TMIPR"
                            # "TMILZ"
                            ))
@@ -584,8 +595,8 @@ plot_palma_cma <- ggplot(dados_cma,
            width = dados_cma$largura*0.7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,8,0.5),
-    limits = c(0,8)) +
+    breaks = seq(0,4,0.5),
+    limits = c(0,4)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -595,7 +606,7 @@ plot_palma_cma <- ggplot(dados_cma,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 3.5,
+            size = 3.0,
             colour = "black",
             fontface = "bold",
             family = "encode_sans_bold",
@@ -776,7 +787,7 @@ ggsave(plot_palma_tmi,
 
 # Razão de Medias por Cor CMA - Valores ----------------------------------------------------------
 
-times <- c("30", "15", "15")
+times <- c("60", "30", "15")
 
 razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
@@ -1021,7 +1032,7 @@ razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "dou", "CMA", times = c("30","15","15"))
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "poa", "CMA", times = c("60","30","15"))
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
@@ -1054,7 +1065,7 @@ medias_razoes_acc_cor2 <- medias_razoes_acc %>%
   
   
   filter(indicador %in% ifelse(modo == "transit", c(
-    # "CMATT45",
+    paste0("CMATT", times[1]),
     paste0("CMALZ", times[1]),
     # "CMAMT45",
     paste0("CMAEI", times[1]),
@@ -1066,7 +1077,7 @@ medias_razoes_acc_cor2 <- medias_razoes_acc %>%
     # "CMAST45",
     # "CMATT45"
   ), ifelse(modo == "bike", c(
-    # "CMATT30",
+    paste0("CMATT", times[2]),
     paste0("CMALZ", times[2]),
     paste0("CMAEI", times[2]),
     paste0("CMAEF", times[2]),
@@ -1078,7 +1089,7 @@ medias_razoes_acc_cor2 <- medias_razoes_acc %>%
     # "CMAST30",
     # "CMATT30"
   ),c(
-    # "CMATT15",
+    paste0("CMATT", times[3]),
     paste0("CMALZ", times[3]),
     paste0("CMAEI", times[3]),
     paste0("CMAEF", times[3]),
@@ -1128,7 +1139,7 @@ medias_razoes_acc_cor2 <- medias_razoes_acc %>%
                                         labels = c(paste0("Caminhada (",times[3]," min)"),
                                                    paste0("Bicicleta (",times[2]," min)"),
                                                    paste0("Transporte Público (",times[1]," min)")))
-  medias_razoes_acc_cor2$indicador <- factor(medias_razoes_acc_cor2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+  medias_razoes_acc_cor2$indicador <- factor(medias_razoes_acc_cor2$indicador, levels = c("CMATT","CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
 # medias_razoes_acc_cor2 <- medias_razoes_acc_cor2 %>%
 #   mutate(largura = ifelse(indicador == "CMASA", 1/3,
 #                           ifelse(indicador == "CMASB", 2/3,1)))
@@ -1145,8 +1156,8 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
   
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,2.5,0.5),
-    limits = c(0,2.5)) +
+    breaks = seq(0,1.5,0.25),
+    limits = c(0,1.5)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -1156,7 +1167,7 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 3.5,
+            size = 3.0,
             colour = "black",
             fontface = "bold",
             angle = 0) +
@@ -1236,7 +1247,7 @@ medias_razoes_acc_gen2 <- medias_razoes_acc %>%
   
   
   filter(indicador %in% ifelse(modo == "transit", c(
-    # "CMATT45",
+    paste0("CMATT", times[1]),
     paste0("CMALZ", times[1]),
     # "CMAMT45",
     paste0("CMAEI", times[1]),
@@ -1248,7 +1259,7 @@ medias_razoes_acc_gen2 <- medias_razoes_acc %>%
     # "CMAST45",
     # "CMATT45"
   ), ifelse(modo == "bike", c(
-    # "CMATT30",
+    paste0("CMATT", times[2]),
     paste0("CMALZ", times[2]),
     paste0("CMAEI", times[2]),
     paste0("CMAEF", times[2]),
@@ -1260,7 +1271,7 @@ medias_razoes_acc_gen2 <- medias_razoes_acc %>%
     # "CMAST30",
     # "CMATT30"
   ),c(
-    # "CMATT15",
+    paste0("CMATT", times[3]),
     paste0("CMALZ", times[3]),
     paste0("CMAEI", times[3]),
     paste0("CMAEF", times[3]),
@@ -1282,14 +1293,16 @@ medias_razoes_acc_gen2$modo <- factor(medias_razoes_acc_gen2$modo,
                                                  paste0("Bicicleta (",times[2]," min)"),
                                                  paste0("Transporte Público (",times[1]," min)")))
 
-medias_razoes_acc_gen2$indicador <- factor(medias_razoes_acc_gen2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+medias_razoes_acc_gen2$indicador <- factor(medias_razoes_acc_gen2$indicador, levels = c("CMATT","CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
 
 
 plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
                               aes(y = media, x = indicador, fill = modo)) +
   geom_col(position = position_dodge(width = 0.7),
            # stat = "identity",
-           width = medias_razoes_acc_cor2$largura*0.7) +
+           width = 0.7
+           # width = medias_razoes_acc_cor2$largura*0.7
+           ) +
   # geom_col(position = position_dodge(),
   #          width = .7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
@@ -1305,7 +1318,7 @@ plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 3.5,
+            size = 3.0,
             colour = "black",
             fontface = "bold",
             angle = 0) +
@@ -1400,7 +1413,7 @@ medias_razoes_acc_resp2 <- medias_razoes_acc %>%
   filter(recorte == "responsavel") %>%
 
   filter(indicador %in% ifelse(modo == "transit", c(
-    # "CMATT45",
+    paste0("CMATT", times[1]),
     paste0("CMALZ", times[1]),
     # "CMAMT45",
     paste0("CMAEI", times[1]),
@@ -1412,7 +1425,7 @@ medias_razoes_acc_resp2 <- medias_razoes_acc %>%
     # "CMAST45",
     # "CMATT45"
   ), ifelse(modo == "bike", c(
-    # "CMATT30",
+    paste0("CMATT", times[2]),
     paste0("CMALZ", times[2]),
     paste0("CMAEI", times[2]),
     paste0("CMAEF", times[2]),
@@ -1424,7 +1437,7 @@ medias_razoes_acc_resp2 <- medias_razoes_acc %>%
     # "CMAST30",
     # "CMATT30"
   ),c(
-    # "CMATT15",
+    paste0("CMATT", times[3]),
     paste0("CMALZ", times[3]),
     paste0("CMAEI", times[3]),
     paste0("CMAEF", times[3]),
@@ -1445,7 +1458,7 @@ medias_razoes_acc_resp2$modo <- factor(medias_razoes_acc_resp2$modo,
                                       labels = c(paste0("Caminhada (",times[3]," min)"),
                                                  paste0("Bicicleta (",times[2]," min)"),
                                                  paste0("Transporte Público (",times[1]," min)")))
-medias_razoes_acc_resp2$indicador <- factor(medias_razoes_acc_resp2$indicador, levels = c("CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
+medias_razoes_acc_resp2$indicador <- factor(medias_razoes_acc_resp2$indicador, levels = c("CMATT","CMAEI", "CMAEF", "CMAEM", "CMASB", "CMASM", "CMASA", "CMALZ"))
 
 
 plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
@@ -1470,7 +1483,7 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
             position = position_dodge(width = 0.7),
             vjust = -0.5,
             hjust = 0.5,
-            size = 3.5,
+            size = 3.0,
             colour = "black",
             fontface = "bold",
             angle = 0) +
