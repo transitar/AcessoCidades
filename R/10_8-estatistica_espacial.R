@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'poa'
+sigla_muni <- 'rma'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -74,7 +74,7 @@ faz_lisa <- function(sigla_muni){
   # decisao_muni <- read_excel('../planilha_municipios.xlsx',
   #                            sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
   
-  simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+  simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
     st_make_valid() %>%
     st_transform(decisao_muni$epsg) %>%
     st_buffer(2) %>%
@@ -153,13 +153,13 @@ dados_micro_sf <- hex_muni %>% left_join(data_micro2, by = c("id_hex"="hex"))
 #outros -> id_g
 
 data_complete <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id) %>%
+  drop_na(id_g) %>%
   group_by(id_hex, genero, cor) %>%
   summarise(n = n(), renda_per_capita = mean(Rend_pc))
 
 
 data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id) %>%
+  drop_na(id_g) %>%
   group_by(id_hex, genero) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc))  %>%
@@ -175,7 +175,7 @@ data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
 
 
 data_complete_cor <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id) %>%
+  drop_na(id_g) %>%
   group_by(id_hex, cor) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc)) %>%
@@ -420,7 +420,7 @@ map_lisa_cor <- ggplot()+
                                )) +
   
   ggspatial::annotation_scale(style = "ticks",
-                              location = "br",
+                              location = "bl",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -428,11 +428,11 @@ map_lisa_cor <- ggplot()+
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
   
   tema()+
   
-  theme(legend.position = c(0.23,0.25)) +
+  theme(legend.position = c(0.78,0.26)) +
 
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1047,7 +1047,7 @@ map_lisa_renda <- ggplot() +
   
   
   ggspatial::annotation_scale(style = "ticks",
-                              location = "br",
+                              location = "bl",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -1055,11 +1055,11 @@ map_lisa_renda <- ggplot() +
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
   
   tema() +
   
-  theme(legend.position = c(0.24,0.25)) +
+  theme(legend.position = c(0.77,0.26)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1393,7 +1393,7 @@ tema()+
   theme(legend.title = element_text(size=rel(0.9), hjust = 0),
         axis.ticks.length = unit(0,"pt"),
         legend.margin = margin(t = 0),
-        legend.position = c(0.30, 0.2),
+        legend.position = c(0.74, 0.26),
         legend.direction = "vertical",
         legend.box = "vertical",
         legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
@@ -1493,7 +1493,7 @@ map_lisa_responsaveis <- ggplot() +
   
 
   ggspatial::annotation_scale(style = "ticks",
-                              location = "br",
+                              location = "bl",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -1501,11 +1501,14 @@ map_lisa_responsaveis <- ggplot() +
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
   
   tema() +
   
-  theme(legend.position = c(0.27,0.25)) +
+  theme(legend.position = c(0.74,0.31)
+        # legend.text=element_text(size=25, family = "encode_sans_light"),
+        # legend.title=element_text(size=27, family = "encode_sans_bold")
+        ) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1525,7 +1528,7 @@ suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sig
 
 ggsave(map_lisa_responsaveis,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/6-lisa_resp_hm_%s_new.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/6-lisa_resp_hm_%s_new2.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
