@@ -12,10 +12,15 @@ create_diretorios <- function(sigla_muni){
 
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
+# source_emp = rais / aop
+# source_escolas = censo_escolar / aop / muni
+# source_lazer = osm / muni
+# source_saude = cnes / aop / muni
+# ano = ano dos empregos da rais
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'poa'; ano <- 2018; source_saude <- 'aop'; source_lazer <- 'osm'; source_escolas <- "aop"; source_emp <- "aop"
+sigla_muni <- 'rma'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "rais"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -143,7 +148,7 @@ infos_to_hex <- function(sigla_muni, ano) {
                         source_saude,  sigla_muni, source_saude)
   dados_saude <- read_rds(file_saude) %>% mutate(S001 = 1) %>%
     select(S001, S002 = health_low, S003 = health_med, S004 = health_high)
-  mapview(dados_saude)
+  # mapview(dados_saude)
   
   
   if (muni == "dou"){
@@ -253,15 +258,16 @@ infos_to_hex <- function(sigla_muni, ano) {
       #                            1, health_low)
       # ) %>%
       mutate(E001 = 1,
-             E002 = ifelse(TP_ETAPA_ENSINO == 1,1,0),
-             E003 = ifelse(TP_ETAPA_ENSINO == 2,1,0),
-             E004 = ifelse(TP_ETAPA_ENSINO == 3,1,0),
-             M001 = QT_MAT_BAS + QT_MAT_FUND + QT_MAT_INF+QT_MAT_MED+QT_MAT_PROF,
-             M002 = QT_MAT_BAS+QT_MAT_INF,
-             M003 = QT_MAT_FUND,
-             M004 = QT_MAT_MED+QT_MAT_PROF) %>%
+             E002 = ifelse(QT_MAT_B > 0,1,0),
+             E003 = ifelse(QT_MAT_F > 0,1,0),
+             E004 = ifelse(QT_MAT_M > 0 | QT_MAT_P > 0,1,0),
+             M001 = QT_MAT_B + QT_MAT_F + QT_MAT_I+QT_MAT_M+QT_MAT_P,
+             M002 = QT_MAT_B+QT_MAT_I,
+             M003 = QT_MAT_F,
+             M004 = QT_MAT_M+QT_MAT_P) %>%
       #                            1, health_low)) %>%
       select(E001, E002, E003, E004, M001, M002,M003,M004)
+    # mapview(dados_educacao)
     
     join_educacao_hex <- sf::st_join(dados_educacao, hex)
     
