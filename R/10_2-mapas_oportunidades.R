@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 
 
 graficos <- function(munis = "all"){
@@ -187,7 +187,7 @@ graficos <- function(munis = "all"){
 # Mapa de empregos --------------------------------------------------------
 
     hist(dados_hex$n_jobs)
-    max_jobs <- 500
+    max_jobs <- 1600
     dados_empregos <- dados_hex %>% filter(n_jobs >0) %>%
       mutate(n_jobs = ifelse(n_jobs > max_jobs, max_jobs, n_jobs))
     
@@ -373,7 +373,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.32),
+      legend.position = c(0.19, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -646,7 +646,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.31),
+      legend.position = c(0.19, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -654,7 +654,7 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.05, 'cm'),
+      legend.spacing.y = unit(0.1, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
@@ -1089,7 +1089,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.20, 0.27),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1239,7 +1239,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.26),
+      legend.position = c(0.19, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1420,7 +1420,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_saude_medio,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/5-saude-baixa_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/5-saude-mediaa_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 16.5, height = 16.5, units = "cm" )
 
@@ -1537,7 +1537,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.24),
+      legend.position = c(0.21, 0.20),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1932,7 +1932,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.30),
+      legend.position = c(0.19, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2375,9 +2375,9 @@ graficos <- function(munis = "all"){
               alpha = 0.5)+
       
       geom_sf(data = st_transform(dados_escolas, 3857),
-              aes(fill = E001),
+              aes(fill = factor(E001)),
               colour = "grey70",
-              alpha=.8,
+              alpha= 1,
               size = 0)+
       
       scale_color_manual(name = "Uso do solo",
@@ -2389,20 +2389,31 @@ graficos <- function(munis = "all"){
                                    "ag" = "Aglomerados subnormais")
       )+
 
-      scale_fill_gradientn(
+      scale_fill_manual(
         name = "Nº de Escolas",
-        colors =colors_orange[2:length(colors_orange)],
+        # colors =colors_orange[2:length(colors_orange)],
+        values =colors_escolas,
         breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        limits = c(1,max(dados_escolas %>% distinct(E001))),
-        # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-        # values = NULL,
-        space = "Lab",
-        na.value = NA,
-        # guide = "colourbar",
-        aesthetics = "fill",
-        # colors
+        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        # limits = c(1,max(dados_escolas %>% distinct(E001))),
+
       ) +
+      
+      # scale_fill_gradientn(
+      #   name = "Nº de Escolas",
+      #   # colors =colors_orange[2:length(colors_orange)],
+      #   colors =colors_escolas,
+      #   breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
+      #   labels = seq(1,max(dados_escolas %>% distinct(E001)),1),
+      #   limits = c(1,max(dados_escolas %>% distinct(E001))),
+      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #   # values = NULL,
+      #   space = "Lab",
+      #   na.value = NA,
+      #   # guide = "colourbar",
+      #   aesthetics = "fill",
+      #   # colors
+      # ) +
 
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       
@@ -2455,7 +2466,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/11-escolas_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/11-escolas_%s_new3.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
 
@@ -2504,9 +2515,9 @@ graficos <- function(munis = "all"){
               alpha = 0.5)+
       
       geom_sf(data = st_transform(dados_escolas_infantil, 3857),
-              aes(fill = E002),
+              aes(fill = factor(E002)),
               colour = "grey70",
-              alpha=.8,
+              alpha= 1,
               size = 0)+
       
       scale_color_manual(name = "Uso do solo",
@@ -2518,20 +2529,32 @@ graficos <- function(munis = "all"){
                                    "ag" = "Aglomerados subnormais")
       )+
       
-      scale_fill_gradientn(
+      
+      scale_fill_manual(
         name = "Nº de escolas infantis",
-        colors =colors_orange[2:length(colors_orange)],
-        breaks = seq(1,max(dados_escolas_infantil %>% distinct(E002)),1),
-        labels = seq(1,max(dados_escolas_infantil %>% distinct(E002)),1),
-        limits = c(1,max(dados_escolas_infantil %>% distinct(E002))),
-        # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-        # values = NULL,
-        space = "Lab",
-        na.value = NA,
-        # guide = "colourbar",
-        aesthetics = "fill",
-        # colors
+        # colors =colors_orange[2:length(colors_orange)],
+        values =colors_escolas,
+        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
+        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        # limits = c(1,max(dados_escolas %>% distinct(E001))),
+        
       ) +
+      
+      # scale_fill_gradientn(
+      #   name = "Nº de escolas infantis",
+      #   # colors =colors_purple[3:length(colors_purple)],
+      #   colors =colors_escolas,
+      #   breaks = seq(1,max(dados_escolas_infantil %>% distinct(E002)),1),
+      #   labels = seq(1,max(dados_escolas_infantil %>% distinct(E002)),1),
+      #   limits = c(1,max(dados_escolas_infantil %>% distinct(E002))),
+      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #   # values = NULL,
+      #   space = "Lab",
+      #   na.value = NA,
+      #   # guide = "colourbar",
+      #   aesthetics = "fill",
+      #   # colors
+      # ) +
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       
@@ -2563,7 +2586,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.20, 0.25),
+        legend.position = c(0.19, 0.18),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2633,7 +2656,7 @@ graficos <- function(munis = "all"){
               alpha = 0.5)+
       
       geom_sf(data = st_transform(dados_escolas_fundamental, 3857),
-              aes(fill = E003),
+              aes(fill = factor(E003)),
               colour = "grey70",
               alpha=.8,
               size = 0)+
@@ -2647,20 +2670,30 @@ graficos <- function(munis = "all"){
                                    "ag" = "Aglomerados subnormais")
       )+
       
-      scale_fill_gradientn(
+      scale_fill_manual(
         name = "Nº de escolas de ensino fundamental",
-        colors =colors_orange[2:length(colors_orange)],
-        breaks = seq(1,max(dados_escolas_fundamental %>% distinct(E003)),1),
-        labels = seq(1,max(dados_escolas_fundamental %>% distinct(E003)),1),
-        limits = c(1,max(dados_escolas_fundamental %>% distinct(E003))),
-        # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-        # values = NULL,
-        space = "Lab",
-        na.value = NA,
-        # guide = "colourbar",
-        aesthetics = "fill",
-        # colors
+        # colors =colors_orange[2:length(colors_orange)],
+        values =colors_escolas,
+        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
+        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        # limits = c(1,max(dados_escolas %>% distinct(E001))),
+        
       ) +
+      
+      # scale_fill_gradientn(
+      #   name = "Nº de escolas de ensino fundamental",
+      #   colors =colors_orange[2:length(colors_orange)],
+      #   breaks = seq(1,max(dados_escolas_fundamental %>% distinct(E003)),1),
+      #   labels = seq(1,max(dados_escolas_fundamental %>% distinct(E003)),1),
+      #   limits = c(1,max(dados_escolas_fundamental %>% distinct(E003))),
+      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #   # values = NULL,
+      #   space = "Lab",
+      #   na.value = NA,
+      #   # guide = "colourbar",
+      #   aesthetics = "fill",
+      #   # colors
+      # ) +
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       
@@ -2692,7 +2725,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.24, 0.23),
+        legend.position = c(0.23, 0.18),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2763,7 +2796,7 @@ graficos <- function(munis = "all"){
               alpha = 0.5)+
       
       geom_sf(data = st_transform(dados_escolas_medio, 3857),
-              aes(fill = E004),
+              aes(fill = factor(E004)),
               colour = "grey70",
               alpha=.8,
               size = 0)+
@@ -2777,20 +2810,30 @@ graficos <- function(munis = "all"){
                                    "ag" = "Aglomerados subnormais")
       )+
       
-      scale_fill_gradientn(
+      scale_fill_manual(
         name = "Nº de escolas de ensino médio",
-        colors =colors_orange[2:length(colors_orange)],
-        breaks = seq(1,max(dados_escolas_medio %>% distinct(E004)),1),
-        labels = seq(1,max(dados_escolas_medio %>% distinct(E004)),1),
-        limits = c(1,max(dados_escolas_medio %>% distinct(E004))),
-        # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-        # values = NULL,
-        space = "Lab",
-        na.value = NA,
-        # guide = "colourbar",
-        aesthetics = "fill",
-        # colors
+        # colors =colors_orange[2:length(colors_orange)],
+        values =colors_escolas,
+        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
+        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        # limits = c(1,max(dados_escolas %>% distinct(E001))),
+        
       ) +
+      
+      # scale_fill_gradientn(
+      #   name = "Nº de escolas de ensino médio",
+      #   colors =colors_orange[2:length(colors_orange)],
+      #   breaks = seq(1,max(dados_escolas_medio %>% distinct(E004)),1),
+      #   labels = seq(1,max(dados_escolas_medio %>% distinct(E004)),1),
+      #   limits = c(1,max(dados_escolas_medio %>% distinct(E004))),
+      #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+      #   # values = NULL,
+      #   space = "Lab",
+      #   na.value = NA,
+      #   # guide = "colourbar",
+      #   aesthetics = "fill",
+      #   # colors
+      # ) +
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       
@@ -2822,7 +2865,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.20, 0.22),
+        legend.position = c(0.20, 0.18),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
