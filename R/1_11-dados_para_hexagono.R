@@ -15,7 +15,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'pal'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm';source_escolas <- "censo_escolar"
+sigla_muni <- 'poa'; ano <- 2018; source_saude <- 'aop'; source_lazer <- 'osm'; source_escolas <- "aop"; source_emp <- "aop"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -57,7 +57,12 @@ infos_to_hex <- function(sigla_muni, ano) {
   #empregos
   
   #leitura dos dados de empregos
-  
+  if (source_emp == "aop"){
+    
+    empregos <- aopdata::read_landuse(city = sigla_muni, year = 2019, geometry = TRUE) 
+    hex3 <- empregos %>% select(n_jobs = T001, id_hex) %>% st_drop_geometry()
+    
+  } else {
   file <- sprintf('../data-raw/empregos/%s_empregos%s.gpkg', sigla_muni, ano)
   empregos <- read_sf(file)
   empregos <- empregos %>% rename(jobs = EMPREGOS)
@@ -94,7 +99,9 @@ infos_to_hex <- function(sigla_muni, ano) {
                            0,
                            n_jobs)) %>%
     # filter(n_jobs > 0) %>%
-    st_drop_geometry() 
+    st_drop_geometry()
+  
+  }
   
 
   # mapview(hex3, zcol = 'n_jobs')
@@ -174,9 +181,10 @@ infos_to_hex <- function(sigla_muni, ano) {
   # mapview(dados_saude, zcol = "S001")
   } else if (source == "aop"){
     
-    file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s_%s_geocoded_2019.rds',source,  sigla_muni,
-                          source,  sigla_muni, source)
-    dados_saude <- read_rds(file_saude)
+    source <- "aop"
+    file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s.rds',source,  sigla_muni,
+                          source,  sigla_muni)
+    dados_saude <- read_rds(file_saude) %>% st_drop_geometry()
     
   }
   
@@ -286,7 +294,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   } else {
   
   
-  
+  source <- "aop"
   file_educacao <- sprintf('../data/educacao/%s/muni_%s_educacao_%s/muni_%s.rds',source,  sigla_muni, source,  sigla_muni)
   dados_educacao <- read_rds(file_educacao) %>% st_drop_geometry()
   
@@ -297,8 +305,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   # mapview(hex5, zcol = 'M001')
   
-  #falta lazer
-  
+
   file_lazer <- sprintf('../data-raw/lazer/%s/muni_%s_lazer_%s/muni_%s_lazer_%s.rds',source_lazer,
                         sigla_muni, source_lazer,  sigla_muni, source_lazer)
   
@@ -342,7 +349,7 @@ infos_to_hex <- function(sigla_muni, ano) {
     group_by(id_hex) %>% 
     summarise(lazer_tot = sum(count)) %>% distinct(id_hex, .keep_all = T)
   
-  if (silga_muni == "dou"){
+  if (sigla_muni == "dou"){
     hex_lazer2 <- hex_lazer %>% mutate(count = ifelse(is.na(id)== TRUE,
                                                       0,
                                                       1)) %>%
@@ -352,7 +359,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   }
   
   
-  hex_lazer3 <- left_join(hex,hex_lazer2 , by = "id_hex") %>% select(id_hex, lazer_tot) %>%
+  hex_lazer3 <- left_join(hex_empty,hex_lazer2 , by = "id_hex") %>% select(id_hex, lazer_tot) %>%
     st_drop_geometry()
   
   
@@ -410,7 +417,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   dados_bikecomp <- dados_bikecomp %>% st_transform(decisao_muni$epsg)
   
-  join_bikecomp_hex <- sf::st_join(dados_bikecomp,st_transform(hex,decisao_muni$epsg ))
+  join_bikecomp_hex <- sf::st_join(dados_bikecomp,st_transform(hex_empty,decisao_muni$epsg ))
   
   hex2 <- join_bikecomp_hex %>%
     st_drop_geometry() %>%
@@ -426,10 +433,10 @@ infos_to_hex <- function(sigla_muni, ano) {
   # sum(hex_total_sf$n_jobs)
   hex_total_sf <- left_join(hex_total, hex_empty, by = "id_hex") %>% st_as_sf()
   
-  hex_total_sf <- hex_total
+  # hex_total_sf <- hex_total
   
   teste <- hex_total_sf 
-  # mapview(teste, zcol = "S004")
+  # mapview(teste, zcol = "n_jobs")
   #
   
   # teste <- hex_jobs %>% filter(h3_resolution > 0)
