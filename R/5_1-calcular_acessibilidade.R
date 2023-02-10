@@ -1,5 +1,5 @@
 ###### 5.1 Calcular acessibilidade
-
+rm(list = ls(all.names = T)); gc()
 # carregar bibliotecas
 source('./R/fun/setup.R')
 
@@ -7,7 +7,7 @@ source('./R/fun/setup.R')
 
 
 
-sigla_muni <- "dou"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
+sigla_muni <- "poa"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
 # sigla_muni <- "spo"; ano=2019
 # sigla_muni <- "for"; ano=2019
 # sigla_muni <- "for"; ano=2017
