@@ -4,7 +4,7 @@ source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'dou'
+sigla_muni <- 'rma'
 
 create_diretorios <- function(sigla_muni){
   
@@ -36,7 +36,15 @@ lazer_osm <- function(munis = 'all'){
     q_library <- opq(bbox = box) %>%
       add_osm_feature(key = 'amenity', value = 'library') %>% osmdata_sf()
     
-    q_library_sf <- q_library$osm_points %>% st_as_sf()
+    # q_library_sf <- q_library$osm_points %>% st_as_sf() %>%
+    #   st_centroid()
+    q_library_sf <- q_library$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    
+    st_write(q_library_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                   sigla_muni,
+                                   sigla_muni),
+             layer = "bibliotecas")
     # mapview(q_library_sf)
     
     #Lazer tag leisure
@@ -51,6 +59,11 @@ lazer_osm <- function(munis = 'all'){
       st_centroid()
     # mapview(q_leisure_park_sf)
     
+    st_write(q_leisure_park_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                   sigla_muni,
+                                   sigla_muni),
+             layer = "parques_pracas")
+    
     #golf_course: contém campos de golfe
     # q_leisure_golf <- opq(bbox = box)%>%
     #   add_osm_feature(key = 'leisure', value = 'golf_course') %>% osmdata_sf()
@@ -58,14 +71,17 @@ lazer_osm <- function(munis = 'all'){
     # q_leisure_golf_sf <- q_leisure_golf$osm_multipolygons %>% st_as_sf() %>%
     #   st_centroid()
     
-    #dog_park
-    # q_leisure_dog <- opq(bbox = box)%>%
-    #   add_osm_feature(key = 'leisure', value = 'dog_park') %>% osmdata_sf()
-    # 
-    # q_leisure_dog_sf <- q_leisure_dog$osm_polygons %>% st_as_sf() %>%
-    #   st_centroid()
-    # # mapview(q_leisure_dog_sf)
-    
+    # dog_park
+    q_leisure_dog <- opq(bbox = box)%>%
+      add_osm_feature(key = 'leisure', value = 'dog_park') %>% osmdata_sf()
+
+    q_leisure_dog_sf <- q_leisure_dog$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    # mapview(q_leisure_dog_sf)
+    st_write(q_leisure_dog_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+             layer = "parques_cachorros")
     #garden: jardins
     
     q_leisure_garden <- opq(bbox = box)%>%
@@ -74,7 +90,10 @@ lazer_osm <- function(munis = 'all'){
     q_leisure_garden_sf <- q_leisure_garden$osm_polygons %>% st_as_sf() %>%
       st_centroid()
     # mapview(q_leisure_garden_sf)
-    
+    st_write(q_leisure_garden_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+             layer = "jardins")
     #nature_reserve reservas naturais
     q_leisure_nature <- opq(bbox = box)%>%
       add_osm_feature(key = 'leisure', value = 'nature_reserve') %>% osmdata_sf()
@@ -82,7 +101,10 @@ lazer_osm <- function(munis = 'all'){
     q_leisure_nature_sf <- q_leisure_nature$osm_polygons %>% st_as_sf() %>%
       st_centroid()
     # mapview(q_leisure_nature_sf)
-  
+    st_write(q_leisure_nature_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+             layer = "reservas_naturais")
     
     
     #pitch : campos de putebol outdoor
@@ -93,7 +115,10 @@ lazer_osm <- function(munis = 'all'){
     q_leisure_pitch_sf <- q_leisure_pitch$osm_polygons %>% st_as_sf() %>%
       st_centroid()
     # mapview(q_leisure_pitch_sf)
-    
+    st_write(q_leisure_pitch_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+             layer = "campos_futebol")
     #playground
     
     q_leisure_playground <- opq(bbox = box)%>%
@@ -102,7 +127,10 @@ lazer_osm <- function(munis = 'all'){
     q_leisure_playground_sf <- q_leisure_playground$osm_polygons %>% st_as_sf() %>%
       st_centroid()
     # mapview(q_leisure_playground_sf)
-    
+    st_write(q_leisure_playground_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+             layer = "playgrounds")
     #stadium 
     q_leisure_stadium <- opq(bbox = box)%>%
       add_osm_feature(key = 'leisure', value = 'stadium') %>% osmdata_sf()
@@ -111,10 +139,20 @@ lazer_osm <- function(munis = 'all'){
       st_centroid()
     # mapview(q_leisure_stadium_sf)
     
+    st_write(q_leisure_stadium_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+             layer = "estadios")
+    
+    
+    #leitura do arquivo filtrado:
+    
+    
+    
     q_leisure_park_sf2 <- q_leisure_park_sf %>% select(osm_id,
                                                        name) %>% mutate(type = "park")
-    q_leisure_golf_sf2 <- q_leisure_golf_sf %>% select(osm_id,
-                                                       name) %>% mutate(type = "golf")
+    # q_leisure_golf_sf2 <- q_leisure_golf_sf %>% select(osm_id,
+    #                                                    name) %>% mutate(type = "golf")
     q_leisure_garden_sf2 <- q_leisure_garden_sf %>% select(osm_id,
                                                        name) %>% mutate(type = "garden")
     q_leisure_nature_sf2 <- q_leisure_nature_sf %>% select(osm_id,
@@ -130,12 +168,12 @@ lazer_osm <- function(munis = 'all'){
     
     lazer2 <- rbind(q_leisure_park_sf2,
                     # q_leisure_golf_sf2,
-                    # q_leisure_garden_sf2,
+                    q_leisure_garden_sf2,
                     q_leisure_nature_sf2,
                     q_leisure_pitch_sf2,
-                    q_leisure_playground_sf2)
-                    # q_leisure_stadium_sf2)
-                    # q_leisure_dog_sf2)
+                    q_leisure_playground_sf2,
+                    q_leisure_stadium_sf2,
+                    q_leisure_dog_sf2)
     
     lazer_final <- lazer2 %>% st_filter(muni_shape)
     
