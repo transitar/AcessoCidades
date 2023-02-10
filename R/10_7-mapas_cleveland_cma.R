@@ -14,7 +14,7 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 mode1 <- "transit"
 oportunidade <- "saude"
 titulo_leg <- "Eq. de saúde"
@@ -263,7 +263,7 @@ faz_grafico_e_salva <- function(sigla_muni,
     acess <- acess %>% filter(sigla_muni == sigla_munii)
     cols <- which(names(acess) %in% paste0(type_acc, sigla_op, time))
     acess <- acess %>% filter(mode == mode1) %>%
-      select(id_hex, sigla_muni, cols)
+      select(id_hex, cols)
     acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op, time)))
     acess <- acess2
     
@@ -281,7 +281,7 @@ faz_grafico_e_salva <- function(sigla_muni,
       acess <- acess %>% filter(sigla_muni == sigla_munii)
       cols <- which(names(acess) %in% paste0(type_acc, sigla_op))
       acess <- acess %>% filter(mode == mode1) %>%
-        select(id_hex, sigla_muni, cols)
+        select(id_hex, cols)
       acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op)))
       acess <- acess2
       
@@ -799,8 +799,8 @@ faz_grafico_e_salva <- function(sigla_muni,
   }
   
   
-  mapas_cma_clev(sigla_muni = 'dou',type_acc = "TMI", mode1 = "bike", oportunidade = "lazer",
-                 sigla_op = "LZ", titulo_leg = "Lazer", time = 30,
+  mapas_cma_clev(sigla_muni = 'poa',type_acc = "TMI", mode1 = "walk", oportunidade = "bikes_compartilhadas",
+                 sigla_op = "BK", titulo_leg = "Bicicletas compartilhadas<br>", time = 15,
   cols = 1,
   width = 15,
   height = 10)
@@ -920,6 +920,50 @@ faz_grafico_e_salva <- function(sigla_muni,
                       width = 15,
                       height = 10)
 
+# Aplicação para todos os modos incluindo BK e PR -------------------------
+
+  library("future")
+  plan(multisession)
+  
+  lista_modos <- c(rep("transit", 64), rep("walk", 64), rep("bike", 64))
+  
+  lista_tempos <- rep(c(rep(15, 16), rep(30,16), rep(45, 16), rep(60,16)),3)
+  
+  lista_oportunidade <- rep(rep(c("empregos",
+                                  rep("matriculas",4),
+                                  rep("escolas", 4),
+                                  rep("saude", 4),
+                                  "lazer", "paraciclos", 
+                                  "bikes_compartilhadas"),4),3)
+  
+  lista_siglaop <- rep(rep(c("TT",
+                             "MT", "MI", "MF", "MM",
+                             "ET", "EI", "EF", "EM",
+                             "ST", "SB", "SM", "SA",
+                             "LZ", "PR", "BK"), 4),3)
+  
+  lista_titulo_leg <- rep(rep(c("Empregos",
+                                rep("Matrículas",4),
+                                rep("Escolas", 4),
+                                rep("Eq. de Saúde", 4),
+                                "Eq. de lazer",
+                                "Paraciclos",
+                                "bicicletas compartilhadas"), 4),3)
+  
+  
+  
+  lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+  
+  furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
+                      sigla_muni = 'poa',
+                      type_acc = "CMA",
+                      cols = 1,
+                      width = 15,
+                      height = 10)
+  
+  
+  
+  
 # Aplicacao da funcao para tmi --------------------------------------------
 
   # lista_modos <- c(rep("walk", 9), rep("bike", 9))
@@ -1027,6 +1071,49 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
                       sigla_muni = 'con',
+                      type_acc = "TMI",
+                      cols = 1,
+                      width = 15,
+                      height = 10)
+
+# Aplicação TMI todos os tempos com PR e BK -------------------------------
+
+  lista_modos <- c(rep(rep("transit", 11),4), rep(rep("walk", 11),4), rep(rep("bike", 11),4))
+  
+  lista_tempos <- rep(c(rep(15, 11), rep(30,11), rep(45, 11), rep(60, 11)),3)
+  
+  lista_oportunidade <- rep(rep(c(
+    
+    rep("escolas", 4),
+    rep("saude", 4),
+    "lazer",
+    "paraciclos",
+    "bikes_compartilhadas"),4),3)
+  
+  lista_siglaop <- rep(rep(c(
+    "ET", "EI", "EF", "EM",
+    "ST", "SB", "SM", "SA",
+    "LZ", "PR", "BK"), 4),3)
+  
+  lista_titulo_leg <- rep(rep(c(
+    rep("Escolas", 4),
+    rep("Eq. de Saúde", 4),
+    "Eq. de Lazer",
+    "Paraciclos",
+    "Bicicletas Compartilhadas"), 4),3)
+  
+  
+  
+  
+  lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+  
+  library("future")
+  seed = TRUE
+  plan(multisession)
+  
+  
+  furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
+                      sigla_muni = 'poa',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
