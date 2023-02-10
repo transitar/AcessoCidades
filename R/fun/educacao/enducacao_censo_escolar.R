@@ -213,11 +213,20 @@ educacao_filter <- function(ano, download = FALSE) {
   chave_google_maps <- readline(prompt = "API key google maps: ")
   register_google(key = chave_google_maps)
   
-  sigla_muni <- "dou"
+  sigla_muni <- "rma"
   escolas_censo_muni <- function(sigla_muni){
     
+    if (sigla_muni == "rma"){
     escolas_muni <- escolas_fim_mat_end %>%
-      filter(co_municipio == munis_list$munis_metro$code_muni[which(munis_list$munis_metro$abrev_muni==sigla_muni)])
+      # filter(co_municipio %in% munis_list$munis_metro$code_muni[which(munis_list$munis_metro$abrev_muni==sigla_muni)])
+    filter(co_municipio %in% c(2800308,2804805,2800605,2806701)) %>%
+      mutate(city = ifelse(co_municipio == 2806701, "São Cristóvão", city))
+    
+    
+    } else {
+      escolas_muni <- escolas_fim_mat_end %>%
+        filter(co_municipio %in% munis_list$munis_metro$code_muni[which(munis_list$munis_metro$abrev_muni==sigla_muni)])
+    }
     
     write.csv(escolas_muni, sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_sem_geocode_%s.csv",
                                     ano,
@@ -235,7 +244,7 @@ educacao_filter <- function(ano, download = FALSE) {
     
 
     # Initialize the data frame
-    escolas_to_geocode <- escolas_muni %>% mutate(addresses = paste(adress, city, state, country)) %>%
+    escolas_to_geocode <- escolas_muni %>% mutate(addresses = paste(no_entidade ,adress, city, state, country)) %>%
       mutate(addresses = stringi::stri_enc_toutf8(addresses))
     escolas_to_geocode$addresses <- gsub('[^[:alnum:] ]','',escolas_to_geocode$addresses)
     
@@ -247,6 +256,20 @@ educacao_filter <- function(ano, download = FALSE) {
     # Loop through the addresses to get the latitude and longitude of each address and add it to the
     # origAddress data frame in new columns lat and lon
     # Write a CSV file containing origAddress to the working directory
+    write_sf(escolas_geocoded_sf, sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_geocode_%s.shp",
+                                           ano,
+                                           sigla_muni,
+                                           ano,
+                                           sigla_muni,
+                                           ano), append = F)
+    
+    escolas_geocoded_sf <- read_sf(sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_geocode_%s.shp",
+                                         ano,
+                                         sigla_muni,
+                                         ano,
+                                         sigla_muni,
+                                         ano))
+
     write_rds(escolas_geocoded_sf, sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_geocode_%s.rds",
                                     ano,
                                     sigla_muni,
@@ -255,8 +278,10 @@ educacao_filter <- function(ano, download = FALSE) {
                                     ano))
 
     
+  #somente até aqui
     
     
+      
   }
   
   lista_munis <- munis_list$munis_df$abrev_muni
