@@ -124,6 +124,19 @@ colors_orange <- c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
 
 colors_green <- c("#dbede7", "#79b9a6", "#56a68e", "#0f805e", "#0b5e45", "#094d39", "#073b2c")
 
+colors_escolas <- c("#7736a9",
+                    # "#e5665d",
+                    "#FFE537",
+                    "#c57422"
+                    )
+# #tesyte
+# colors_escolas <- c("#EA4D2A",
+#                     "#E3651B",
+#                     "#FCA001",
+#                     "#FFC80B"
+# )
+
+
 colors_viridis <- c("#450D54")
 
 # colors_blue <- c("#eff1f6", "#8d97bd", "#6b79a9", "#344889", "#21367d", "#1d306e", "#19295f")
@@ -157,6 +170,12 @@ aproxima_muni <- function(sigla_muni) {
     
     coord_sf(ylim = c(-2245238,-2277744), xlim = c(-4895103, -4936148), expand = FALSE)
     
+  } else if (sigla_muni == "rma") {
+    
+
+    coord_sf(ylim = c(-1198511,-1254623), xlim = c(-4161439,  -4091299), expand = FALSE)
+    # coord_sf(ylim = c(-1198511,-1254623), xlim = c(-4161439,  -4075243), expand = FALSE)
+
   }
   
 }
@@ -180,6 +199,17 @@ aproxima_muni_recortes <- function(sigla_muni) {
     coord_sf(ylim = c(1.291373*(-6086358--6114267)-2557777,-2557777), xlim = c(-6114267, -6086358), expand = FALSE)
 
   }
+  # else if (sigla_muni == "rma") {
+  #   
+  #   coord_sf(ylim = c(1.291373*(-4097369--4158337)-1269731,-1269731), xlim = c(-4158337, -4097369), expand = FALSE)
+  # 
+  # }
+  
+  else if (sigla_muni == "rma") {
+    
+    coord_sf(ylim = c(1.291373*(-4119220--4144039)-1244912,-1244912), xlim = c(-4144039, -4119220), expand = FALSE)
+    # -4144039,-1233581
+  }
   
 }
 
@@ -190,7 +220,7 @@ munis_recorte_limites = tribble(
   "bel",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "man",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "slz",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "rma",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "rma",  "Bairros",                     1600,         250,      1000,         2000,        500,           30,           10,            500,         500,         150,
   "noh",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "dou",  "Setores",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
   "con",  "Unid. de planej.",  1500,      200,         1000,         1500,        200,           40,          20,            160,         160,          80,
@@ -200,6 +230,44 @@ munis_recorte_limites = tribble(
   
   
 ) %>% setDT()
+
+
+munis_names = tribble(
+
+~muni,   ~ uf, ~cod_muni_uf, ~pop, ~cod_ibge, ~muni_abrev, ~estado_nome,
+"Porto Alegre",	"RS",	"Porto Alegre RS", 	1492530, 4314902, "poa", "Rio Grande do Sul",
+"Belém", "PA",	"Belém PA",	1506420	, 1501402, "bel", "Pará",
+"Manaus",	'AM',	"Manaus AM",2255903	, 1302603	, "man", "Amazonas",
+"São Luís",	"MA", "São Luís MA",	1115932,	2111300,	"slz", "Maranhão",
+"Aracaju",	"SE",	"Aracaju SE",	672614,	2800308,	"arj", "Sergipe",
+"Nossa Senhora do Socorro",	"SE",	"Nossa Senhora do Socorro SE",	187733,	2804805,	"nss", "Sergipe",
+"Barra dos Coqueiros",	"SE", "Barra dos Coqueiros SE",	31439,	2800605, 	"bac", "Sergipe",
+"São Cristóvão",	"SE",	"São Cristóvão SE",	92090, 2806701,	"sac", "Sergipe",
+"Novo Hamburgo",	"RS", "Novo Hamburgo RS",	247303,	4313409,	"noh", "Sergipe",
+"Dourados",	"MS",	"Dourados MS",	227990,	5003702,	"dou", "Mato Grosso do Sul",
+"Contagem",	"MG",	"Contagem MG",	673849,	3118601,	"com", "Minas Gerais",
+"Vitória da Conquista",	"BA",	"Vitória da Conquista BA",	343643,	2933307,	"vic", "Bahia",
+"Cachoeiro de Itapemirim", 	"ES",	"Cachoeiro de Itapemirim ES",	212172,	3201209	, "cit", "Espírito Santo",
+"Palmas",	"TO",	"Palmas TO",	313349,	1721000,	"pal", "Tocantins"
+
+) %>% setDT()
+
+# munis_legend_position = tribble(
+#   ~abrev_muni,  ~lisa_renda,           ~annotations,        ~lisa_cor,     ~lisa_resp, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
+#   "poa",              NA,                       NA,                 NA,         2000,         1000,       1000,          200,          100,             1500,          1500,          200,
+#   "bel",              NA,                      NA ,                NA,         NA,           NA,           NA,             NA,          NA,          NA,
+#   "man",              NA,                       NA,                NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+#   "slz",              NA,                      NA,                 NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+#   "rma",              list(0.77,0.26),    list("tl","bl"),       list(0.78,0.26),      1000,         2000,        500,           30,           10,            500,         500,         150,
+#   "noh",              NA,                       NA,                 NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+#   "dou",              NA,                       NA,                  NA,          500,          500,        500,           40,          100,            400,         400,         200,
+#   "con",              NA,                       NA,                 NA,         1000,         1500,        200,           40,          20,            160,         160,          80,
+#   "vic",              NA,                       NA,                   NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+#   "cit",              NA,                       NA,                   NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+#   "pal",              NA,                       NA,                  NA,          600,         1000,        500,           60,            5,            400,         400,         150,
+#   
+#   
+# ) %>% setDT()
 
 
 
