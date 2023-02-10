@@ -1,7 +1,8 @@
 #download de dados cicloviários do osm
+rm(list = ls(all.names=T)); gc()
 source('./R/fun/setup.R')
 
-sigla_muni = "dou"
+sigla_muni <- "rma"
 
 create_diretorios <- function(sigla_muni){
   
@@ -120,7 +121,7 @@ download_osm <- function(munis = 'all'){
     
     ciclo <- rbind(highway_cycleway,
                    cycleway,
-                   # cycleway_left,
+                   cycleway_left,
                    cycleway_right)
 
     # mapview(ciclo) + mapview(muni_shape)
@@ -170,4 +171,4 @@ download_osm <- function(munis = 'all'){
 }
 
 
-lazer_osm(munis = 'pal')
+# lazer_osm(munis = 'pal')
