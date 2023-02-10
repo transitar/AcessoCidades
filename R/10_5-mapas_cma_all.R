@@ -12,7 +12,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 # library(elementalist)
 # rm(list = ls())
 # width <- 14
@@ -20,10 +20,10 @@ sigla_muni <- 'dou'
 
 # sigla_muni <- 'dou'
 mode1 <- "bike"
-oportunidade <- "saude"
-titulo_leg <- "Eq. de Saúde"
-sigla_op <- "SA"
-time <- 30
+oportunidade <- "lazer"
+titulo_leg <- "Eq. de lazer"
+sigla_op <- "LZ"
+time <- 15
 # time <- c(15,30,45,60)
 type_acc <- "CMA"
 
@@ -131,7 +131,7 @@ tema_CMA <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.20, 0.33),
+    legend.position = c(0.20, 0.27),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -323,7 +323,7 @@ mapas_cma <- function(sigla_muni,
     
     cols <- which(names(acess) %in% paste0(type_acc, sigla_op, time))
     acess <- acess %>% filter(mode == mode1) %>%
-      select(sigla_muni, cols)
+      select(cols)
     acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op, time)))
     acess <- acess2
     
@@ -932,6 +932,62 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
                     cols = 1,
                     width = 16.5,
                     height = 16.5)
+
+# Aplica;'ao para todos os tempos com bk comp e paraciclos ----------------
+
+library("future")
+plan(multisession)
+
+lista_modos <- c(rep("transit", 64), rep("walk", 64), rep("bike", 64))
+
+lista_tempos <- rep(c(rep(15, 16), rep(30,16), rep(45, 16),  rep(60, 16)),3)
+
+lista_oportunidade <- rep(rep(c("empregos",
+                                rep("matriculas",4),
+                                rep("escolas", 4),
+                                rep("saude", 4),
+                                "lazer",
+                                "paraciclos",
+                                "bikes_compartilhadas"),4),3)
+
+lista_siglaop <- rep(rep(c("TT",
+                           "MT", "MI", "MF", "MM",
+                           "ET", "EI", "EF", "EM",
+                           "ST", "SB", "SM", "SA",
+                           "LZ","PR", "BK"), 4),3)
+
+lista_titulo_leg <- rep(rep(c("Empregos",
+                              c("Matrículas",
+                                "Matrículas",
+                                "Matrículas",
+                                "Matrículas"),
+                              c("Escolas",
+                                "Escolas",
+                                "Escolas",
+                                "Escolas"),
+                              c("Eq. de saúde",
+                                "Eq. de Saúde",
+                                "Eq. de Saúde",
+                                "Eq. de Saúde"),
+                              "Eq. de lazer",
+                              "Paraciclos",
+                              "Bicicletas Comaprtilhadas"), 4),3)
+
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
+                    sigla_muni = 'poa',
+                    type_acc = "CMA",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
+
+
+
+
 
 # Aplicação da função para todos os tempos sem TP -------------------------
 
