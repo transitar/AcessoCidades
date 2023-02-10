@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'dou'
+sigla_muni <- 'rma'
 ano_cnes <- 2022
-estado <- 'MS'
+estado <- 'SE'
 
 
 library(ggmap)
@@ -70,6 +70,7 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
   
   
   dados_estabelecimentos2 <- dados_estabelecimentos %>% select(CNES,
+                                                               CPF_CNPJ,
                                                                CODUFMUN,
                                                                COD_CEP,
                                                                PF_PJ,
@@ -138,7 +139,8 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     # CAPS - CENTRO DE ATENCAO PSICOSSOCIAL - saude mental e drogas
     # UBS IPAT e UBS CDPM II - vinculatos a policia
     
-    to_remove_3 <- "43|50|60|64|67|68|70|71|74|75|76"
+    to_remove_3 <- "|43|50|60|64|67|68|75|76|77|81|82|83|84|85"
+    # dados_74_70 <- cnes_filter4 %>% filter(TP_UNID %like% "74|70")
     
     # 5.2 Delete Home care, tele saude, unidades moveis de saude
     # to_remove2 <- 'TELESSAUDE|UNIDADE MOVEL|DOMICILIAR|PSICOSSOCIAL|FARMACIA|DE ORGAOS|CENTRAL DE REGULACAO DO ACESSO'
@@ -192,11 +194,22 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     nrow(cnes_filter6)
     
 
+    # leitura dos dados com endereço
+    
+    cnes_filter6 <- read_xlsx(sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_%s_bruto_2.xlsx",
+                      sigla_muni,
+                      sigla_muni,
+                      ano))
+    
+    
     
     # Initialize the data frame
-    cnes_to_geocode <- cnes_filter6 %>% mutate(addresses = paste(COD_CEP, "Dourados", "Mato Grosso do Sul", "Brasil")) %>%
+    cnes_to_geocode <- cnes_filter6 %>%
+      # mutate(addresses = paste(COD_CEP, munis_names$muni[which(munis_names$cod_ibge == .$CODUFMUN)],
+      #                          munis_names$estado_nome[which(munis_names$cod_ibge == .$CODUFMUN)],
+      #                          "Brasil")) %>%
       mutate(addresses = stringi::stri_enc_toutf8(addresses))
-    
+    # write.xlsx(cnes_to_geocode, '../data/saude/cnes/muni_rma_saude_cnes/muni_rma_cnes_2019_bruto.xlsx')
     # escolas_to_geocode$addresses <- gsub('[^[:alnum:] ]','',escolas_to_geocode$addresses)
     
     # cnes_to_geocode <- cnes_to_geocode[1:10,]
@@ -221,15 +234,24 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     # Loop through the addresses to get the latitude and longitude of each address and add it to the
     # origAddress data frame in new columns lat and lon
     # Write a CSV file containing origAddress to the working directory
-    write_rds(cnes_geocoded_sf, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.rds",
+    # write_rds(cnes_geocoded_sf, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.rds",
+    #                                    sigla_muni,
+    #                                    sigla_muni,
+    #                                    ano))
+    
+    write_sf(cnes_geocoded_sf, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.gpkg",
+                                        sigla_muni,
+                                        sigla_muni,
+                                        ano))
+    arq_saude_final <- read_sf(sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.gpkg",
                                        sigla_muni,
                                        sigla_muni,
                                        ano))
-    # write_sf(cnes_geocoded_sf, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.gpkg",
-    #                                     sigla_muni,
-    #                                     sigla_muni,
-    #                                     ano))
     
+    write_rds(arq_saude_final, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.rds",
+                                        sigla_muni,
+                                        sigla_muni,
+                                        ano))
     
   }
   
