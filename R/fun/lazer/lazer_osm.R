@@ -145,9 +145,54 @@ lazer_osm <- function(munis = 'all'){
              layer = "estadios")
     
     
+
     #leitura do arquivo filtrado:
     
     
+    
+    q_library_sf <- st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                   sigla_muni,
+                                   sigla_muni),
+             layer = "bibliotecas")
+    
+    q_leisure_park_sf <- st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                    sigla_muni,
+                                    sigla_muni),
+                            layer = "parques_pracas")
+    
+    q_leisure_dog_sf <- st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                        sigla_muni,
+                                        sigla_muni),
+                                layer = "parques_cachorros")
+    
+    q_leisure_garden_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                            sigla_muni,
+                                            sigla_muni),
+                                    layer = "jardins") 
+    
+    q_leisure_nature_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                            sigla_muni,
+                                            sigla_muni),
+                                    layer = "reservas_naturais")
+    
+    q_leisure_pitch_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                            sigla_muni,
+                                            sigla_muni),
+                                    layer = "campos_futebol")
+    
+    q_leisure_playground_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                           sigla_muni,
+                                           sigla_muni),
+                                   layer = "playgrounds")
+    
+    q_leisure_stadium_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                                sigla_muni,
+                                                sigla_muni),
+                                        layer = "estadios")
+    
+    
+    q_library_sf2 <- q_library_sf %>% select(osm_id,
+                                                       name) %>% mutate(type = "library")
     
     q_leisure_park_sf2 <- q_leisure_park_sf %>% select(osm_id,
                                                        name) %>% mutate(type = "park")
@@ -164,9 +209,10 @@ lazer_osm <- function(munis = 'all'){
     q_leisure_stadium_sf2 <- q_leisure_stadium_sf %>% select(osm_id,
                                                        name) %>% mutate(type = "stadium")
     q_leisure_dog_sf2 <- q_leisure_dog_sf %>% select(osm_id,
-                                                          name) %>% mutate(type = "dog_park")
+                                                          name = leisure) %>% mutate(type = "dog_park")
     
-    lazer2 <- rbind(q_leisure_park_sf2,
+    lazer2 <- rbind(q_library_sf2,
+                    q_leisure_park_sf2,
                     # q_leisure_golf_sf2,
                     q_leisure_garden_sf2,
                     q_leisure_nature_sf2,
@@ -183,6 +229,11 @@ lazer_osm <- function(munis = 'all'){
     
     readr::write_rds(lazer_final,
                      sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm.rds',
+                             sigla_muni,
+                             sigla_muni))
+    
+    write_sf(lazer_final,
+                     sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm.gpkg',
                              sigla_muni,
                              sigla_muni))
 
