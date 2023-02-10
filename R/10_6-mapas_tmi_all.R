@@ -9,7 +9,7 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'dou'
+sigla_muni <- 'poa'
 mode1 <- "transit"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
@@ -140,7 +140,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.19, 0.32),
+    legend.position = c(0.19, 0.25),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -335,7 +335,7 @@ mapas_tmi <- function(sigla_muni,
   
   cols <- which(names(acess) %in% paste0(type_acc, sigla_op))
   acess <- acess %>% filter(mode == mode1) %>%
-    select(sigla_muni, cols)
+    select(cols)
   acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op)))
   acess <- acess2
   
@@ -772,11 +772,11 @@ mapas_tmi <- function(sigla_muni,
 
 mapas_tmi(sigla_muni = "poa",
           type_acc = "TMI",
-          sigla_op = "SB",
-          mode1 = "bike",
-          oportunidade = "saude",
-          titulo_leg = "saúde",
-          time = 45)
+          sigla_op = "BK",
+          mode1 = "walk",
+          oportunidade = "bikes_compartilhadas",
+          titulo_leg = "Bicicletas compartilhadas<br>",
+          time = 15)
 # mapas_tmi(sigla_muni = "poa",
 #           type_acc = "TMI",
 #           sigla_op = "EI",
@@ -997,3 +997,82 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
                     height = 16.5)
 
 
+
+# Aplicação para todos os tempos com bikes e paraciclos -------------------
+
+
+lista_modos <- c(rep(rep("transit", 11),4), rep(rep("walk", 11),4), rep(rep("bike", 11),4))
+
+lista_tempos <- rep(c(rep(15, 11), rep(30,11), rep(45, 11), rep(60, 11)),3)
+
+lista_oportunidade <- rep(rep(c(
+  rep("escolas", 4),
+  rep("saude", 4),
+  "lazer",
+  "paraciclos",
+  "bikes_compartilhadas"),4),3)
+
+lista_siglaop <- rep(rep(c(
+  "ET", "EI", "EF", "EM",
+  "ST", "SB", "SM", "SA",
+  "LZ", "PR", "BK"), 4),3)
+
+lista_titulo_leg <- rep(rep(c(
+  rep("escolas", 4),
+  rep("Eq. de saúde", 4),
+  "Eq. de lazer",
+  "Paraciclos",
+  "Bicicletas compartilhadas"), 4),3)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+library("future")
+seed = TRUE
+plan(multisession)
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
+                    sigla_muni = 'poa',
+                    type_acc = "TMI",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
+
+
+# Aplica;'ao poa ----------------------------------------------------------
+
+
+lista_modos <- c(rep("transit", 11), rep("walk", 11), rep("bike", 11))
+
+lista_tempos <- c(rep(45, 11), rep(45,11), rep(45, 11))
+
+lista_oportunidade <- rep(c(
+  rep("escolas", 4),
+  rep("saude", 4),
+  "lazer",
+  "paraciclos",
+  "bikes_compartilhadas"),3)
+
+lista_siglaop <- rep(c(
+  "ET", "EI", "EF", "EM",
+  "ST", "SB", "SM", "SA",
+  "LZ", "PR", "BK"), 3)
+
+lista_titulo_leg <- rep(c(
+  rep("escolas", 4),
+  rep("Eq. de saúde", 4),
+  "Eq. de lazer",
+  "Paraciclos",
+  "Bicicletas compartilhadas"), 3)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+library("future")
+seed = TRUE
+plan(multisession)
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
+                    sigla_muni = 'poa',
+                    type_acc = "TMI",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
