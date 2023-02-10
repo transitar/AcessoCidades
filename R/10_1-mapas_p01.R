@@ -17,7 +17,7 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'poa'
+sigla_muni <- 'rma'
 ano <- 2019
 
 tema <- function(base_size) {
@@ -93,8 +93,8 @@ graficos <- function(munis = "all"){
     decisao_muni <- read_excel('../planilha_municipios.xlsx',
                                sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
     
-    simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
-      st_make_valid() %>%
+    simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
+      # st_make_valid() %>%
       st_transform(decisao_muni$epsg) %>%
       st_buffer(2) %>%
       st_union() 
@@ -293,12 +293,13 @@ graficos <- function(munis = "all"){
 # Mapa de densidade populacional novo -------------------------------------
 
     # cor_ag_densidade <- "#d7b377" #bullywood
-    cor_ag_densidade <- "#e9eb9e" #crayola
+    # cor_ag_densidade <- "#e9eb9e"
+    cor_ag_densidade <- "#0A7E5C"#crayola
     # cor_ag_densidade <- "#d8f793" #mindaro green
     
     hist(pop_counts$pop_total)
     #limite de população (caso seja necessário fixar um valor máximo)
-    pop_max_limite <- 2500
+    pop_max_limite <- 3000
     
     if (pop_max_limite == F){
       
@@ -452,7 +453,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = .3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -460,7 +461,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -491,7 +492,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.27),
+      legend.position = c(0.82, 0.29),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -512,6 +513,7 @@ graficos <- function(munis = "all"){
     
     
     suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+    
     
     ggsave(map_pop_density,
            device = "png",
@@ -661,6 +663,9 @@ graficos <- function(munis = "all"){
         renda_pc_media = mean(Rend_pc, na.rm=T),
         min_pc = min(Rend_pc, na.rm =T),
         max_pc = max(Rend_pc, na.rm=T))
+    
+    # a <- data_micro2 %>% filter(Rend_pes == max(data_micro2$Rend_pes))
+    # a %>% left_join(dados_hex, by = c("hex"="id_hex")) %>% st_as_sf() %>% mapview()
     
     renda_quartis <- data_micro2 %>%
       mutate(
@@ -831,7 +836,7 @@ graficos <- function(munis = "all"){
     
     cor_ag <- "#dbad6a"
     # hist(renda$renda)
-    renda_max_limite <- 10
+    renda_max_limite <- 8
     
     if (renda_max_limite == F){
       
@@ -996,7 +1001,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1004,7 +1009,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -1035,7 +1040,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.27),
+      legend.position = c(0.82, 0.29),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1081,7 +1086,8 @@ data_micro <- dados_simulacao  %>%
                                V0606 == 3 ~ "Amarelos",
                                V0606 == 4 ~ "Pardos",
                                V0606 == 5 ~ "Indígenas"),
-            genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"))
+            genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens")) #%>%
+      # filter(V0606 != "Amarelos" | V0606 != "Indígenas")
     
     
 data_recorte <- data_micro %>%
@@ -1113,6 +1119,7 @@ data_recorte_cor2 <- data_micro %>%
   st_as_sf()
 
 
+
 data_recorte_cor2_hex <- data_recorte_cor2 %>%
   
   group_by(hex) %>%
@@ -1141,14 +1148,19 @@ data_recorte_cor2_hex <- data_recorte_cor2 %>%
          brancos  = ifelse(is_empty(n[cor == "Brancos"]) == F,
                             n[cor == "Brancos"], 0),
          pretos  = ifelse(is_empty(n[cor == "Pretos"]) == F,
-                          n[cor == "Pretos"], 0)
+                          n[cor == "Pretos"], 0)#,
+         # pardos = ifelse(is_empty(n[cor == "Pardos"]) == F,
+         #                 n[cor == "Pardos"], 0),
          
          
          
   ) %>%
   distinct(hex, .keep_all = T) %>%
-  select(hex, dif_bp, dif_pb, brancos, pretos)
+  select(hex, dif_bp, dif_pb, brancos,
+         # pardos,
+         pretos)
 
+# write_sf(data_recorte_cor2_hex, '../data/microssimulacao/muni_poa/dados_cor_poa.gpkg')
 
 # dados para os mapas - recorte de genero
 
@@ -2015,7 +2027,7 @@ map_pop_dif_cor <- ggplot() +
   
   geom_sf(data = dados_areas %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "grey60"),
+          aes(color = "areas"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -2025,16 +2037,16 @@ map_pop_dif_cor <- ggplot() +
           alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#0f805e"),
+          aes(color = "ag"),
           size = 1.3,
-          fill = '#0f805e',
+          fill = '#f8e169',
           show.legend = "polygon",
           alpha = 0.3)+
   
 
 geom_sf(data = simplepolys %>% st_transform(3857),
         # aes(size = 2),
-        aes(color = "#8f040e"),
+        aes(color = "urb"),
         # color = "grey45",
         # aes(fill = '#CFF0FF'),
         fill = NA,
@@ -2043,13 +2055,13 @@ geom_sf(data = simplepolys %>% st_transform(3857),
         linewidth = 0.3,
         alpha= 0.4)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#0f805e", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#0f805e" = "#0f805e"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#0f805e" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#f8e169"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
 
   scale_fill_distiller("Habitantes",
@@ -2121,7 +2133,7 @@ theme(
   # legend.margin = margin(t = -80)
 ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-         override.aes = list(fill = c("#0f805e","white", "white"),
+         override.aes = list(fill = c("#f8e169","white", "white"),
                              alpha = c(0.2,0.7,0.7)))) +
 
   # guides(fill = guide_legend(byrow = TRUE)) +
