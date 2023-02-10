@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'poa'
+sigla_muni <- 'rma'
 
 
 graficos <- function(munis = "all"){
@@ -61,7 +61,7 @@ graficos <- function(munis = "all"){
       st_make_valid() %>%
       st_union()
     
-    simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+    simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
       st_make_valid() %>%
       st_transform(decisao_muni$epsg) %>%
       st_buffer(2) %>%
@@ -249,7 +249,7 @@ graficos <- function(munis = "all"){
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
+              linewidth = 0.4,
               alpha= 0.7)  +
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
@@ -334,7 +334,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey85", size = .4) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -342,7 +342,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -373,7 +373,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.25),
+      legend.position = c(0.82, 0.26),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -381,7 +381,7 @@ graficos <- function(munis = "all"){
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.2, 'cm'),
+      legend.spacing.y = unit(0.1, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
@@ -479,6 +479,7 @@ graficos <- function(munis = "all"){
               alpha=.8,
               size = 0)+
       
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey85", linewidth = 0.4) +
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
@@ -528,7 +529,7 @@ graficos <- function(munis = "all"){
             fill = NA,
             # stroke = 2,
             # size = 2,
-            linewidth = 0.8,
+            linewidth = 0.4,
             alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -536,7 +537,7 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.9,
+              linewidth = 0.3,
               fill = "#d96e0a",
               show.legend = "polygon",
               alpha = 0.7)+
@@ -604,10 +605,10 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey85", linewidth = 0.4) +
+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -615,7 +616,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -646,7 +647,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.25),
+      legend.position = c(0.82, 0.26),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -660,9 +661,12 @@ graficos <- function(munis = "all"){
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)+
-      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white")),
-                                  order = 1,
-                                  byrow = T))
+      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", "white", "white"),
+                                                      linewidth = c(1,1,1),
+                                                      alpha = c(0.5,0.5,0.5)),
+                                  order = 1#,
+                                  # byrow = T
+                                  ))
     
     
     
@@ -1062,7 +1066,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1070,7 +1074,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
 
     theme(
       strip.text.x = element_text(size=rel(1.2)),
@@ -1089,7 +1093,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.27),
+      legend.position = c(0.80, 0.27),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1136,7 +1140,7 @@ graficos <- function(munis = "all"){
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
-
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
               aes(color = "areas"),
@@ -1157,7 +1161,7 @@ graficos <- function(munis = "all"){
             fill = NA,
             # stroke = 2,
             # size = 2,
-            linewidth = 0.8,
+            linewidth = 0.4,
             alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -1165,16 +1169,10 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.5,
+              linewidth = 0.4,
               fill = "#d96e0a",
               show.legend = "polygon",
               alpha = 0.7)+
-      
-      geom_sf(data = st_transform(dados_saude_basico, 3857),
-              aes(fill = as.factor(S002)),
-              colour = "grey70",
-              alpha=.8,
-              size = 0)+
       
       scale_color_manual(name = "Uso do solo",
                          values = c("urb" = "#8F040E",
@@ -1184,6 +1182,29 @@ graficos <- function(munis = "all"){
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                    "ag" = "Aglomerados subnormais")
       )+
+      
+      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",2))
+                                                      # color = c("#d96e0a", rep("#A09C9C", 2))
+      ),
+      order = 1)
+      # fill = guide_legend(override.aes = list(fill = c("#c4c9ed",
+      #                                                  
+      #                                                  "#96a0df",
+      #                                                  "#5766cc",
+      #                                                  # "4" = "#3b458a",
+      #                                                  "#1f2447"),
+      #                                         color = rep("#A09C9C", 4)),
+      # order = 2)
+      ) +
+      
+      new_scale_color() +
+      
+      geom_sf(data = st_transform(dados_saude_basico, 3857),
+              aes(fill = as.factor(S002)),
+              colour = "grey70",
+              alpha=.8,
+              size = 0)+
+      
       scale_fill_viridis_d(option = "viridis",
                            name = "Eq. de saúde básica",
                            direction = 1,
@@ -1209,10 +1230,10 @@ graficos <- function(munis = "all"){
     #                             # "5" = "5"
     #                             )) +
 
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1220,7 +1241,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
 
     theme(
       strip.text.x = element_text(size=rel(1.2)),
@@ -1239,7 +1260,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.25),
+      legend.position = c(0.82, 0.24),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1252,21 +1273,21 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni) +
+      aproxima_muni(sigla_muni = sigla_muni) 
       
-      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",2))
-                                                      # color = c("#d96e0a", rep("#A09C9C", 2))
-      ),
-      order = 1)
-      # fill = guide_legend(override.aes = list(fill = c("#c4c9ed",
-      #                                                  
-      #                                                  "#96a0df",
-      #                                                  "#5766cc",
-      #                                                  # "4" = "#3b458a",
-      #                                                  "#1f2447"),
-      #                                         color = rep("#A09C9C", 4)),
-      # order = 2)
-      )
+      # guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",2))
+      #                                                 # color = c("#d96e0a", rep("#A09C9C", 2))
+      # ),
+      # order = 1)
+      # # fill = guide_legend(override.aes = list(fill = c("#c4c9ed",
+      # #                                                  
+      # #                                                  "#96a0df",
+      # #                                                  "#5766cc",
+      # #                                                  # "4" = "#3b458a",
+      # #                                                  "#1f2447"),
+      # #                                         color = rep("#A09C9C", 4)),
+      # # order = 2)
+      # )
 
     ggsave(map_saude_basico,
            device = "png",
@@ -1279,6 +1300,7 @@ graficos <- function(munis = "all"){
     dados_saude_medio <- dados_hex %>% filter(S003 >0) %>%
       mutate(S003 = ifelse(S003 > 5, 5, S003))
     
+    saude_medio_total <- sum(dados_hex$S003)
     
     map_saude_medio <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1307,7 +1329,7 @@ graficos <- function(munis = "all"){
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
+              linewidth = 0.4,
               alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -1315,12 +1337,12 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.5,
+              linewidth = 0.4,
               fill = "#d96e0a",
               show.legend = "polygon",
               alpha = 0.7)+
       
-      geom_sf(data = st_transform(dados_saude_basico, 3857),
+      geom_sf(data = st_transform(dados_saude_medio, 3857),
               aes(fill = as.factor(S002)),
               colour = "grey70",
               alpha=.8,
@@ -1362,7 +1384,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1370,7 +1392,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -1389,7 +1411,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.24),
+        legend.position = c(0.78, 0.24),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -1428,7 +1450,7 @@ graficos <- function(munis = "all"){
 
     dados_saude_alta <- dados_hex %>% filter(S004 >0) #%>%
       # mutate(S004 = ifelse(S004 > 2, 2, S004))
-    # sum(dados_saude_alta$S004)
+    sum(dados_hex$S004)
     # hist(dados_saude_alta$S004)
     map_saude_alta <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1456,7 +1478,7 @@ graficos <- function(munis = "all"){
             fill = NA,
             # stroke = 2,
             # size = 2,
-            linewidth = 0.8,
+            linewidth = 0.4,
             alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -1464,10 +1486,10 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.5,
+              linewidth = 0.4,
               fill = "#d96e0a",
               show.legend = "polygon",
-              alpha = 0.7)+
+              alpha = 0.3)+
       
       geom_sf(data = st_transform(dados_saude_alta, 3857),
               aes(fill = as.factor(S004)),
@@ -1510,7 +1532,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1518,7 +1540,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
 
     theme(
       strip.text.x = element_text(size=rel(1.2)),
@@ -1537,7 +1559,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.21, 0.20),
+      legend.position = c(0.79, 0.24),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1905,7 +1927,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1913,7 +1935,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
 
     theme(
       strip.text.x = element_text(size=rel(1.2)),
@@ -1932,7 +1954,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.25),
+      legend.position = c(0.82, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2031,7 +2053,7 @@ graficos <- function(munis = "all"){
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2039,7 +2061,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -2058,7 +2080,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.23, 0.27),
+        legend.position = c(0.81, 0.25),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2156,7 +2178,7 @@ graficos <- function(munis = "all"){
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2164,7 +2186,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -2183,7 +2205,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.23, 0.27),
+        legend.position = c(0.80, 0.25),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2280,7 +2302,7 @@ graficos <- function(munis = "all"){
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2288,7 +2310,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -2307,7 +2329,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.23, 0.27),
+        legend.position = c(0.80, 0.25),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2473,7 +2495,7 @@ graficos <- function(munis = "all"){
 # Escolas Infantil --------------------------------------------------------
 
     dados_escolas_infantil <- dados_hex %>% filter(E002 >0)
-    total_escolas_infantil <- sum(dados_escolas_infantil$E002)
+    total_escolas_infantil <- sum(dados_hex$E002)
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_infantil <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2481,6 +2503,8 @@ graficos <- function(munis = "all"){
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
@@ -2501,7 +2525,7 @@ graficos <- function(munis = "all"){
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
+              linewidth = 0.4,
               alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -2509,7 +2533,7 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.9,
+              linewidth = 0.4,
               fill = "#2B6CB0",
               show.legend = "polygon",
               alpha = 0.5)+
@@ -2534,8 +2558,8 @@ graficos <- function(munis = "all"){
         name = "Nº de escolas infantis",
         # colors =colors_orange[2:length(colors_orange)],
         values =colors_escolas,
-        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        breaks = seq(1,max(dados_escolas_infantil %>% distinct(E001)),1),
+        labels = seq(1,max(dados_escolas_infantil %>% distinct(E001)),1)#,
         # limits = c(1,max(dados_escolas %>% distinct(E001))),
         
       ) +
@@ -2556,10 +2580,10 @@ graficos <- function(munis = "all"){
       #   # colors
       # ) +
       
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2567,7 +2591,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -2586,7 +2610,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.19, 0.18),
+        legend.position = c(0.82, 0.22),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2614,7 +2638,7 @@ graficos <- function(munis = "all"){
 # Escolasde ensino fundamental --------------------------------------------
 
     dados_escolas_fundamental <- dados_hex %>% filter(E003 >0)
-    total_escolas_fundamental <- sum(dados_escolas_fundamental$E003)
+    total_escolas_fundamental <- sum(dados_hex$E003)
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_fundamental <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2622,6 +2646,8 @@ graficos <- function(munis = "all"){
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
@@ -2642,7 +2668,7 @@ graficos <- function(munis = "all"){
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
+              linewidth = 0.4,
               alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -2650,7 +2676,7 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.9,
+              linewidth = 0.4,
               fill = "#2B6CB0",
               show.legend = "polygon",
               alpha = 0.5)+
@@ -2674,8 +2700,8 @@ graficos <- function(munis = "all"){
         name = "Nº de escolas de ensino fundamental",
         # colors =colors_orange[2:length(colors_orange)],
         values =colors_escolas,
-        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        breaks = seq(1,max(dados_escolas_fundamental %>% distinct(E001)),1),
+        labels = seq(1,max(dados_escolas_fundamental %>% distinct(E001)),1)#,
         # limits = c(1,max(dados_escolas %>% distinct(E001))),
         
       ) +
@@ -2695,10 +2721,10 @@ graficos <- function(munis = "all"){
       #   # colors
       # ) +
       
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2706,7 +2732,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -2725,7 +2751,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.23, 0.18),
+        legend.position = c(0.78, 0.20),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2754,7 +2780,7 @@ graficos <- function(munis = "all"){
 # Escolas ensino médio novo -----------------------------------------------
 
     dados_escolas_medio <- dados_hex %>% filter(E004 >0)
-    total_escolas_medio <- sum(dados_escolas_medio$E004)
+    total_escolas_medio <- sum(dados_hex$E004)
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_medio <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2762,7 +2788,7 @@ graficos <- function(munis = "all"){
       scale_fill_identity()+
       # nova escala
       new_scale_fill() +
-      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
               aes(color = "areas"),
@@ -2782,7 +2808,7 @@ graficos <- function(munis = "all"){
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
+              linewidth = 0.4,
               alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -2790,7 +2816,7 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.9,
+              linewidth = 0.4,
               fill = "#2B6CB0",
               show.legend = "polygon",
               alpha = 0.5)+
@@ -2814,8 +2840,8 @@ graficos <- function(munis = "all"){
         name = "Nº de escolas de ensino médio",
         # colors =colors_orange[2:length(colors_orange)],
         values =colors_escolas,
-        breaks = seq(1,max(dados_escolas %>% distinct(E001)),1),
-        labels = seq(1,max(dados_escolas %>% distinct(E001)),1)#,
+        breaks = seq(1,max(dados_escolas_medio %>% distinct(E001)),1),
+        labels = seq(1,max(dados_escolas_medio %>% distinct(E001)),1)#,
         # limits = c(1,max(dados_escolas %>% distinct(E001))),
         
       ) +
@@ -2835,10 +2861,10 @@ graficos <- function(munis = "all"){
       #   # colors
       # ) +
       
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey75", linewidth = 0.4) +
+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2846,7 +2872,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -2865,7 +2891,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.20, 0.18),
+        legend.position = c(0.81, 0.20),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
