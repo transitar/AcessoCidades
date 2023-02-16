@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'rma'
+sigla_muni <- 'noh'
 
 
 #gráficos de ciclovias
@@ -152,9 +152,10 @@ graficos <- function(munis = "all"){
       summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
     
+    # terminais <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+    #                                sigla_muni, sigla_muni), layer= "terminais") %>% st_transform(decisao_muni$epsg)
     
-    
-    # mapview(area_natend300)
+    # mapview(terminais)
     
     #mapa localização
     cores_ciclo <- c('#5766cc', '#33b099', '#d96e0a')
@@ -339,9 +340,21 @@ graficos <- function(munis = "all"){
               alpha = 1,
               linewidth = 0.3) +
       
+      #TERMINAIS
+      
+      # geom_sf(data = st_transform(terminais, 3857),
+      #         aes(color = 'terminais'),
+      #         # color = '#0f805e',
+      #         # color = NA,
+      #         alpha = 1,
+      #         size  = 1,
+      #         linewidth = 0.3) +
+      
       scale_color_manual(name = "Infraestrutura de<br>Transporte Público",
-                         values = c("linhas" = "#2B6CB0"),
-                         label = c("linhas" = "Linhas de Transporte Público")
+                         values = c("linhas" = "#2B6CB0",
+                                    "terminais" = "black"),
+                         label = c("linhas" = "Linhas de Transporte Público",
+                                   "terminais" = "Terminais de Integração")
       )+
       
       
@@ -362,7 +375,7 @@ graficos <- function(munis = "all"){
     
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -370,7 +383,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -402,7 +415,7 @@ graficos <- function(munis = "all"){
       legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.80, 0.32),
+      legend.position = c(0.18, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -415,7 +428,20 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       guides(#fill = guide_legend(byrow = TRUE),
-             color = guide_legend(override.aes = list(fill = c("white")),
+             color = guide_legend(override.aes = list(fill = c("white"#,
+                                                               # "white"
+                                                               ),
+                                                      shape = c(NA#,
+                                                                # 20
+                                                                ),
+                                                      # colour = c("#2B6CB0","black"),
+                                                      size = c(1#,
+                                                               # 2
+                                                               ),
+                                                      linetype = c(1#,
+                                                                   # 0
+                                                                   )
+                                                      ),
                                   order = 3)) +
       aproxima_muni(sigla_muni = sigla_muni)
     
@@ -795,7 +821,7 @@ graficos <- function(munis = "all"){
       )+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -803,7 +829,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       
     theme(
       strip.text.x = element_text(size=rel(1.2)),
@@ -823,7 +849,7 @@ graficos <- function(munis = "all"){
       legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.80, 0.32),
+      legend.position = c(0.18, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1074,7 +1100,7 @@ graficos <- function(munis = "all"){
       )+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1082,7 +1108,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -1102,7 +1128,7 @@ graficos <- function(munis = "all"){
         legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.80, 0.32),
+        legend.position = c(0.18, 0.32),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -1390,11 +1416,41 @@ graficos <- function(munis = "all"){
     
     
     # levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
-    data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+    if (sigla_muni == "dou"){
+      
+      data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos"))
+      
+    } else {
+      
+      data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+      
+    }
+    
     
     data_micro_bus <- data_micro2 %>% filter(hex %in% id_hex_intersects_bus)
     # mapview(data_micro_bus)
     #recorte nos dados da microssimulacao
+    
+    if (sigla_muni == "dou"){
+      
+      
+      recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects_bus), "OK","N"))  %>% 
+        # mutate(total = "total") %>% 
+        mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+               cor = case_when(V0606 == "Pardos" ~ "Pretos",
+                               V0606 == "Pretos" ~ "Pretos",
+                               V0606 == "Brancos" ~ "Brancos",
+                               V0606 == "Indígenas" ~ "Indígenas")) %>%
+        mutate(
+          quintil_renda = ntile(Rend_pc, 4)) %>%
+        group_by(cor, quintil_renda, genero, teste) %>% summarise(n = n()) %>% 
+        ungroup() %>% group_by(cor, quintil_renda, genero) %>% 
+        summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
+        mutate(class = paste(genero, cor))%>%
+        mutate(id = paste(class, quintil_renda))
+     
+       
+    } else {
     
     recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects_bus), "OK","N"))  %>% 
       # mutate(total = "total") %>% 
@@ -1409,6 +1465,8 @@ graficos <- function(munis = "all"){
       summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
       mutate(class = paste(genero, cor))%>%
       mutate(id = paste(class, quintil_renda))
+    
+    }
     
     resumo.infra_tp300 <- weighted.mean(recorte_rr$prop, w = recorte_rr$n)
     
@@ -1434,10 +1492,10 @@ graficos <- function(munis = "all"){
       passo <- 0.01
     } else if (range_tot <= 0.10){
       passo <- 0.025
-    } else if (range_tot <= 25){
+    } else if (range_tot <= 0.25){
       passo <- 0.05
     } else {
-      passo <- 0.5
+      passo <- 0.10
     }
     
     range1 <- plyr::round_any(ifelse( (min(recorte_rr$prop) - extend)<0, 0, min(recorte_rr$prop) - extend),
@@ -1446,6 +1504,67 @@ graficos <- function(munis = "all"){
     range2 <- plyr::round_any(ifelse( (max(recorte_rr$prop) + extend)>1, 1, max(recorte_rr$prop) + extend),
                               passo,
                               f=ceiling)
+    
+    if (sigla_muni == "dou"){
+      
+      plot_cleveland_bus300 <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
+        geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
+        geom_point(aes(color = class, size= n), shape = 1, stroke = 1.5) +
+        guides(fill=guide_legend(title="Gênero e cor")) +
+        scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
+        )+
+        scale_size_continuous( range = c(0,escala),
+                               limits = c(0,break_max),
+                               breaks = c(break_leap,break_leap*2,break_leap*3),
+                               name = "Habitantes",
+                               guide = "legend")
+      p_b300_bus <- plot_cleveland_bus300 + scale_color_manual(name = "Gênero e Cor",
+                                                               values = c("Homens Brancos"="#ADBEF0",
+                                                                          "Homens Pretos"="#174DE8",
+                                                                          "Homens Indígenas"="black",
+                                                                          "Mulheres Brancos" = "#EBB814",
+                                                                          "Mulheres Pretos"="#B39229",
+                                                                          "Mulheres Indígenas"="#cc3003"),
+                                                               labels = c("Homens Brancos"="Homens Brancos",
+                                                                          "Homens Pretos"="Homens Negros",
+                                                                          "Mulheres Brancos"="Mulheres Brancas",
+                                                                          "Mulheres Pretos"="Mulheres Negras",
+                                                                          "Homens Indígenas"="Homens Indígenas",
+                                                                          "Mulheres Indígenas"="Mulheres Indígenas"))+
+        # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
+        #                    limits = c(0,5), # baixa complexidade car                   
+        #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
+        scale_y_discrete(expand = c(0.4,0.4)) +
+        labs(title = "População com acesso à infraestrutura de transporte público")+  
+        #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
+        # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
+        # theme_minimal() +
+        xlab("% de habitantes do recorte") +
+        ylab("Quartil de renda per capita") +
+        scale_x_continuous(labels = scales::percent,
+                           limits = c(range1,range2),
+                           breaks = seq(range1,range2, passo)) +
+        scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
+        theme(#axis.title = element_blank(),
+          panel.grid.minor = element_line(),
+          legend.background = element_blank(),
+          panel.background = element_blank(),
+          legend.direction = "vertical",
+          legend.position = "bottom",
+          text = element_text(family = "sans",
+                              # face = "bold",
+                              size = 20),
+          
+          plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
+          plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
+          plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+          legend.title = element_text(size = 35, family = "encode_sans_bold"),
+          legend.text = element_text(size = 30, family = "encode_sans_light"),
+          axis.text = element_text(size = 30, family = "encode_sans_light"),
+          axis.title = element_text(size = 35, family = "encode_sans_bold"))
+      
+      
+    } else {
     
     plot_cleveland_bus300 <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
@@ -1499,17 +1618,28 @@ graficos <- function(munis = "all"){
         axis.text = element_text(size = 30, family = "encode_sans_light"),
         axis.title = element_text(size = 35, family = "encode_sans_bold"))
     
-    
+    }
     
     #escrita do gráfico
     
+    if (sigla_muni == "dou"){
+    
+      ggsave(p_b300_bus,
+             device = "png",
+             filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new.png", sigla_muni, sigla_muni),
+             dpi = 300,
+             width = 15, height = 11, units = "cm" )
+      
+      
+      } else {
+
     ggsave(p_b300_bus,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/11-linhasbus_300_cleveland_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
-    
+      }
     
 
     
@@ -1575,7 +1705,15 @@ graficos <- function(munis = "all"){
     
     
     # levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
-    data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+    if (sigla_muni == "dou"){
+      
+      data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos"))
+      
+    } else {
+      
+      data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+      
+    }
     
     data_micro_bus <- data_micro2 %>% filter(hex %in% id_hex_intersects_bus)
     # mapview(data_micro_bus)
@@ -1996,7 +2134,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2004,7 +2142,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -2035,7 +2173,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.80, 0.25),
+      legend.position = c(0.18, 0.25),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2221,7 +2359,7 @@ viagens <- read_rds(sprintf('../data/tp_frequencias/muni_%s/rotas_viagens_%s.rds
   mutate(cond = case_when(headway_medio <= 5 ~ '< 5 minutos',
                         headway_medio <= 10 ~ '5-10 minutos',
                         headway_medio <= 15 ~ '10-15 minutos',
-                        headway_medio > 25 ~ '>15 minutos'))
+                        headway_medio > 25 ~ '>25 minutos'))
 
 
 labels_freq <- c(seq(0,25,5),">30")
@@ -2543,7 +2681,7 @@ limits_freq <- c(0,30)
     #957A03 amarelo queimado
     ggsave(map_frequencias2,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s_new2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
     
@@ -2903,6 +3041,29 @@ limits_freq <- c(0,30)
     # dados_hex_intersect_freq <- dados_hex_intersect_freq$id_hex %>% unique()
     showtext_auto()
     
+    if (sigla_muni == "dou"){
+      
+      recorte_rr_h <- data_micro2 %>%
+        # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
+        left_join(viagens %>% st_drop_geometry(), by = c("hex"="id_hex")) %>%
+        drop_na(headway_medio) %>%
+        mutate(
+          quintil_renda = ntile(Rend_pc, 4))%>%
+        # mutate(total = "total") %>% 
+        mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+               cor = case_when(V0606 == "Pardos" ~ "Pretos",
+                               V0606 == "Pretos" ~ "Pretos",
+                               V0606 == "Brancos" ~ "Brancos",
+                               V0606 == "Indígenas" ~ "Indígenas")) %>%
+        group_by(cor, quintil_renda, genero) %>%
+        summarise(sd = sd(headway_medio),
+                  headway_medio = mean(headway_medio, na.rm =T),
+                  n = n()) %>%
+        mutate(id = paste(genero, cor))
+      
+      
+    } else {
+    
     recorte_rr_h <- data_micro2 %>%
       # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
       left_join(viagens %>% st_drop_geometry(), by = c("hex"="id_hex")) %>%
@@ -2920,7 +3081,7 @@ limits_freq <- c(0,30)
                 n = n()) %>%
       mutate(id = paste(genero, cor))
     
-    
+    }
     
     # sd(teste$headway_medio)
     # recorte_rr <- data_micro2 %>%
@@ -2978,6 +3139,68 @@ limits_freq <- c(0,30)
                                 passo_h,
                                 f = ceiling)
     
+    
+    if (sigla_muni == "dou"){
+      
+      plot_cleveland_headway <- ggplot(recorte_rr_h, aes(headway_medio, as.character(quintil_renda))) +
+        geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
+        geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
+        guides(fill=guide_legend(title="Gênero e cor")) +
+        scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003")
+        )+
+        scale_size_continuous( range = c(0,escala_h),
+                               limits = c(0,break_max_h),
+                               breaks = c(break_leap_h,break_leap_h*2,break_leap_h*3),
+                               name = "Habitantes",
+                               guide = "legend")
+      p_head_bus <- plot_cleveland_headway + scale_color_manual(name = "Gênero e Cor",
+                                                                values = c("Homens Brancos"="#ADBEF0",
+                                                                           "Homens Pretos"="#174DE8",
+                                                                           "Homens Indígenas"="grey70",
+                                                                           "Mulheres Brancos" = "#EBB814",
+                                                                           "Mulheres Pretos"="#B39229",
+                                                                           "Mulheres Indígenas"="#cc3003"),
+                                                                labels = c("Homens Brancos"="Homens Brancos",
+                                                                           "Homens Pretos"="Homens Negros",
+                                                                           "Mulheres Brancos"="Mulheres Brancas",
+                                                                           "Mulheres Pretos"="Mulheres Negras",
+                                                                           "Homens Indígenas"="Homens Indígenas",
+                                                                           "Mulheres Indígenas"="Mulheres Indígenas"))+
+        # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
+        #                    limits = c(0,5), # baixa complexidade car                   
+        #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
+        scale_y_discrete(expand = c(0.4,0.4)) +
+        labs(title = "Intervalo médio por recortes")+  
+        #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
+        # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
+        # theme_minimal() +
+        xlab("Intervalo médio (min)") +
+        ylab("Quartil de renda per capita") +
+        scale_x_continuous(labels = scales::number,
+                           limits = c(range1_h,range2_h),
+                           breaks = seq(range1_h,range2_h, passo_h)) +
+        scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
+        theme(#axis.title = element_blank(),
+          panel.grid.minor = element_line(),
+          legend.background = element_blank(),
+          panel.background = element_blank(),
+          legend.direction = "vertical",
+          legend.position = "bottom",
+          text = element_text(family = "sans",
+                              # face = "bold",
+                              size = 20),
+          
+          plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
+          plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
+          plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+          legend.title = element_text(size = 35, family = "encode_sans_bold"),
+          legend.text = element_text(size = 30, family = "encode_sans_light"),
+          axis.text = element_text(size = 30, family = "encode_sans_light"),
+          axis.title = element_text(size = 35, family = "encode_sans_bold"))
+      
+      
+    } else {
+    
     plot_cleveland_headway <- ggplot(recorte_rr_h, aes(headway_medio, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
       geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
@@ -3030,17 +3253,27 @@ limits_freq <- c(0,30)
         axis.text = element_text(size = 30, family = "encode_sans_light"),
         axis.title = element_text(size = 35, family = "encode_sans_bold"))
     
-    
+    }
     
     #escrita do gráfico
-    
+    if (sigla_muni == "dou"){
+      
+      ggsave(p_head_bus,
+             device = "png",
+             filename =  sprintf("../data/map_plots_transports/muni_%s/16-linhasbus_freq_cleveland_%s_new2.png", sigla_muni, sigla_muni),
+             dpi = 300,
+             width = 15, height = 11, units = "cm" )
+      
+    } else {
+      
+      
     ggsave(p_head_bus,
            device = "png",
            filename =  sprintf("../data/map_plots_transports/muni_%s/16-linhasbus_freq_cleveland_%s_new2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     
-    
+    }
 
 # Tarifa - Espacial -------------------------------------------------------
 
@@ -3349,7 +3582,7 @@ limits_freq <- c(0,30)
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -3357,7 +3590,7 @@ limits_freq <- c(0,30)
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -3376,7 +3609,7 @@ limits_freq <- c(0,30)
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.82, 0.27),
+        legend.position = c(0.18, 0.32),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -3415,6 +3648,29 @@ limits_freq <- c(0,30)
 
 # Cleveland de peso da tarifa ---------------------------------------------
 
+    
+    if (sigla_muni == "dou"){
+      
+      recorte_tarifa <- data_micro2 %>%
+        filter(Rend_pc >0) %>%
+        mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
+        # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
+        mutate(
+          quintil_renda = ntile(Rend_pc, 4)) %>%
+        # mutate(total = "total") %>% 
+        mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+               cor = case_when(V0606 == "Pardos" ~ "Pretos",
+                               V0606 == "Pretos" ~ "Pretos",
+                               V0606 == "Brancos" ~ "Brancos",
+                               V0606 == "Indígenas" ~ "Indígenas")) %>%
+        group_by(cor, quintil_renda, genero) %>%
+        summarise(tarifa_grupo = mean(tarifa_renda, na.rm = T),
+                  n = n()) %>%
+        mutate(id = paste(genero, cor),
+               ID_juntar = paste(genero, cor, quintil_renda))
+      
+    } else {
+    
     recorte_tarifa <- data_micro2 %>%
       filter(Rend_pc >0) %>%
       mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
@@ -3432,7 +3688,7 @@ limits_freq <- c(0,30)
       mutate(id = paste(genero, cor),
              ID_juntar = paste(genero, cor, quintil_renda))
     
-    
+    }
     
     # dados da PNADC
     
@@ -3522,6 +3778,83 @@ limits_freq <- c(0,30)
                                 passo_tarifa,
                                 f = ceiling)
     
+    if (sigla_muni == "dou"){
+      
+      plot_cleveland_tarifa <- ggplot(recorte_tarifa, aes(tarifa_grupo, as.character(quintil_renda))) +
+        geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
+        geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
+        guides(fill=guide_legend(title="Gênero e cor")) +
+        scale_fill_manual(values = c("#33b099", "#5766cc", "#d96e0a", "#cc3003")
+        )+
+        scale_size_continuous( range = c(0,escala_tarifa),
+                               limits = c(0,break_max_tarifa),
+                               breaks = c(break_leap_tarifa,break_leap_tarifa*2,break_leap_tarifa*3),
+                               name = "Habitantes",
+                               guide = "legend")
+      p_tarifa <- plot_cleveland_tarifa + scale_color_manual(name = "Gênero e Cor",
+                                                             values = c("Homens Brancos"="#ADBEF0",
+                                                                        "Homens Pretos"="#174DE8",
+                                                                        "Homens Indígenas"="grey70",
+                                                                        "Mulheres Brancos" = "#EBB814",
+                                                                        "Mulheres Pretos"="#B39229",
+                                                                        "Mulheres Indígenas"="#cc3003"),
+                                                             labels = c("Homens Brancos"="Homens Brancos",
+                                                                        "Homens Pretos"="Homens Negros",
+                                                                        "Mulheres Brancos"="Mulheres Brancas",
+                                                                        "Mulheres Pretos"="Mulheres Negras",
+                                                                        "Homens Indígenas"="Homens Indígenas",
+                                                                        "Mulheres Indígenas"="Mulheres Indígenas"))+
+        # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
+        #                    limits = c(0,5), # baixa complexidade car                   
+        #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
+        scale_y_discrete(expand = c(0.4,0.4)) +
+        labs(title = "% da renda mensal gasta para realizar 60 viagens*")+  
+        #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
+        labs(#subtitle = "por mês no transporte público",
+          caption = paste0("*Considerando a tarifa do transporte público em ",
+                           munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)]," de R$ ",
+                           decisao_muni$tarifa))+
+        # theme_minimal() +
+        xlab("% da renda") +
+        ylab("Quartil de renda per capita") +
+        scale_x_continuous(labels = scales::percent,
+                           limits = c(range1_tarifa,range2_tarifa),
+                           breaks = seq(range1_tarifa,range2_tarifa, passo_tarifa)) +
+        scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
+        theme(#axis.title = element_blank(),
+          panel.grid.minor = element_line(),
+          legend.background = element_blank(),
+          panel.background = element_blank(),
+          legend.direction = "vertical",
+          legend.position = "bottom",
+          text = element_text(family = "sans",
+                              # face = "bold",
+                              size = 20),
+          
+          plot.title = element_text(size = 33, margin = margin(b=10), family = "encode_sans_bold"),
+          plot.subtitle = element_text(size=20, color = "darkslategrey"
+                                       # margin = margin(b = 25)
+          ),
+          plot.caption = element_text(size = 20,
+                                      # margin = margin(t=10),
+                                      color = "darkslategrey",
+                                      hjust = 0,
+                                      family = "encode_sans_light"),
+          legend.title = element_text(size = 33, family = "encode_sans_bold"),
+          legend.text = element_text(size = 27, family = "encode_sans_light"),
+          axis.text = element_text(size = 27, family = "encode_sans_light"),
+          axis.title = element_text(size = 33, family = "encode_sans_bold"))
+      
+      ggsave(p_tarifa,
+             device = "png",
+             filename =  sprintf("../data/map_plots_transports/muni_%s/19-custo_tarifa_cleveland_%s_new_pnadc.png", sigla_muni, sigla_muni),
+             dpi = 300,
+             width = 15, height = 11, units = "cm" )
+      
+      
+      
+    } else {
+    
     plot_cleveland_tarifa <- ggplot(recorte_tarifa, aes(tarifa_grupo, as.character(quintil_renda))) +
       geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
       geom_point(aes(color = id, size= n), shape = 1, stroke = 1.5) +
@@ -3549,7 +3882,7 @@ limits_freq <- c(0,30)
       labs(title = "% da renda mensal gasta para realizar 60 viagens*")+  
       #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
       labs(#subtitle = "por mês no transporte público",
-           caption = paste0("*Considerando a tarifa do transporte público na ",
+           caption = paste0("*Considerando a tarifa do transporte público em ",
                             munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)]," de R$ ",
                                                           decisao_muni$tarifa))+
       # theme_minimal() +
@@ -3588,7 +3921,7 @@ limits_freq <- c(0,30)
            filename =  sprintf("../data/map_plots_transports/muni_%s/19-custo_tarifa_cleveland_%s_new_pnadc.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
-    
+    }
     # mapview(renda, zcol = "tarifa_renda2")
     
   }
