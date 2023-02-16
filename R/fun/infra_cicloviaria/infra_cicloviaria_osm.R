@@ -2,7 +2,7 @@
 rm(list = ls(all.names=T)); gc()
 source('./R/fun/setup.R')
 
-sigla_muni <- "rma"
+sigla_muni <- "noh"
 
 create_diretorios <- function(sigla_muni){
   
