@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'rma'
+sigla_muni <- 'noh'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -420,7 +420,7 @@ map_lisa_cor <- ggplot()+
                                )) +
   
   ggspatial::annotation_scale(style = "ticks",
-                              location = "bl",
+                              location = "br",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -428,11 +428,11 @@ map_lisa_cor <- ggplot()+
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
   
   tema()+
   
-  theme(legend.position = c(0.78,0.26)) +
+  theme(legend.position = c(0.22,0.31)) +
 
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1047,7 +1047,7 @@ map_lisa_renda <- ggplot() +
   
   
   ggspatial::annotation_scale(style = "ticks",
-                              location = "bl",
+                              location = "br",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -1055,11 +1055,11 @@ map_lisa_renda <- ggplot() +
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
   
   tema() +
   
-  theme(legend.position = c(0.77,0.26)) +
+  theme(legend.position = c(0.22,0.31)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
@@ -1493,7 +1493,7 @@ map_lisa_responsaveis <- ggplot() +
   
 
   ggspatial::annotation_scale(style = "ticks",
-                              location = "bl",
+                              location = "br",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -1501,13 +1501,13 @@ map_lisa_responsaveis <- ggplot() +
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
   
   tema() +
   
-  theme(legend.position = c(0.74,0.31)
-        # legend.text=element_text(size=25, family = "encode_sans_light"),
-        # legend.title=element_text(size=27, family = "encode_sans_bold")
+  theme(legend.position = c(0.22,0.29),
+        legend.text=element_text(size=25, family = "encode_sans_light"),
+        legend.title=element_text(size=27, family = "encode_sans_bold")
         ) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
