@@ -12,7 +12,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'poa'
+sigla_muni <- 'noh'
 # library(elementalist)
 # rm(list = ls())
 # width <- 14
@@ -131,7 +131,7 @@ tema_CMA <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.20, 0.27),
+    legend.position = c(0.19, 0.33),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -196,7 +196,7 @@ mapas_cma <- function(sigla_muni,
     st_union()
   # mapview(simplepolys)
 
-  simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+  simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
     st_make_valid() %>%
     st_transform(decisao_muni$epsg) %>%
     st_buffer(2) %>%
@@ -1029,7 +1029,7 @@ lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_
 
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'dou',
+                    sigla_muni = 'noh',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
