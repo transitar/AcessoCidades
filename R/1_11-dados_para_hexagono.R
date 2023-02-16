@@ -20,7 +20,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'rma'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "rais"
+sigla_muni <- 'noh'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "rais"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -79,7 +79,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   ano <- 2019
   file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)
   hex <- read_rds(file_hex)
-  
+  # teste <- hex %>% mutate(area = st_area(.)) %>% mutate(areakm2 = as.numeric(area)/10^6)
   # mapview(hex)
   
   #leitura do shape do município
