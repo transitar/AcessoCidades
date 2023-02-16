@@ -68,7 +68,7 @@ filtrar_malha_viaria_br(year = 2020)
 # função para extrair a malha viária do município -------------------------
 
 
-muni <- "pal"; year <- 2022
+muni <- "rma"; year <- 2022
 # muni <- "goi"; year <- 2014
 
 extrai_malha_viaria <- function(muni, year) {
