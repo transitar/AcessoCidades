@@ -17,7 +17,7 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'rma'
+sigla_muni <- 'noh'
 ano <- 2019
 
 tema <- function(base_size) {
@@ -299,7 +299,7 @@ graficos <- function(munis = "all"){
     
     hist(pop_counts$pop_total)
     #limite de população (caso seja necessário fixar um valor máximo)
-    pop_max_limite <- 3000
+    pop_max_limite <- 1600
     
     if (pop_max_limite == F){
       
@@ -321,6 +321,7 @@ graficos <- function(munis = "all"){
       
     }
     
+    # hist(pop_mapas$pop_total)
     
     map_pop_density <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -453,7 +454,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = .3) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -461,7 +462,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -492,7 +493,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.82, 0.29),
+      legend.position = c(0.18, 0.34),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -836,7 +837,7 @@ graficos <- function(munis = "all"){
     
     cor_ag <- "#dbad6a"
     # hist(renda$renda)
-    renda_max_limite <- 8
+    renda_max_limite <- 6
     
     if (renda_max_limite == F){
       
@@ -1001,7 +1002,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -1009,7 +1010,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -1040,7 +1041,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.82, 0.29),
+      legend.position = c(0.18, 0.34),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1118,6 +1119,15 @@ data_recorte_cor2 <- data_micro %>%
   left_join(dados_hex, by = c("hex" = "id_hex")) %>%
   st_as_sf()
 
+# data_recorte_cor2 <- data_micro %>%
+#   mutate(cor = case_when(V0606 == "Pardos" ~ "Pardos",
+#                          V0606 == "Pretos" ~ "Pretos",
+#                          V0606 == "Brancos" ~ "Brancos")) %>%
+#   group_by(hex, cor) %>%
+#   summarise(n = n()) %>%
+#   left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+#   st_as_sf()
+
 
 
 data_recorte_cor2_hex <- data_recorte_cor2 %>%
@@ -1160,7 +1170,7 @@ data_recorte_cor2_hex <- data_recorte_cor2 %>%
          # pardos,
          pretos)
 
-# write_sf(data_recorte_cor2_hex, '../data/microssimulacao/muni_poa/dados_cor_poa.gpkg')
+write_sf(data_recorte_cor2_hex, sprintf('../data/microssimulacao/muni_%s/dados_cor_%s2.gpkg', sigla_muni, sigla_muni))
 
 # dados para os mapas - recorte de genero
 
