@@ -3,10 +3,10 @@
 # 2. Scripts em Python
 
 # carregar bibliotecas
-options(java.parameters = '-Xmx5G')
+options(java.parameters = '-Xmx6G')
 source('./R/fun/setup.R')
 
-sigla_muni <- 'dou'
+sigla_muni <- 'noh'
 ano <- 2022
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
@@ -54,15 +54,15 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
     #idealmente essa já deve ser a grade com todos os dados no hexagono
     
     grade <- data.table::setDT(readRDS(endereco_grade))
-    grade[
-      , 
-      tem_pop_oport := 
-        pop_total > 0 | 
-        renda_total > 0 |
-        empregos_total > 0 | 
-        saude_total > 0 | 
-        edu_total > 0
-    ]
+    # grade[
+    #   , 
+    #   tem_pop_oport := 
+    #     pop_total > 0 | 
+    #     renda_total > 0 |
+    #     empregos_total > 0 | 
+    #     saude_total > 0 | 
+    #     edu_total > 0
+    # ]
     
     # identifica resolucao utilizada
     res <- stringr::str_extract(endereco_grade, "\\d{2}(?=_)")
@@ -126,6 +126,7 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
   
 }
 
+gerar_pontos_OTP_muni(sigla_muni = "rma", ano = 2022)
 # write do gsheets
 a <- lapply(munis_list$munis_metro[ano_metro == 2017]$abrev_muni, gerar_pontos_OTP_muni, ano = 2017)
 b <- lapply(munis_list$munis_metro[ano_metro == 2018]$abrev_muni, gerar_pontos_OTP_muni, ano = 2018)
