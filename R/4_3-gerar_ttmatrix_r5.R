@@ -5,7 +5,7 @@ rm(list = ls(all.names = T)); gc()
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-5XmxG')
+options(java.parameters = '-7XmxG')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -25,7 +25,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'dou'; ano <- 2022; modo <- c("WALK", "TRANSIT")
+sigla_munii <- 'noh'; ano <- 2022; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -74,7 +74,12 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   if (sigla_munii == 'dou') {
     date <- '2022-12-08'
   }
-  
+  if (sigla_munii == 'rma') {
+    date <- '2022-12-08'
+  }
+  if (sigla_munii == 'noh') {
+    date <- '2022-12-08'
+  }
   
   # if (modes == "todos") {
   #   
@@ -107,7 +112,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
     
     
-    dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni), recursive = T)
+    dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_munii), recursive = T)
     # 3.1) calculate a travel time matrix
     message("Running transit peak matrix...")
     a <- Sys.time()
@@ -208,7 +213,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   max_trip_duration_bike <- 180 # minutes
   
   suppressWarnings(dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk',
-                     sigla_muni), recursive = T))
+                     sigla_munii), recursive = T))
   
   a <- Sys.time()
   ttm_walk <- travel_time_matrix(r5r_core = setup,
@@ -217,7 +222,8 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  mode = "WALK",
                                  max_trip_duration = max_trip_duration_walk,
                                  n_threads = 15,
-                                 progress = T)
+                                 progress = T,
+                                 verbose = F)
                                  # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni))
   time_ttmatrix_walk <- Sys.time() - a
   
@@ -254,7 +260,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
   }
   
-  dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni), recursive = T)
+  dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_munii), recursive = T)
   a <- Sys.time()
   ttm_bike <- travel_time_matrix(r5r_core = setup,
                                  origins = points,
@@ -330,7 +336,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
       
       # juntar matrizes
       ttm <- rbind(ttm_pico, ttm_walk, ttm_bike)
-      # ttm <- rbind(ttm_pico)
+      # ttm <- rbind( ttm_walk, ttm_bike)
       
       rm(ttm_pico)
       rm(ttm_fpico)
