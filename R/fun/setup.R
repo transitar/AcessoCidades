@@ -176,7 +176,15 @@ aproxima_muni <- function(sigla_muni) {
     coord_sf(ylim = c(-1198511,-1254623), xlim = c(-4161439,  -4091299), expand = FALSE)
     # coord_sf(ylim = c(-1198511,-1254623), xlim = c(-4161439,  -4075243), expand = FALSE)
 
-  }
+  } else if (sigla_muni == "noh") {
+  
+  
+  coord_sf(ylim = c(-3455221,-3485093), xlim = c(-5712702,  -5668809), expand = FALSE)
+
+  
+}
+  
+  
   
 }
 
@@ -209,6 +217,11 @@ aproxima_muni_recortes <- function(sigla_muni) {
     
     coord_sf(ylim = c(1.291373*(-4119220--4144039)-1244912,-1244912), xlim = c(-4144039, -4119220), expand = FALSE)
     # -4144039,-1233581
+  } else if (sigla_muni == "noh") {
+    
+    coord_sf(ylim = c(1.291373*(-5684469--5699024)-3473777,-3473777), xlim = c(-5699024, -5684469), expand = FALSE)
+    # -5684469,-3473777
+    # -5699024,-3461508
   }
   
 }
@@ -221,7 +234,7 @@ munis_recorte_limites = tribble(
   "man",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "slz",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
   "rma",  "Bairros",                     1600,         250,      1000,         2000,        500,           30,           10,            500,         500,         150,
-  "noh",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "noh",  "Bairros",                    600,        100,        1000,          200,         800,           4,          4,             250,          250,          100,
   "dou",  "Setores",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
   "con",  "Unid. de planej.",  1500,      200,         1000,         1500,        200,           40,          20,            160,         160,          80,
   "vic",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
