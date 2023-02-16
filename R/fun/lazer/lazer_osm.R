@@ -4,7 +4,7 @@ source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'rma'
+sigla_muni <- 'noh'
 
 create_diretorios <- function(sigla_muni){
   
@@ -41,10 +41,13 @@ lazer_osm <- function(munis = 'all'){
     q_library_sf <- q_library$osm_polygons %>% st_as_sf() %>%
       st_centroid()
     
-    st_write(q_library_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+    q_library_sf_points <- q_library$osm_points %>% st_as_sf()
+    
+    st_write(q_library_sf_points, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
                                    sigla_muni,
                                    sigla_muni),
-             layer = "bibliotecas")
+             layer = "bibliotecas",
+             append = F)
     # mapview(q_library_sf)
     
     #Lazer tag leisure
@@ -219,7 +222,8 @@ lazer_osm <- function(munis = 'all'){
                     q_leisure_pitch_sf2,
                     q_leisure_playground_sf2,
                     q_leisure_stadium_sf2,
-                    q_leisure_dog_sf2)
+                    q_leisure_dog_sf2
+                    )
     
     lazer_final <- lazer2 %>% st_filter(muni_shape)
     
@@ -233,7 +237,7 @@ lazer_osm <- function(munis = 'all'){
                              sigla_muni))
     
     write_sf(lazer_final,
-                     sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm.gpkg',
+                     sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_final.gpkg',
                              sigla_muni,
                              sigla_muni))
 
