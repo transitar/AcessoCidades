@@ -30,11 +30,12 @@ message("Inform username and password to access https://urs.earthdata.nasa.gov "
 username <- readline("Give the username : ")
 password <- readline("Give the password : ")
 
+
 # username <- "user"
 # password <- "pass"
 
 ano <- 2019
-sigla_muni <- "pal"
+sigla_muni <- "rma"
 # sigla_muni="for"
 
 download_srtm <- function(sigla_muni) {
@@ -84,6 +85,13 @@ download_srtm <- function(sigla_muni) {
   } else {
     rst_layer <- do.call(raster::mosaic, args = c(rst, fun = mean))
   }
+  
+  # para a rma acontece de ter uma quadricula completamente vazia, que não é baixada
+  #é necessário baixar manualmente no qgis, fazer o mosaico e carrecar no R para cortar
+  #ou colocar o buffer para 0 para evitar de baixar a quadricula
+  
+  # rst_layer <- raster::raster('../00 - Recebidos/C - RM Aracajú - SE/topografia/srtm_mosaic_rma.tif')
+  
   rst_layer_crop <- raster::crop(rst_layer, st_bbox(muni_sf))
   
   # save processed raster to the municipality folder
@@ -96,7 +104,7 @@ download_srtm <- function(sigla_muni) {
                       overwrite = TRUE)
 }
 
-# download_srtm("poa")
+download_srtm("rma")
 # download_srtm("bel")
 walk(munis_list$munis_df$abrev_muni, download_srtm)
 
