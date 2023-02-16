@@ -21,7 +21,7 @@ Sys.setenv(MAPBOX_API_KEY = my_api$V1)
 
 Sys.getenv("MAPBOX_API_KEY")
 
-sigla_muni = 'RMA'
+sigla_muni = 'NOH'
 ano = 2019
 
 # 2.1) Baixar e salvar os maps tiles de todos os municipios ---------------------
@@ -51,7 +51,7 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
   
   temp_sf <- read_rds(muni_folder_path_shape) 
   
-  temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(35000)
+  temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(20000)
   # }
   # mapview(temp_sf)
   
