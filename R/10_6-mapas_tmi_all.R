@@ -1,5 +1,5 @@
 #10_6-mapas_tmi_all
-# rm(list = ls(all.names = T))
+# rm(list = ls(all.names = T)); gc()
 
 source('./R/fun/setup.R')
 library(patchwork)
@@ -9,8 +9,8 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'poa'
-mode1 <- "transit"
+sigla_muni <- 'noh'
+mode1 <- "bike"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
 sigla_op <- "EF"
@@ -140,7 +140,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.19, 0.25),
+    legend.position = c(0.19, 0.33),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -212,7 +212,7 @@ mapas_tmi <- function(sigla_muni,
   #   st_union()
   # mapview(simplepolys)
   
-  simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+  simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
     st_make_valid() %>%
     st_transform(decisao_muni$epsg) %>%
     st_buffer(2) %>%
@@ -1076,3 +1076,39 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
                     cols = 1,
                     width = 16.5,
                     height = 16.5)
+
+# Aplicação todos os tempos sem TP ----------------------------------------
+
+
+lista_modos <- c(rep(rep("walk", 9),4), rep(rep("bike", 9),4))
+
+lista_tempos <- rep(c(rep(15, 9), rep(30,9), rep(45, 9), rep(60, 9)),2)
+
+lista_oportunidade <- rep(rep(c(
+  rep("escolas", 4),
+  rep("saude", 4),
+  "lazer"),4),2)
+
+lista_siglaop <- rep(rep(c(
+  "ET", "EI", "EF", "EM",
+  "ST", "SB", "SM", "SA",
+  "LZ"), 4),2)
+
+lista_titulo_leg <- rep(rep(c(
+  rep("escolas", 4),
+  rep("Eq. de saúde", 4),
+  "Eq. de lazer"), 4),2)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+library("future")
+seed = TRUE
+plan(multisession)
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
+                    sigla_muni = 'noh',
+                    type_acc = "TMI",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
+
