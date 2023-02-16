@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'rma'
+sigla_muni <- 'noh'
 ano_cnes <- 2022
-estado <- 'SE'
+estado <- 'RS'
 
 
 library(ggmap)
@@ -139,7 +139,7 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     # CAPS - CENTRO DE ATENCAO PSICOSSOCIAL - saude mental e drogas
     # UBS IPAT e UBS CDPM II - vinculatos a policia
     
-    to_remove_3 <- "|43|50|60|64|67|68|75|76|77|81|82|83|84|85"
+    to_remove_3 <- "43|50|60|64|67|68|75|76|77|81|82|83|84|85"
     # dados_74_70 <- cnes_filter4 %>% filter(TP_UNID %like% "74|70")
     
     # 5.2 Delete Home care, tele saude, unidades moveis de saude
@@ -184,22 +184,36 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
     # dados_complementares <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/dados_complementares_%s_%s.dbc',
     #                                                    estado, tolower(estado), ano_cnes))
     
+    cnes_filter6 <- cnes_filter6 %>% filter(CODUFMUN == munis_list$munis_df$code_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)] %>% 
+                                               unlist() %>% substring(., 1, 6)) %>%
+      mutate(nome_fantasia = NA,
+             logradouro = NA,
+             numero = NA,
+             bairro = NA,
+             city = munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)]
+             )
+      
+    
     # 3) Salvar ---------
     write_rds(cnes_filter6, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_%s.rds",
                                     sigla_muni,
                                     sigla_muni,
                                     ano))
-    
+    write.xlsx(cnes_filter6, sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_%s.xlsx",
+                                    sigla_muni,
+                                    sigla_muni,
+                                    ano))
     
     nrow(cnes_filter6)
     
 
     # leitura dos dados com endereço
     
-    cnes_filter6 <- read_xlsx(sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_%s_bruto_2.xlsx",
+    cnes_filter6 <- read_xlsx(sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_%s.xlsx",
                       sigla_muni,
                       sigla_muni,
-                      ano))
+                      ano)) %>%
+      mutate(addresses = paste(nome_fantasia, logradouro, numero,bairro, city, "Brasil"))
     
     
     
