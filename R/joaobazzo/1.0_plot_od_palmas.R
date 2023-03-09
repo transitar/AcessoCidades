@@ -72,7 +72,7 @@ sf_zona2 <- sf::st_as_sf(sf_zona2)
 #  Map -----
 
 my_tile <- readr::read_rds("data-raw/bra_palmas/maptile_crop_mapbox_pal_2019.rds")
-my_bound <- sf::st_transform(x = sf_zona2,3857)
+my_bound <- sf::st_transform(x = sf_zona2,c)
 my_bound <- my_bound[my_bound$Zona != 164,]
 
 bound_bbox <- sf::st_bbox(sf::st_buffer(my_bound,2000)) 
