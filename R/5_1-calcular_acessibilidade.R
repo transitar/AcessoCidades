@@ -7,7 +7,7 @@ source('./R/fun/setup.R')
 
 
 
-sigla_muni <- "noh"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
+sigla_muni <- "rma"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
 # sigla_muni <- "spo"; ano=2019
 # sigla_muni <- "for"; ano=2019
 # sigla_muni <- "for"; ano=2017
@@ -936,7 +936,7 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     }
     
   }
-  suppressWarnings(dir.create(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds', 
+  suppressWarnings(dir.create(sprintf('../r5r/accessibility/muni_%s/acc_%s/', 
                      sigla_muni, sigla_muni), recursive = T))
   
   write_rds(acess_cma, sprintf('../r5r/accessibility/muni_%s/acc_%s.rds', 
