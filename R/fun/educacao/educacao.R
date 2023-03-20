@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'pal'
-ano <- 2021
-estado <- 'RS'
+sigla_muni <- 'bel'
+ano <- 2019
+estado <- 'PA'
 
 create_diretorios <- function(sigla_muni){
   
@@ -30,7 +30,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 
 
-file_hex <- sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', ano, sigla_muni)
+file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)
 hex <- read_rds(file_hex)
 
 if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
