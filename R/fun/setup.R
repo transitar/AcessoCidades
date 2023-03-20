@@ -125,7 +125,7 @@ colors_orange <- c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
 colors_green <- c("#dbede7", "#79b9a6", "#56a68e", "#0f805e", "#0b5e45", "#094d39", "#073b2c")
 
 colors_escolas <- c("#7736a9",
-                    # "#e5665d",
+                    "#e5665d",
                     "#FFE537",
                     "#c57422"
                     )
@@ -182,8 +182,23 @@ aproxima_muni <- function(sigla_muni) {
   coord_sf(ylim = c(-3455221,-3485093), xlim = c(-5712702,  -5668809), expand = FALSE)
 
   
-}
-  
+  } else if (sigla_muni == "slz") {
+    
+    coord_sf(ylim = c(-274487,-314218), xlim = c(-4959296,  -4914246), expand = FALSE)
+
+  } else if (sigla_muni == "bel") {
+    
+    coord_sf(ylim = c(-112607,-172661), xlim = c(-5435689,  -5375866), expand = FALSE)
+    # coord_sf(ylim = c(-136461,-165126), xlim = c(-5414704,  -5384011), expand = FALSE)
+    
+  } else if (sigla_muni == "cit") {
+    
+    coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
+    # coord_sf(ylim = c(-2363809,-2383122), xlim = c(-4594910,  -4571315), expand = FALSE)
+
+
+  }
+   
   
   
 }
@@ -206,7 +221,7 @@ aproxima_muni_recortes <- function(sigla_muni) {
     
     coord_sf(ylim = c(1.291373*(-6086358--6114267)-2557777,-2557777), xlim = c(-6114267, -6086358), expand = FALSE)
 
-  }
+  } 
   # else if (sigla_muni == "rma") {
   #   
   #   coord_sf(ylim = c(1.291373*(-4097369--4158337)-1269731,-1269731), xlim = c(-4158337, -4097369), expand = FALSE)
@@ -220,25 +235,35 @@ aproxima_muni_recortes <- function(sigla_muni) {
   } else if (sigla_muni == "noh") {
     
     coord_sf(ylim = c(1.291373*(-5684469--5699024)-3473777,-3473777), xlim = c(-5699024, -5684469), expand = FALSE)
-    # -5684469,-3473777
-    # -5699024,-3461508
+
+  } else if (sigla_muni == "slz") {
+    
+    coord_sf(ylim = c(1.291373*(-4915495--4945559)-312553,-312553), xlim = c(-4945559, -4915495), expand = FALSE)
+
+  } else if (sigla_muni == "bel") {
+    
+    coord_sf(ylim = c(1.291373*(-5383505--5405857)-165932,-165932), xlim = c(-5405857, -5383505), expand = FALSE)
+   
+  }  else if (sigla_muni == "cit") {
+    
+    coord_sf(ylim = c(1.291373*(-4573728--4586249)-2382024,-2382024), xlim = c(-4586249, -4573728), expand = FALSE)
   }
-  
+
 }
 
 
 munis_recorte_limites = tribble(
   ~abrev_muni, ~legenda,           ~rec_gen,  ~rec_dif_gen, ~rec_brancos, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
   "poa", "Bairros",      3000,      200,         2000,         1000,       1000,          200,          100,             1500,          1500,          200,
-  "bel",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "bel",  "Bairros / Ilhas",       2000,         300,          1000,      3000,          2000,           40,           8,             600,          600,          200,
   "man",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "slz",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "rma",  "Bairros",                     1600,         250,      1000,         2000,        500,           30,           10,            500,         500,         150,
+  "slz",  "Centro histórico",                   1500,        200,       1000,         2000,       1200,           40,           12,            400,         400,         150,
+  "rma",  "Bairros",                   1600,         250,      1000,         2000,        500,           30,           10,            500,         500,         150,
   "noh",  "Bairros",                    600,        100,        1000,          200,         800,           4,          4,             250,          250,          100,
   "dou",  "Setores",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
   "con",  "Unid. de planej.",  1500,      200,         1000,         1500,        200,           40,          20,            160,         160,          80,
   "vic",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
-  "cit",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "cit",  "Bairros",        1000,         100,       1200,         1200,       400,         10,           4,             400,          300,          200,
   "pal",  "Área de planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
   
   
