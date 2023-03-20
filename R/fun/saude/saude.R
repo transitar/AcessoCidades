@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'noh'
+sigla_muni <- 'bel'
 ano_cnes <- 2022
-estado <- 'RS'
+estado <- 'PA'
 
 
 library(ggmap)
@@ -257,6 +257,7 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
                                         sigla_muni,
                                         sigla_muni,
                                         ano))
+    
     arq_saude_final <- read_sf(sprintf("../data/saude/cnes/muni_%s_saude_cnes/muni_%s_cnes_geocoded_%s.gpkg",
                                        sigla_muni,
                                        sigla_muni,
