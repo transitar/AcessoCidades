@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'noh'
+sigla_muni <- 'cit'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -82,7 +82,10 @@ faz_lisa <- function(sigla_muni){
   
   assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                     sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-    mutate(title = "Assentamentos Precários")
+    mutate(title = "Assentamentos Precários") %>% st_make_valid() %>%
+    st_union() %>%
+    st_make_valid() %>%
+    st_simplify(dTolerance = 300)
 # setor_muni2 <- read_rds(sprintf('../data-raw/censo_2021_info_muni/muni_%s.rds',sigla_muni)) %>%
 #   select(code_tract = Cod_setor,
 #          # Situacao_setor,
@@ -360,21 +363,21 @@ map_lisa_cor <- ggplot()+
                               3857), aes(fill = cluster_bp), colour = NA, alpha=1, size = 0)+
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
 
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "bairros"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "bairros"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
           aes(colour = "assentamentos"),
           fill = "#0A7E5C",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.3)+
   
   geom_sf(data = simplepolys %>% st_transform(3857),
@@ -385,7 +388,7 @@ map_lisa_cor <- ggplot()+
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.3,
+          linewidth = 0.5,
           alpha= 0.7)  +
   
   scale_color_manual(name = "Uso do solo",
@@ -432,13 +435,19 @@ map_lisa_cor <- ggplot()+
   
   tema()+
   
-  theme(legend.position = c(0.22,0.31)) +
+  theme(legend.position = c(0.22,0.26)) +
 
   aproxima_muni(sigla_muni = sigla_muni) +
   
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
-                                                  color = c("#0A7E5C", "grey50", "#fde9be"),
-                                                  linewidth = c(1,1,1)),
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
+                                                           # "white",
+                                                           "white"),
+                                                  color = c("#0A7E5C",
+                                                            # "grey50",
+                                                            "#fde9be"),
+                                                  linewidth = c(1,
+                                                                # 1,
+                                                                1)),
                               order = 2))
   
 # map_lisa_cor
@@ -498,124 +507,124 @@ data_complete2 <- data_complete_cor #%>%
 # LISA MAP diferenca de cor antigo -----------------------------------------------
 
 
-map_lisa_cor <- ggplot() +
-  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-  coord_equal() +
-  scale_fill_identity()+
-  # nova escala
-  new_scale_fill() +
-  
-  
-  # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
-  geom_sf(data = st_transform(data_complete_cor, 3857),
-          aes(fill = cluster_bp),
-          colour = NA,
-          alpha=1,
-          size = 0)+
-  
-  scale_fill_manual(name = "Agrupamentos",
-    ,values = c('Not significant' = 'grey70', 'High-High' = '#21367D',
-                               'Low-Low' = '#CC3003'
-                               # 'Low-High' = '#D96E0A'
-                               # 'Low-High' = NA
-  ),
-  labels = c('Not significant' = 'Não Significativo',
-             'High-High' = '> predominância de negros',
-             'Low-Low' = '< predominância de negros'
-             # 'Low-High' = ''
-             # 'Low-High' = 'Baixo-Alto'
-  )) +
-  
-  # labs(color = 'Infraestrutura Cicloviária',
-  #      fill = 'População') +
-  
-  ggnewscale::new_scale_color() +
-  
-  geom_sf(data = assentamentos,
-          # aes(fill = "#d96e0a"),
-          aes(color = "#0f805e"),
-          
-          # fill = "#d96e0a",
-          linewidth = 1.0,
-          fill = NA,
-          show.legend = "polygon",
-          alpha = 0.9)+
-  
-  # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
-  #         color = NA,alpha = .7, linewidth = 1) +
-  # geom_sf(data = st_transform(dados_linhas, 3857),
-  #         aes(color = '#0f805e'),
-  #         # color = '#0f805e',
-  #         # color = NA,
-  #         alpha = 1,
-  #         linewidth = 1.0) +
-  
-  # scale_color_manual(name = "Uso do solo",
-  #                    values = c("##0f805e" = "##0f805e"),
-  #                    label = c("##0f805e" = "Assentamentos precários")
-  # )+
-  geom_sf(data = dados_areas %>% st_transform(3857),
-        # aes(size = 2),
-        aes(color = "grey60"),
-        # color = "grey45",
-        # aes(fill = '#CFF0FF'),
-        fill = NA,
-        # stroke = 2,
-        # size = 2,
-        linewidth = 0.7,
-        alpha= 0.7) +
-  
-  
-  # ggnewscale::new_scale_color() +
-  geom_sf(data = simplepolys %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey45"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.8,
-          alpha= 0.7)  +
-  
-  scale_color_manual(name = "Uso do solo",
-                     values = c("#0f805e" = "#0f805e",
-                                "grey45" = "grey45",
-                                "grey60" = "grey60"),
-                     label = c("#0f805e" = "Assentamentos precários",
-                               "grey45" = "Área urbana",
-                               "grey60" = "Unidades de Planejamento")) +
-  # scale_color_manual(name = "Área Urbanizada",
-  #                    values = c("grey45" = "grey45"),
-  #                    label = c("grey45" = "Palmas")
-  # )+
-  
-geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
-  
-  ggspatial::annotation_scale(style = "ticks",
-                              location = "br",
-                              text_family = "encode_sans_bold",
-                              text_cex = 3,
-                              line_width = 1,
-                              width_hint = 0.10,
-                              pad_x = unit(0.35, "cm"),
-                              pad_y = unit(0.35, "cm")
-  ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
-  tema() +
-  aproxima_muni(sigla_muni = sigla_muni)
-
-
-
-suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
-
-ggsave(map_lisa_cor,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/3-lisa_cor_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = 16.5, height = 16.5, units = "cm" )
+# map_lisa_cor <- ggplot() +
+#   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+#   coord_equal() +
+#   scale_fill_identity()+
+#   # nova escala
+#   new_scale_fill() +
+#   
+#   
+#   # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
+#   geom_sf(data = st_transform(data_complete_cor, 3857),
+#           aes(fill = cluster_bp),
+#           colour = NA,
+#           alpha=1,
+#           size = 0)+
+#   
+#   scale_fill_manual(name = "Agrupamentos",
+#     ,values = c('Not significant' = 'grey70', 'High-High' = '#21367D',
+#                                'Low-Low' = '#CC3003'
+#                                # 'Low-High' = '#D96E0A'
+#                                # 'Low-High' = NA
+#   ),
+#   labels = c('Not significant' = 'Não Significativo',
+#              'High-High' = '> predominância de negros',
+#              'Low-Low' = '< predominância de negros'
+#              # 'Low-High' = ''
+#              # 'Low-High' = 'Baixo-Alto'
+#   )) +
+#   
+#   # labs(color = 'Infraestrutura Cicloviária',
+#   #      fill = 'População') +
+#   
+#   ggnewscale::new_scale_color() +
+#   
+#   geom_sf(data = assentamentos,
+#           # aes(fill = "#d96e0a"),
+#           aes(color = "#0f805e"),
+#           
+#           # fill = "#d96e0a",
+#           linewidth = 1.0,
+#           fill = NA,
+#           show.legend = "polygon",
+#           alpha = 0.9)+
+#   
+#   # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
+#   #         color = NA,alpha = .7, linewidth = 1) +
+#   # geom_sf(data = st_transform(dados_linhas, 3857),
+#   #         aes(color = '#0f805e'),
+#   #         # color = '#0f805e',
+#   #         # color = NA,
+#   #         alpha = 1,
+#   #         linewidth = 1.0) +
+#   
+#   # scale_color_manual(name = "Uso do solo",
+#   #                    values = c("##0f805e" = "##0f805e"),
+#   #                    label = c("##0f805e" = "Assentamentos precários")
+#   # )+
+#   geom_sf(data = dados_areas %>% st_transform(3857),
+#         # aes(size = 2),
+#         aes(color = "grey60"),
+#         # color = "grey45",
+#         # aes(fill = '#CFF0FF'),
+#         fill = NA,
+#         # stroke = 2,
+#         # size = 2,
+#         linewidth = 0.7,
+#         alpha= 0.7) +
+#   
+#   
+#   # ggnewscale::new_scale_color() +
+#   geom_sf(data = simplepolys %>% st_transform(3857),
+#           # aes(size = 2),
+#           aes(color = "grey45"),
+#           # color = "grey45",
+#           # aes(fill = '#CFF0FF'),
+#           fill = NA,
+#           # stroke = 2,
+#           # size = 2,
+#           linewidth = 0.8,
+#           alpha= 0.7)  +
+#   
+#   scale_color_manual(name = "Uso do solo",
+#                      values = c("#0f805e" = "#0f805e",
+#                                 "grey45" = "grey45",
+#                                 "grey60" = "grey60"),
+#                      label = c("#0f805e" = "Assentamentos precários",
+#                                "grey45" = "Área urbana",
+#                                "grey60" = "Unidades de Planejamento")) +
+#   # scale_color_manual(name = "Área Urbanizada",
+#   #                    values = c("grey45" = "grey45"),
+#   #                    label = c("grey45" = "Palmas")
+#   # )+
+#   
+# geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+#   
+#   ggspatial::annotation_scale(style = "ticks",
+#                               location = "br",
+#                               text_family = "encode_sans_bold",
+#                               text_cex = 3,
+#                               line_width = 1,
+#                               width_hint = 0.10,
+#                               pad_x = unit(0.35, "cm"),
+#                               pad_y = unit(0.35, "cm")
+#   ) +
+#   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+#   tema() +
+#   aproxima_muni(sigla_muni = sigla_muni)
+# 
+# 
+# 
+# suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+# 
+# ggsave(map_lisa_cor,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/3-lisa_cor_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = 16.5, height = 16.5, units = "cm" )
 
 
 
@@ -696,119 +705,119 @@ ggsave(hist_difcor,
 
 # Lisa de Genero
 
-queen_w <- queen_weights(data_complete2,order = 1)
-
-# calculate LISA as per GEODA
-lisa_genero <- local_moran(queen_w, data_complete2["dif_homens_mulheres"])
-
-data_complete2$cluster_hm <- as.factor(lisa_genero$GetClusterIndicators())
-levels(data_complete2$cluster_hm) <- lisa_genero$GetLabels()
-
-
-
-map_lisa_genero <- ggplot()+
-  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-  coord_equal() +
-  scale_fill_identity()+
-  # nova escala
-  new_scale_fill() +
-  geom_sf(data = st_transform(data_complete2 %>% filter(cluster_hm != "Low-High"),
-                              3857),
-          aes(fill = cluster_hm), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
-  # geom_sf(data = simplepolys %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "#8E8E8E"),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = .7,
-  #         alpha= .1)  +
-  
-  geom_sf(data = assentamentos,
-          aes(colour = "white"),
-          fill = NA,
-          size = 1.3)+
-  
-  scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
-                                  blue = ""), guide = "legend") +
-  labs(color = "")+
-  
-  scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#CC3003',
-                               'Low-Low' = '#21367D'
-                               # 'Low-High' = '#D96E0A'
-                               ),
-                    labels = c('Not significant' = 'Não Significativo',
-                               'High-High' = 'Menor predominância\nde mulheres',
-                               'Low-Low' = 'Maior predominância\nde mulheres'
-                               # 'Low-High' = 'Baixo-Alto'
-                               )) +
-  
-  # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
-  #                      type = "div",
-  #                      palette = "GnBu",
-  #                      direction = 1,
-  #                      breaks = seq(0,10,2),
-  #                      labels = c("0","2", "4", "6","8", ">10"),
-  #                      limits = c(0,10)) +
-  
-  
-  # scale_fill_gradientn(
-#   name = "Renda Media",
-#   colors = colors_acc ,
-#   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-#   # values = NULL,
-#   space = "Lab",
-#   na.value = NA,
-#   # guide = "colourbar",
-#   aesthetics = "fill",
-#   # colors
-# ) +
-
-# scale_fill_continuous(palette = "Blues",
-#                   aesthetics = "fill")+
-# viridis::scale_fill_viridis(option = "cividis"
+# queen_w <- queen_weights(data_complete2,order = 1)
 # 
-# #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
-# # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
-# #                               scale = ifelse(sigla_op== "TT",1e-3,1))
-# #                      limits = c(0,500000))+
-# # , limits = c(0, 0.72)
-# # , breaks = c(0.001, 0.35, 0.7)
-# # , labels = c(0, "35", "70%")
-# ) +
-
-# scale_color_manual(values = 'transparent')+
-# facet_wrap(~ind, ncol = 2)+
-tema()+
-  labs(fill = "Agrupamento") +
-  theme(legend.title = element_text(size=rel(0.9), hjust = 0),
-        axis.ticks.length = unit(0,"pt"),
-        legend.margin = margin(t = 0),
-        legend.position = c(0.22, 0.2),
-        legend.direction = "vertical",
-        legend.box = "vertical",
-        legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
-        # legend.background = element_rect(fill = "white", color = NA)
-        # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
-        #       # plot.background = element_rect(fill = "#eff0f0",
-        #       #                                 colour = NA)
-        # legend.background = element_rect(fill = "white",
-        #                                  colour = NA)
-        #       
-  )
-# map_lisa_genero
-# map_pop_density
-
-suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
-
-ggsave(map_lisa_genero,
-       device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/4-lisa_genero_%s.png',
-                           sigla_muni,
-                           sigla_muni),
-       dpi = 300,
-       width = width, height = height, units = "cm" )
+# # calculate LISA as per GEODA
+# lisa_genero <- local_moran(queen_w, data_complete2["dif_homens_mulheres"])
+# 
+# data_complete2$cluster_hm <- as.factor(lisa_genero$GetClusterIndicators())
+# levels(data_complete2$cluster_hm) <- lisa_genero$GetLabels()
+# 
+# 
+# 
+# map_lisa_genero <- ggplot()+
+#   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+#   coord_equal() +
+#   scale_fill_identity()+
+#   # nova escala
+#   new_scale_fill() +
+#   geom_sf(data = st_transform(data_complete2 %>% filter(cluster_hm != "Low-High"),
+#                               3857),
+#           aes(fill = cluster_hm), colour = NA, alpha=1, size = 0)+
+#   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+#   # geom_sf(data = simplepolys %>% st_transform(3857),
+#   #         # aes(size = 2),
+#   #         aes(color = "#8E8E8E"),
+#   #         fill = NA,
+#   #         # stroke = 2,
+#   #         # size = 2,
+#   #         linewidth = .7,
+#   #         alpha= .1)  +
+#   
+#   geom_sf(data = assentamentos,
+#           aes(colour = "white"),
+#           fill = NA,
+#           size = 1.3)+
+#   
+#   scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
+#                                   blue = ""), guide = "legend") +
+#   labs(color = "")+
+#   
+#   scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#CC3003',
+#                                'Low-Low' = '#21367D'
+#                                # 'Low-High' = '#D96E0A'
+#                                ),
+#                     labels = c('Not significant' = 'Não Significativo',
+#                                'High-High' = 'Menor predominância\nde mulheres',
+#                                'Low-Low' = 'Maior predominância\nde mulheres'
+#                                # 'Low-High' = 'Baixo-Alto'
+#                                )) +
+#   
+#   # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
+#   #                      type = "div",
+#   #                      palette = "GnBu",
+#   #                      direction = 1,
+#   #                      breaks = seq(0,10,2),
+#   #                      labels = c("0","2", "4", "6","8", ">10"),
+#   #                      limits = c(0,10)) +
+#   
+#   
+#   # scale_fill_gradientn(
+# #   name = "Renda Media",
+# #   colors = colors_acc ,
+# #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+# #   # values = NULL,
+# #   space = "Lab",
+# #   na.value = NA,
+# #   # guide = "colourbar",
+# #   aesthetics = "fill",
+# #   # colors
+# # ) +
+# 
+# # scale_fill_continuous(palette = "Blues",
+# #                   aesthetics = "fill")+
+# # viridis::scale_fill_viridis(option = "cividis"
+# # 
+# # #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
+# # # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+# # #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+# # #                      limits = c(0,500000))+
+# # # , limits = c(0, 0.72)
+# # # , breaks = c(0.001, 0.35, 0.7)
+# # # , labels = c(0, "35", "70%")
+# # ) +
+# 
+# # scale_color_manual(values = 'transparent')+
+# # facet_wrap(~ind, ncol = 2)+
+# tema()+
+#   labs(fill = "Agrupamento") +
+#   theme(legend.title = element_text(size=rel(0.9), hjust = 0),
+#         axis.ticks.length = unit(0,"pt"),
+#         legend.margin = margin(t = 0),
+#         legend.position = c(0.22, 0.2),
+#         legend.direction = "vertical",
+#         legend.box = "vertical",
+#         legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+#         # legend.background = element_rect(fill = "white", color = NA)
+#         # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+#         #       # plot.background = element_rect(fill = "#eff0f0",
+#         #       #                                 colour = NA)
+#         # legend.background = element_rect(fill = "white",
+#         #                                  colour = NA)
+#         #       
+#   )
+# # map_lisa_genero
+# # map_pop_density
+# 
+# suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sigla_muni)))
+# 
+# ggsave(map_lisa_genero,
+#        device = "png",
+#        filename =  sprintf('../data/map_plots_population/muni_%s/4-lisa_genero_%s.png',
+#                            sigla_muni,
+#                            sigla_muni),
+#        dpi = 300,
+#        width = width, height = height, units = "cm" )
 
 
 
@@ -871,96 +880,96 @@ levels(renda$cluster_renda) <- lisa_renda$GetLabels()
 # Lisa de Renda Antigo ----------------------------------------------------
 
 
-map_lisa_renda <- ggplot()+
-  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-  coord_equal() +
-  scale_fill_identity()+
-  # nova escala
-  new_scale_fill() +
-  geom_sf(data = st_transform(renda %>% filter(cluster_renda != "Low-High"), 3857), aes(fill = cluster_renda), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
-  # geom_sf(data = simplepolys %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "#8E8E8E"),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = .7,
-  #         alpha= .1)  +
-  
-  geom_sf(data = assentamentos,
-          aes(colour = "white"),
-          fill = NA,
-          size = 1.3)+
-  
-  scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
-                                  blue = ""), guide = "legend") +
-  labs(color = "")+
-  
-  scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#CC3003',
-                               'Low-Low' = '#21367D'
-                               # 'Low-High' = '#D96E0A'
-                               ),
-                    labels = c('Not significant' = 'Não Significativo',
-                               'High-High' = 'Predominância de\nvalores de renda\nper capita maiores',
-                               'Low-Low' = 'Predominância de\nvalores de renda\nper capita menores'
-                               # 'Low-High' = 'Baixo-Alto'
-                               )) +
-  
-  # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
-  #                      type = "div",
-  #                      palette = "GnBu",
-  #                      direction = 1,
-  #                      breaks = seq(0,10,2),
-  #                      labels = c("0","2", "4", "6","8", ">10"),
-  #                      limits = c(0,10)) +
-  
-  
-  # scale_fill_gradientn(
-#   name = "Renda Media",
-#   colors = colors_acc ,
-#   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-#   # values = NULL,
-#   space = "Lab",
-#   na.value = NA,
-#   # guide = "colourbar",
-#   aesthetics = "fill",
-#   # colors
-# ) +
-
-# scale_fill_continuous(palette = "Blues",
-#                   aesthetics = "fill")+
-# viridis::scale_fill_viridis(option = "cividis"
+# map_lisa_renda <- ggplot()+
+#   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+#   coord_equal() +
+#   scale_fill_identity()+
+#   # nova escala
+#   new_scale_fill() +
+#   geom_sf(data = st_transform(renda %>% filter(cluster_renda != "Low-High"), 3857), aes(fill = cluster_renda), colour = NA, alpha=1, size = 0)+
+#   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+#   # geom_sf(data = simplepolys %>% st_transform(3857),
+#   #         # aes(size = 2),
+#   #         aes(color = "#8E8E8E"),
+#   #         fill = NA,
+#   #         # stroke = 2,
+#   #         # size = 2,
+#   #         linewidth = .7,
+#   #         alpha= .1)  +
+#   
+#   geom_sf(data = assentamentos,
+#           aes(colour = "white"),
+#           fill = NA,
+#           size = 1.3)+
+#   
+#   scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
+#                                   blue = ""), guide = "legend") +
+#   labs(color = "")+
+#   
+#   scale_fill_manual(values = c('Not significant' = 'grey70', 'High-High' = '#CC3003',
+#                                'Low-Low' = '#21367D'
+#                                # 'Low-High' = '#D96E0A'
+#                                ),
+#                     labels = c('Not significant' = 'Não Significativo',
+#                                'High-High' = 'Predominância de\nvalores de renda\nper capita maiores',
+#                                'Low-Low' = 'Predominância de\nvalores de renda\nper capita menores'
+#                                # 'Low-High' = 'Baixo-Alto'
+#                                )) +
+#   
+#   # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
+#   #                      type = "div",
+#   #                      palette = "GnBu",
+#   #                      direction = 1,
+#   #                      breaks = seq(0,10,2),
+#   #                      labels = c("0","2", "4", "6","8", ">10"),
+#   #                      limits = c(0,10)) +
+#   
+#   
+#   # scale_fill_gradientn(
+# #   name = "Renda Media",
+# #   colors = colors_acc ,
+# #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+# #   # values = NULL,
+# #   space = "Lab",
+# #   na.value = NA,
+# #   # guide = "colourbar",
+# #   aesthetics = "fill",
+# #   # colors
+# # ) +
 # 
-# #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
-# # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
-# #                               scale = ifelse(sigla_op== "TT",1e-3,1))
-# #                      limits = c(0,500000))+
-# # , limits = c(0, 0.72)
-# # , breaks = c(0.001, 0.35, 0.7)
-# # , labels = c(0, "35", "70%")
-# ) +
-
-# scale_color_manual(values = 'transparent')+
-# facet_wrap(~ind, ncol = 2)+
-tema()+
-  labs(fill = "Agrupamento") +
-  theme(legend.title = element_text(size=rel(0.9), hjust = 0),
-        axis.ticks.length = unit(0,"pt"),
-        legend.margin = margin(t = 0),
-        legend.position = c(0.22, 0.2),
-        legend.direction = "vertical",
-        legend.box = "vertical",
-        legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
-        # legend.background = element_rect(fill = "white", color = NA)
-        # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
-        #       # plot.background = element_rect(fill = "#eff0f0",
-        #       #                                 colour = NA)
-        # legend.background = element_rect(fill = "white",
-        #                                  colour = NA)
-        #       
-  )+
-  aproxima_muni(sigla_muni = sigla_muni)
+# # scale_fill_continuous(palette = "Blues",
+# #                   aesthetics = "fill")+
+# # viridis::scale_fill_viridis(option = "cividis"
+# # 
+# # #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
+# # # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+# # #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+# # #                      limits = c(0,500000))+
+# # # , limits = c(0, 0.72)
+# # # , breaks = c(0.001, 0.35, 0.7)
+# # # , labels = c(0, "35", "70%")
+# # ) +
+# 
+# # scale_color_manual(values = 'transparent')+
+# # facet_wrap(~ind, ncol = 2)+
+# tema()+
+#   labs(fill = "Agrupamento") +
+#   theme(legend.title = element_text(size=rel(0.9), hjust = 0),
+#         axis.ticks.length = unit(0,"pt"),
+#         legend.margin = margin(t = 0),
+#         legend.position = c(0.22, 0.2),
+#         legend.direction = "vertical",
+#         legend.box = "vertical",
+#         legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+#         # legend.background = element_rect(fill = "white", color = NA)
+#         # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+#         #       # plot.background = element_rect(fill = "#eff0f0",
+#         #       #                                 colour = NA)
+#         # legend.background = element_rect(fill = "white",
+#         #                                  colour = NA)
+#         #       
+#   )+
+#   aproxima_muni(sigla_muni = sigla_muni)
 # map_lisa_renda
 # map_pop_density
 
@@ -987,21 +996,21 @@ map_lisa_renda <- ggplot() +
   
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "bairros"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "bairros"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
           aes(colour = "assentamentos"),
           fill = "#0A7E5C",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.3)+
   
   geom_sf(data = simplepolys %>% st_transform(3857),
@@ -1012,7 +1021,7 @@ map_lisa_renda <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.3,
+          linewidth = 0.5,
           alpha= 0.7)  +
   
   scale_color_manual(name = "Uso do solo",
@@ -1059,13 +1068,19 @@ map_lisa_renda <- ggplot() +
   
   tema() +
   
-  theme(legend.position = c(0.22,0.31)) +
+  theme(legend.position = c(0.22,0.26)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
-                                                  color = c("#0A7E5C", "grey50", "#fde9be"),
-                                                  linewidth = c(1,1,1)),
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
+                                                           # "white",
+                                                           "white"),
+                                                  color = c("#0A7E5C",
+                                                            # "grey50",
+                                                            "#fde9be"),
+                                                  linewidth = c(1,
+                                                                # 1,
+                                                                1)),
                               order = 2))
 
 
@@ -1312,99 +1327,99 @@ levels(renda_resp_sem_na$cluster_mw) <- lisa_mw$GetLabels()
 
 
 
-map_lisa_resp_hm <- ggplot()+
-  geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-  coord_equal() +
-  scale_fill_identity()+
-  # nova escala
-  new_scale_fill() +
-  geom_sf(data = st_transform(renda_resp_sem_na, 3857), aes(fill = cluster_mw), colour = NA, alpha=1, size = 0)+
-  geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
-  # geom_sf(data = simplepolys %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "#8E8E8E"),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = .7,
-  #         alpha= .1)  +
-  
-  geom_sf(data = assentamentos,
-          aes(colour = "white"),
-          fill = NA,
-          size = 1.3)+
-  
-  scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
-                                  blue = ""), guide = "legend") +
-  labs(color = "")+
-  
-  scale_fill_manual(values = c('Not significant' = 'grey70',
-                               'High-High' = '#CC3003',
-                               'Low-Low' = '#21367D',
-                               'Low-High' = '#5766cc',
-                               'High-Low' = '#33b099'
-  ),
-  labels = c('Not significant' = 'Não Significativo',
-             'High-High' = '+ responsáveis do gênero Masc',
-             'Low-Low' = '+ responsáveis do gênero Fem',
-             'Low-High' = '+ resp. do gênero Fem\nao redor de resp. do gênero Masc',
-             'High-Low' = '+ resp. do gênero Masc\nao redor de resp. do gênero Fem'
-             # 'Low-High' = 'Baixo-Alto'
-  )) +
-  
-  # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
-  #                      type = "div",
-  #                      palette = "GnBu",
-  #                      direction = 1,
-  #                      breaks = seq(0,10,2),
-  #                      labels = c("0","2", "4", "6","8", ">10"),
-  #                      limits = c(0,10)) +
-  
-  
-  # scale_fill_gradientn(
-#   name = "Renda Media",
-#   colors = colors_acc ,
-#   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
-#   # values = NULL,
-#   space = "Lab",
-#   na.value = NA,
-#   # guide = "colourbar",
-#   aesthetics = "fill",
-#   # colors
-# ) +
-
-# scale_fill_continuous(palette = "Blues",
-#                   aesthetics = "fill")+
-# viridis::scale_fill_viridis(option = "cividis"
+# map_lisa_resp_hm <- ggplot()+
+#   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+#   coord_equal() +
+#   scale_fill_identity()+
+#   # nova escala
+#   new_scale_fill() +
+#   geom_sf(data = st_transform(renda_resp_sem_na, 3857), aes(fill = cluster_mw), colour = NA, alpha=1, size = 0)+
+#   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+#   # geom_sf(data = simplepolys %>% st_transform(3857),
+#   #         # aes(size = 2),
+#   #         aes(color = "#8E8E8E"),
+#   #         fill = NA,
+#   #         # stroke = 2,
+#   #         # size = 2,
+#   #         linewidth = .7,
+#   #         alpha= .1)  +
+#   
+#   geom_sf(data = assentamentos,
+#           aes(colour = "white"),
+#           fill = NA,
+#           size = 1.3)+
+#   
+#   scale_color_identity(labels = c("white" = "Assentamentos\nPrecarios\n(IBGE 2019)",
+#                                   blue = ""), guide = "legend") +
+#   labs(color = "")+
+#   
+#   scale_fill_manual(values = c('Not significant' = 'grey70',
+#                                'High-High' = '#CC3003',
+#                                'Low-Low' = '#21367D',
+#                                'Low-High' = '#5766cc',
+#                                'High-Low' = '#33b099'
+#   ),
+#   labels = c('Not significant' = 'Não Significativo',
+#              'High-High' = '+ responsáveis do gênero Masc',
+#              'Low-Low' = '+ responsáveis do gênero Fem',
+#              'Low-High' = '+ resp. do gênero Fem\nao redor de resp. do gênero Masc',
+#              'High-Low' = '+ resp. do gênero Masc\nao redor de resp. do gênero Fem'
+#              # 'Low-High' = 'Baixo-Alto'
+#   )) +
+#   
+#   # scale_fill_distiller("Renda per capita\n(Salarios Minimos)",
+#   #                      type = "div",
+#   #                      palette = "GnBu",
+#   #                      direction = 1,
+#   #                      breaks = seq(0,10,2),
+#   #                      labels = c("0","2", "4", "6","8", ">10"),
+#   #                      limits = c(0,10)) +
+#   
+#   
+#   # scale_fill_gradientn(
+# #   name = "Renda Media",
+# #   colors = colors_acc ,
+# #   # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
+# #   # values = NULL,
+# #   space = "Lab",
+# #   na.value = NA,
+# #   # guide = "colourbar",
+# #   aesthetics = "fill",
+# #   # colors
+# # ) +
 # 
-# #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
-# # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
-# #                               scale = ifelse(sigla_op== "TT",1e-3,1))
-# #                      limits = c(0,500000))+
-# # , limits = c(0, 0.72)
-# # , breaks = c(0.001, 0.35, 0.7)
-# # , labels = c(0, "35", "70%")
-# ) +
-
-# scale_color_manual(values = 'transparent')+
-# facet_wrap(~ind, ncol = 2)+
-tema()+
-  labs(fill = "Agrupamento") +
-  theme(legend.title = element_text(size=rel(0.9), hjust = 0),
-        axis.ticks.length = unit(0,"pt"),
-        legend.margin = margin(t = 0),
-        legend.position = c(0.74, 0.26),
-        legend.direction = "vertical",
-        legend.box = "vertical",
-        legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
-        # legend.background = element_rect(fill = "white", color = NA)
-        # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
-        #       # plot.background = element_rect(fill = "#eff0f0",
-        #       #                                 colour = NA)
-        # legend.background = element_rect(fill = "white",
-        #                                  colour = NA)
-        #       
-  ) + aproxima_muni(sigla_muni = sigla_muni)
+# # scale_fill_continuous(palette = "Blues",
+# #                   aesthetics = "fill")+
+# # viridis::scale_fill_viridis(option = "cividis"
+# # 
+# # #                             labels = scales::label_percent(accuracy = .1, decimal.mark = ",")
+# # # labels = scales::label_number(suffix = ifelse(sigla_op== "TT","K",""),
+# # #                               scale = ifelse(sigla_op== "TT",1e-3,1))
+# # #                      limits = c(0,500000))+
+# # # , limits = c(0, 0.72)
+# # # , breaks = c(0.001, 0.35, 0.7)
+# # # , labels = c(0, "35", "70%")
+# # ) +
+# 
+# # scale_color_manual(values = 'transparent')+
+# # facet_wrap(~ind, ncol = 2)+
+# tema()+
+#   labs(fill = "Agrupamento") +
+#   theme(legend.title = element_text(size=rel(0.9), hjust = 0),
+#         axis.ticks.length = unit(0,"pt"),
+#         legend.margin = margin(t = 0),
+#         legend.position = c(0.74, 0.26),
+#         legend.direction = "vertical",
+#         legend.box = "vertical",
+#         legend.text =element_text(size=rel(0.9), hjust = 0, vjust = 1)
+#         # legend.background = element_rect(fill = "white", color = NA)
+#         # theme(plot.title = element_text(hjust = 0.5, size = rel(1)),
+#         #       # plot.background = element_rect(fill = "#eff0f0",
+#         #       #                                 colour = NA)
+#         # legend.background = element_rect(fill = "white",
+#         #                                  colour = NA)
+#         #       
+#   ) + aproxima_muni(sigla_muni = sigla_muni)
 # map_lisa_resp_hm
 # map_pop_density
 
@@ -1432,21 +1447,21 @@ map_lisa_responsaveis <- ggplot() +
   
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "bairros"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "bairros"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
           aes(colour = "assentamentos"),
           fill = "#0A7E5C",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.3)+
   
   geom_sf(data = simplepolys %>% st_transform(3857),
@@ -1457,7 +1472,7 @@ map_lisa_responsaveis <- ggplot() +
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.3,
+          linewidth = 0.5,
           alpha= 0.7)  +
   
   scale_color_manual(name = "Uso do solo",
@@ -1505,16 +1520,22 @@ map_lisa_responsaveis <- ggplot() +
   
   tema() +
   
-  theme(legend.position = c(0.22,0.29),
+  theme(legend.position = c(0.22,0.24),
         legend.text=element_text(size=25, family = "encode_sans_light"),
         legend.title=element_text(size=27, family = "encode_sans_bold")
         ) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
-                                                  color = c("#0A7E5C", "grey50", "#fde9be"),
-                                                  linewidth = c(1,1,1)),
+  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
+                                                           # "white",
+                                                           "white"),
+                                                  color = c("#0A7E5C",
+                                                            # "grey50",
+                                                            "#fde9be"),
+                                                  linewidth = c(1,
+                                                                # 1,
+                                                                1)),
                               order = 2))
 
 
