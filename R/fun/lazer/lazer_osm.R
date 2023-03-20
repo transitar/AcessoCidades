@@ -4,7 +4,7 @@ source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'noh'
+sigla_muni <- 'rma'
 
 create_diretorios <- function(sigla_muni){
   
@@ -148,6 +148,83 @@ lazer_osm <- function(munis = 'all'){
              layer = "estadios")
     
     
+    #praia
+    
+    q_leisure_praia <- opq(bbox = box)%>%
+      add_osm_feature(key = 'natural', value = 'beach') %>% osmdata_sf()
+    
+    q_leisure_praia_sf <- q_leisure_praia$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    # mapview(q_leisure_praia_sf)
+    
+    st_write(q_leisure_praia_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                           sigla_muni,
+                                           sigla_muni),
+             layer = "praias")
+    
+    #atração turistica
+    
+    
+    q_tourist_attraction <- opq(bbox = box)%>%
+      add_osm_feature(key = 'tourism', value = 'attraction') %>% osmdata_sf()
+    
+    q_tourist_attraction_sf <- q_tourist_attraction$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    # mapview(q_tourist_attraction_sf)
+    
+    st_write(q_tourist_attraction_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                         sigla_muni,
+                                         sigla_muni),
+             layer = "atracao_turistica")
+    
+    
+    #pier
+    
+    
+    q_tourist_pier <- opq(bbox = box)%>%
+      add_osm_feature(key = 'man_made', value = 'pier') %>% osmdata_sf()
+    
+    q_tourist_pier_sf <- q_tourist_pier$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    # mapview(q_tourist_attraction_sf)
+    
+    st_write(q_tourist_pier_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                              sigla_muni,
+                                              sigla_muni),
+             layer = "pier")
+    
+    #community_centre
+    
+    
+    q_tourist_centre <- opq(bbox = box)%>%
+      add_osm_feature(key = 'amenity', value = 'community_centre') %>% osmdata_sf()
+    
+    q_tourist_centre_sf <- q_tourist_centre$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    # mapview(q_tourist_attraction_sf)
+    
+    st_write(q_tourist_centre_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                              sigla_muni,
+                                              sigla_muni),
+             layer = "centros_comunitarios")
+    
+    
+    #picnic-site
+    
+    
+    q_tourist_picnic <- opq(bbox = box)%>%
+      add_osm_feature(key = 'tourism', value = 'picnic_site') %>% osmdata_sf()
+    
+    q_tourist_picnic_sf <- q_tourist_picnic$osm_polygons %>% st_as_sf() %>%
+      st_centroid()
+    # mapview(q_tourist_attraction_sf)
+    
+    st_write(q_tourist_picnic_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                              sigla_muni,
+                                              sigla_muni),
+             layer = "picnic")
+    
+    
 
     #leitura do arquivo filtrado:
     
@@ -193,6 +270,32 @@ lazer_osm <- function(munis = 'all'){
                                                 sigla_muni),
                                         layer = "estadios")
     
+    q_leisure_praia_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                             sigla_muni,
+                                             sigla_muni),
+                                     layer = "praias")
+    
+    q_tourist_attraction_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                           sigla_muni,
+                                           sigla_muni),
+                                   layer = "atracao_turistica")
+    
+    
+    q_tourist_pier_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                                sigla_muni,
+                                                sigla_muni),
+                                        layer = "pier")
+    
+    q_tourist_centre_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                          sigla_muni,
+                                          sigla_muni),
+                                  layer = "centros_comunitarios")
+    
+    q_tourist_picnic_sf <-  st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
+                                            sigla_muni,
+                                            sigla_muni),
+                                    layer = "picnic")
+    
     
     q_library_sf2 <- q_library_sf %>% select(osm_id,
                                                        name) %>% mutate(type = "library")
@@ -214,15 +317,36 @@ lazer_osm <- function(munis = 'all'){
     q_leisure_dog_sf2 <- q_leisure_dog_sf %>% select(osm_id,
                                                           name = leisure) %>% mutate(type = "dog_park")
     
+    q_leisure_praia_sf2 <- q_leisure_praia_sf %>% select(osm_id,
+                                                     name = natural) %>% mutate(type = "beach")
+    
+    q_tourist_attraction_sf2 <- q_tourist_attraction_sf %>% select(osm_id,
+                                                         name = name) %>% mutate(type = "attraction")
+    
+    q_tourist_pier_sf2 <- q_tourist_pier_sf %>% select(osm_id,
+                                                                   name = name) %>% mutate(type = "pier")
+    
+    q_tourist_centre_sf2 <- q_tourist_centre_sf %>% select(osm_id,
+                                                       name = name) %>% mutate(type = "community_centre")
+    
+    q_tourist_picnic_sf2 <- q_tourist_picnic_sf %>% select(osm_id,
+                                                           name = name) %>% mutate(type = "picnic")
+    
+    
     lazer2 <- rbind(q_library_sf2,
                     q_leisure_park_sf2,
                     # q_leisure_golf_sf2,
                     q_leisure_garden_sf2,
-                    q_leisure_nature_sf2,
+                    # q_leisure_nature_sf2,
                     q_leisure_pitch_sf2,
                     q_leisure_playground_sf2,
                     q_leisure_stadium_sf2,
-                    q_leisure_dog_sf2
+                    q_leisure_dog_sf2,
+                    q_leisure_praia_sf2,
+                    q_tourist_attraction_sf2,
+                    q_tourist_pier_sf2,
+                    q_tourist_centre_sf2#,
+                    # q_tourist_picnic_sf2
                     )
     
     lazer_final <- lazer2 %>% st_filter(muni_shape)
