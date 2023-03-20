@@ -14,7 +14,7 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'dou'
+sigla_muni <- 'pal'
 mode1 <- "walk"
 oportunidade <- "saude"
 titulo_leg <- "Eq. de saúde"
@@ -992,8 +992,8 @@ faz_grafico_e_salva <- function(sigla_muni,
   }
   
   
-  mapas_cma_clev(sigla_muni = 'rma',type_acc = "TMI", mode1 = "bike", oportunidade = "lazer",
-                 sigla_op = "LZ", titulo_leg = "Lazer", time = 20,
+  mapas_cma_clev(sigla_muni = 'pal',type_acc = "TMI", mode1 = "transit", oportunidade = "lazer",
+                 sigla_op = "LZ", titulo_leg = "Eq. de Lazer", time = 30,
   cols = 1,
   width = 15,
   height = 10)
@@ -1107,7 +1107,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'dou',
+                      sigla_muni = 'rma',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -1145,7 +1145,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'rma',
+                      sigla_muni = 'bel',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -1258,7 +1258,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   seed = TRUE
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'dou',
+                      sigla_muni = 'rma',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
@@ -1342,7 +1342,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'rma',
+                      sigla_muni = 'bel',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
