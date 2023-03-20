@@ -3,10 +3,10 @@
 # 2. Scripts em Python
 
 # carregar bibliotecas
-options(java.parameters = '-Xmx6G')
+options(java.parameters = '-Xmx5G')
 source('./R/fun/setup.R')
 
-sigla_muni <- 'noh'
+sigla_muni <- 'bel'
 ano <- 2022
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
@@ -14,7 +14,7 @@ endereco_grade <- grades_muni <- paste0(
   "../data/hex_municipio/",
   list.files(
     "../data/hex_municipio/",
-    pattern = sigla_muni
+    pattern = paste0(sigla_muni,"_09.rds")
   )
 )
 
@@ -36,7 +36,7 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
     "../data/hex_municipio/",
     list.files(
       "../data/hex_municipio/",
-      pattern = sigla_muni
+      pattern = paste0(sigla_muni,"_09.rds")
     )
   )
   
