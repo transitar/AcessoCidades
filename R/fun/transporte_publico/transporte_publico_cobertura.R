@@ -6,8 +6,8 @@
 
 # rm(list = ls())
 
-
 source('./R/fun/setup.R')
+sf_use_s2(TRUE)
 
 library(patchwork)
 library(showtext)
@@ -21,7 +21,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'noh'
+sigla_muni <- 'slz'
 
 
 #gráficos de ciclovias
@@ -98,9 +98,11 @@ graficos <- function(munis = "all"){
     dir.create(sprintf('../data/tp_cobertura/muni_%s/', sigla_muni))
     
     dados_peds_buffer_300 <- dados_peds %>% st_buffer(300) %>% st_union() %>% st_as_sf()
-    st_write(dados_peds_buffer_300, sprintf('../data/tp_cobertura/muni_%s/buffer_300_%s.gpkg', sigla_muni, sigla_muni))
+    st_write(dados_peds_buffer_300, sprintf('../data/tp_cobertura/muni_%s/buffer_300_%s.gpkg', sigla_muni, sigla_muni),
+             append = F)
     dados_peds_buffer_500 <- dados_peds %>% st_buffer(500) %>% st_union() %>% st_as_sf()
-    st_write(dados_peds_buffer_500, sprintf('../data/tp_cobertura/muni_%s/buffer_500_%s.gpkg', sigla_muni, sigla_muni))
+    st_write(dados_peds_buffer_500, sprintf('../data/tp_cobertura/muni_%s/buffer_500_%s.gpkg', sigla_muni, sigla_muni),
+             append = F)
     
     # mapview(dados_peds_buffer_300)
     area_natend300 <- data_contorno %>% st_transform(decisao_muni$epsg) %>%
@@ -124,15 +126,33 @@ graficos <- function(munis = "all"){
     simplepolys <-  st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
       st_make_valid() %>%
       st_transform(decisao_muni$epsg) %>%
-      st_buffer(2) %>%
+      st_buffer(150) %>%
       st_union()
     
+    # mapview(simplepolys)
+    
+    if (sigla_muni == "slz"){
+      
+      dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                 sigla_muni, sigla_muni), layer= "centro") %>% st_transform(decisao_muni$epsg) %>%
+        st_make_valid()
+
+    } else {
     dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
                                    sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
     
+    }
+    
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                       sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-      mutate(title = "Assentamentos Precários")
+      mutate(title = "Assentamentos Precários") %>% st_make_valid() %>%
+      st_union() %>%
+      st_make_valid() %>%
+      st_simplify(dTolerance = 300)
+    
+    assentamentos2 <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
+                                      sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
+      mutate(title = "Assentamentos Precários") %>% st_make_valid()
     # mapview(assentamentos)
     
     dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
@@ -152,8 +172,8 @@ graficos <- function(munis = "all"){
       summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
     
-    # terminais <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-    #                                sigla_muni, sigla_muni), layer= "terminais") %>% st_transform(decisao_muni$epsg)
+    terminais <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                   sigla_muni, sigla_muni), layer= "terminais") %>% st_transform(decisao_muni$epsg)
     
     # mapview(terminais)
     
@@ -169,7 +189,7 @@ graficos <- function(munis = "all"){
 
 # MAPA DAS LINHAS TP ------------------------------------------------------
 
-    
+    cor_ag <- "#2B6CB0"
     
     #colocar os bairros
     
@@ -180,20 +200,6 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
       
-      geom_sf(data = simplepolys %>% st_transform(3857),
-              # aes(size = 2),
-              fill = "#d8faf0",
-              aes(color = "urb"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              linetype = "solid",
-              # fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.1,
-              alpha= 0.8)  +
-      
-      new_scale_fill() +
 
       geom_sf(data = st_transform(pop_counts, 3857),
               aes(fill = quintil),
@@ -206,9 +212,9 @@ graficos <- function(munis = "all"){
       scale_fill_manual(name = "População",
                         breaks = c("1", "2", "3", "4"),
                         values = c("1" = "#FEF8ED",
-                                   "2" = "#FED49A",
-                                   "3" = "#FDA065",
-                                   "4" = "#D96542"
+                                   "2" = "#fee6c3",
+                                   "3" = "#fac690",
+                                   "4" = "#e9a250"
                                    
                                    # "#33b099" = "#33b099",
                                    # "aglomerados" = "#0f805e"
@@ -226,47 +232,30 @@ graficos <- function(munis = "all"){
       
       guides(#fill = guide_legend(byrow = TRUE),
         # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
-        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
-                                                color = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542")),
+        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250"),
+                                                color = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250")),
                             order = 1,
                             byrow = TRUE)
       ) +
       
       new_scale_fill() +
-      # new_scale_color() +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "aglomerados"),
-              
-              fill = "#0f805e",
-              size = 1.3,
-              # color = NA,
-              show.legend = "polygon",
-              alpha = 0.9)+
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              # fill = "#d8faf0",
+              fill = NA,
+              aes(color = "urb"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              linetype = "solid",
+              # fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.8)  +
       
-      # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
-      #         color = NA,alpha = .7, linewidth = 1) +
-      # geom_sf(data = st_transform(dados_linhas, 3857),
-      #         aes(color = 'linhas'),
-      #         # color = '#0f805e',
-      #         # color = NA,
-      #         alpha = 1,
-      #         linewidth = 0.4) +
-      # 
-      # scale_color_manual(name = "Infraestrutura de Transporte Público",
-      #                    values = c("linhas" = "#2B6CB0"),
-      #                    label = c("linhas" = "Linhas de Transporte Público")
-      # )+
-      
-      
-      
-    #0f805e verde linhas
-      
-      # ggnewscale::new_scale_color() +
-      
-      
-      
+      new_scale_fill() +
+
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
               aes(color = "areas"),
@@ -278,57 +267,38 @@ graficos <- function(munis = "all"){
               # size = 2,
               linewidth = 0.4,
               alpha= 0.7) +
-      
-      # geom_sf(data = simplepolys %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "urb"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         linetype = "solid",
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.4,
-      #         alpha= 0.7)  +
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "aglomerados"),
+              # "#0f805e"
+              fill = cor_ag,
+              linewidth = 0.5,
+              # color = NA,
+              show.legend = "polygon",
+              alpha = 0.5)+
       
 
-      
-      # scale_color_manual(name = "Uso do solo",
-      #                    values = c("urb" = "grey45",
-      #                               "areas" = "grey25"),
-      #                    label = c("urb" = "Área Urbanizada",
-      #                              "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
-      # )+
-      
       scale_color_manual(name = "Uso do solo",
                          breaks = c("areas", "urb", "aglomerados"),
-                         values = c("urb" = "#d8faf0",
-                                    "areas" = "grey25",
-                                    "aglomerados" = "#0f805e"),
+                         values = c(#"urb" = "#d8faf0",
+                           "urb" = "#8F040E",
+                           "areas" = "grey60",
+                           "aglomerados" = cor_ag),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados subnormais")
+                                   "aglomerados" = "Aglomerados Subnormais")
       )+
-      #8F040E vermelho bordas
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         color = "white",
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         linetype = "solid",
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      
       guides(#fill = guide_legend(byrow = TRUE),
-        colour = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e")
-                                                 # colour = c("grey25", "white", "white")
-                                                 ),
-                              oder = 2)
+        colour = guide_legend(override.aes = list(fill = c("white",
+                                                           # "#d8faf0",
+                                                           "white",
+                                                           cor_ag)
+                                                  # colour = c("grey25", "white", "white")
+        ))
         # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
         #                     order = 1)
-        ) +
+      ) +
       # ggnewscale::new_scale_color() +
       ggnewscale::new_scale_color() +
       # ggnewscale::new_scale_fill() +
@@ -338,21 +308,23 @@ graficos <- function(munis = "all"){
               # color = '#0f805e',
               # color = NA,
               alpha = 1,
-              linewidth = 0.3) +
+              linewidth = 0.2) +
       
       #TERMINAIS
       
-      # geom_sf(data = st_transform(terminais, 3857),
-      #         aes(color = 'terminais'),
-      #         # color = '#0f805e',
-      #         # color = NA,
-      #         alpha = 1,
-      #         size  = 1,
-      #         linewidth = 0.3) +
+      geom_sf(data = st_transform(terminais, 3857),
+              aes(color = 'terminais'),
+              # color = '#0f805e',
+              # color = NA,
+              alpha = 1,
+              fill = "grey20",
+              size  = 2.5,
+              shape = 15,
+              linewidth = 0.3) +
       
       scale_color_manual(name = "Infraestrutura de<br>Transporte Público",
-                         values = c("linhas" = "#2B6CB0",
-                                    "terminais" = "black"),
+                         values = c("linhas" = "#4b0082",
+                                    "terminais" = "grey20"),
                          label = c("linhas" = "Linhas de Transporte Público",
                                    "terminais" = "Terminais de Integração")
       )+
@@ -383,7 +355,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -415,7 +387,7 @@ graficos <- function(munis = "all"){
       legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.32),
+      legend.position = c(0.29, 0.34),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -428,18 +400,18 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       guides(#fill = guide_legend(byrow = TRUE),
-             color = guide_legend(override.aes = list(fill = c("white"#,
-                                                               # "white"
+             color = guide_legend(override.aes = list(fill = c("white",
+                                                               "white"
                                                                ),
-                                                      shape = c(NA#,
-                                                                # 20
+                                                      shape = c(NA,
+                                                                15
                                                                 ),
                                                       # colour = c("#2B6CB0","black"),
-                                                      size = c(1#,
-                                                               # 2
+                                                      size = c(1,
+                                                               2
                                                                ),
-                                                      linetype = c(1#,
-                                                                   # 0
+                                                      linetype = c(1,
+                                                                   0
                                                                    )
                                                       ),
                                   order = 3)) +
@@ -447,7 +419,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_linhas_tp,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/5-linhas_tp_%s_new_terminais.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -572,7 +544,7 @@ graficos <- function(munis = "all"){
               # color = '#0f805e',
               # color = NA,
               alpha = 1,
-              linewidth = 0.4) +
+              linewidth = 0.3) +
       
       scale_color_manual(name = "Infraestrutura de Transporte Público",
                          values = c("linhas" = "#2B6CB0"),
@@ -705,26 +677,12 @@ graficos <- function(munis = "all"){
     
 # Mapa - Buffer PEDS 300 M-------------------------------------------------
     
-
+    cor_ag <- "#2B6CB0"
+    
     map_linhas_tp_buffer <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
       scale_fill_identity()+
-      new_scale_fill() +
-      
-      geom_sf(data = simplepolys %>% st_transform(3857),
-              # aes(size = 2),
-              fill = "#d8faf0",
-              aes(color = "urb"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              linetype = "solid",
-              # fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.1,
-              alpha= 0.8)  +
-      
       new_scale_fill() +
       
       geom_sf(data = st_transform(pop_counts, 3857),
@@ -733,14 +691,16 @@ graficos <- function(munis = "all"){
               alpha=1,
               size = 0)+
       
+      
+      
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.8) +
       
       scale_fill_manual(name = "População",
                         breaks = c("1", "2", "3", "4"),
                         values = c("1" = "#FEF8ED",
-                                   "2" = "#FED49A",
-                                   "3" = "#FDA065",
-                                   "4" = "#D96542"
+                                   "2" = "#fee6c3",
+                                   "3" = "#fac690",
+                                   "4" = "#e9a250"
                                    
                                    # "#33b099" = "#33b099",
                                    # "aglomerados" = "#0f805e"
@@ -758,25 +718,29 @@ graficos <- function(munis = "all"){
       
       guides(#fill = guide_legend(byrow = TRUE),
         # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
-        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
-                                                color = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542")),
+        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250"),
+                                                color = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250")),
                             order = 1,
                             byrow = TRUE)
       ) +
       
       new_scale_fill() +
       
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              # fill = "#d8faf0",
+              fill = NA,
+              aes(color = "urb"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              linetype = "solid",
+              # fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.8)  +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "aglomerados"),
-              
-              fill = "#0f805e",
-              size = 1.3,
-              # color = NA,
-              show.legend = "polygon",
-              alpha = 0.9)+
-      
+      new_scale_fill() +
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
               aes(color = "areas"),
@@ -789,21 +753,38 @@ graficos <- function(munis = "all"){
               linewidth = 0.4,
               alpha= 0.7) +
       
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "aglomerados"),
+              # "#0f805e"
+              fill = cor_ag,
+              linewidth = 0.5,
+              # color = NA,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
+      
       scale_color_manual(name = "Uso do solo",
                          breaks = c("areas", "urb", "aglomerados"),
-                         values = c("urb" = "#d8faf0",
-                                    "areas" = "grey25",
-                                    "aglomerados" = "#0f805e"),
+                         values = c(#"urb" = "#d8faf0",
+                           "urb" = "#8F040E",
+                           "areas" = "grey60",
+                           "aglomerados" = cor_ag),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados subnormais")
+                                   "aglomerados" = "Aglomerados Subnormais")
       )+
       
       guides(#fill = guide_legend(byrow = TRUE),
-        colour = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e")
+        colour = guide_legend(override.aes = list(fill = c("white",
+                                                           # "#d8faf0",
+                                                           "white",
+                                                           cor_ag)
                                                   # colour = c("grey25", "white", "white")
-        ),
-        order = 2)) +
+        ))
+        # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
+        #                     order = 1)
+      ) +
       
       ggnewscale::new_scale_color() +
       
@@ -813,11 +794,25 @@ graficos <- function(munis = "all"){
               # color = NA,
               fill = "grey70",
               alpha = 0.7,
+              linewidth = 0.5) +
+      
+      #TERMINAIS
+      geom_sf(data = st_transform(terminais, 3857),
+              aes(color = 'terminais'),
+              # color = '#0f805e',
+              # color = NA,
+              alpha = 1,
+              fill = "grey20",
+              size  = 2.5,
+              shape = 15,
               linewidth = 0.3) +
       
+      
       scale_color_manual(name = "Infraestrutura de<br>Transporte Público",
-                         values = c("buffer300" = "#2B6CB0"),
-                         label = c("buffer300" = "Cobertura de 300m")
+                         values = c("buffer300" = "#4b0082",
+                                    "terminais" = "grey20"),
+                         label = c("buffer300" = "Cobertura de 300m",
+                                   "terminais" = "Terminais de Integração")
       )+
       
       ggspatial::annotation_scale(style = "ticks",
@@ -829,7 +824,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
     theme(
       strip.text.x = element_text(size=rel(1.2)),
@@ -849,7 +844,7 @@ graficos <- function(munis = "all"){
       legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.32),
+      legend.position = c(0.29, 0.34),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -858,9 +853,27 @@ graficos <- function(munis = "all"){
       legend.spacing.y = unit(0.1, 'cm'),
       legend.box.just = "left"
     ) +
+      # guides(#fill = guide_legend(byrow = TRUE),
+      #   color = guide_legend(override.aes = list(fill = c("grey70")),
+      #                        order = 3)) +
       guides(#fill = guide_legend(byrow = TRUE),
-        color = guide_legend(override.aes = list(fill = c("grey70")),
-                             order = 3)) +
+        color = guide_legend(override.aes = list(fill = c("white",
+                                                          "white"
+        ),
+        shape = c(NA,
+                  15
+        ),
+        # colour = c("#2B6CB0","black"),
+        size = c(1,
+                 2
+        ),
+        linetype = c(1,
+                     0
+        )
+        ),
+        order = 3)) +
+      
+      
       aproxima_muni(sigla_muni = sigla_muni)
     
     ggsave(map_linhas_tp_buffer,
@@ -991,35 +1004,22 @@ graficos <- function(munis = "all"){
       scale_fill_identity()+
       new_scale_fill() +
       
-      geom_sf(data = simplepolys %>% st_transform(3857),
-              # aes(size = 2),
-              fill = "#d8faf0",
-              aes(color = "urb"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              linetype = "solid",
-              # fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.1,
-              alpha= 0.8)  +
-      
-      new_scale_fill() +
-      
       geom_sf(data = st_transform(pop_counts, 3857),
               aes(fill = quintil),
               colour = NA,
               alpha=1,
               size = 0)+
       
+      
+      
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.8) +
       
       scale_fill_manual(name = "População",
                         breaks = c("1", "2", "3", "4"),
                         values = c("1" = "#FEF8ED",
-                                   "2" = "#FED49A",
-                                   "3" = "#FDA065",
-                                   "4" = "#D96542"
+                                   "2" = "#fee6c3",
+                                   "3" = "#fac690",
+                                   "4" = "#e9a250"
                                    
                                    # "#33b099" = "#33b099",
                                    # "aglomerados" = "#0f805e"
@@ -1037,25 +1037,29 @@ graficos <- function(munis = "all"){
       
       guides(#fill = guide_legend(byrow = TRUE),
         # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
-        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
-                                                color = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542")),
+        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250"),
+                                                color = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250")),
                             order = 1,
                             byrow = TRUE)
       ) +
       
       new_scale_fill() +
       
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              # fill = "#d8faf0",
+              fill = NA,
+              aes(color = "urb"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              linetype = "solid",
+              # fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.8)  +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "aglomerados"),
-              
-              fill = "#0f805e",
-              size = 1.3,
-              # color = NA,
-              show.legend = "polygon",
-              alpha = 0.9)+
-      
+      new_scale_fill() +
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
               aes(color = "areas"),
@@ -1068,21 +1072,38 @@ graficos <- function(munis = "all"){
               linewidth = 0.4,
               alpha= 0.7) +
       
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "aglomerados"),
+              # "#0f805e"
+              fill = cor_ag,
+              linewidth = 0.5,
+              # color = NA,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
+      
       scale_color_manual(name = "Uso do solo",
                          breaks = c("areas", "urb", "aglomerados"),
-                         values = c("urb" = "#d8faf0",
-                                    "areas" = "grey25",
-                                    "aglomerados" = "#0f805e"),
+                         values = c(#"urb" = "#d8faf0",
+                           "urb" = "#8F040E",
+                           "areas" = "grey60",
+                           "aglomerados" = cor_ag),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                                   "aglomerados" = "Aglomerados subnormais")
+                                   "aglomerados" = "Aglomerados Subnormais")
       )+
       
       guides(#fill = guide_legend(byrow = TRUE),
-        colour = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e")
+        colour = guide_legend(override.aes = list(fill = c("white",
+                                                           # "#d8faf0",
+                                                           "white",
+                                                           cor_ag)
                                                   # colour = c("grey25", "white", "white")
-        ),
-        order = 2)) +
+        ))
+        # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
+        #                     order = 1)
+      ) +
       
       ggnewscale::new_scale_color() +
       
@@ -1092,11 +1113,25 @@ graficos <- function(munis = "all"){
               # color = NA,
               fill = "grey70",
               alpha = 0.7,
+              linewidth = 0.5) +
+      
+      #TERMINAIS
+      geom_sf(data = st_transform(terminais, 3857),
+              aes(color = 'terminais'),
+              # color = '#0f805e',
+              # color = NA,
+              alpha = 1,
+              fill = "grey20",
+              size  = 2.5,
+              shape = 15,
               linewidth = 0.3) +
       
+      
       scale_color_manual(name = "Infraestrutura de<br>Transporte Público",
-                         values = c("buffer500" = "#2B6CB0"),
-                         label = c("buffer500" = "Cobertura de 500m")
+                         values = c("buffer500" = "#4b0082",
+                                    "terminais" = "grey20"),
+                         label = c("buffer500" = "Cobertura de 500m",
+                                   "terminais" = "Terminais de Integração")
       )+
       
       ggspatial::annotation_scale(style = "ticks",
@@ -1108,7 +1143,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -1128,7 +1163,7 @@ graficos <- function(munis = "all"){
         legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.18, 0.32),
+        legend.position = c(0.29, 0.34),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -1137,9 +1172,27 @@ graficos <- function(munis = "all"){
         legend.spacing.y = unit(0.1, 'cm'),
         legend.box.just = "left"
       ) +
+      # guides(#fill = guide_legend(byrow = TRUE),
+      #   color = guide_legend(override.aes = list(fill = c("grey70")),
+      #                        order = 3)) +
       guides(#fill = guide_legend(byrow = TRUE),
-        color = guide_legend(override.aes = list(fill = c("grey70")),
-                             order = 3)) +
+        color = guide_legend(override.aes = list(fill = c("white",
+                                                          "white"
+        ),
+        shape = c(NA,
+                  15
+        ),
+        # colour = c("#2B6CB0","black"),
+        size = c(1,
+                 2
+        ),
+        linetype = c(1,
+                     0
+        )
+        ),
+        order = 3)) +
+      
+      
       aproxima_muni(sigla_muni = sigla_muni)
     
     ggsave(map_linhas_tp_buffer_500,
@@ -1379,8 +1432,8 @@ graficos <- function(munis = "all"){
                                                                                           V0606 == 4 ~ "Pardos",
                                                                                           V0606 == 5 ~ "Indígenas"))
     #ajeitar o formato
-    grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
-                                   sigla_muni, sigla_muni))
+    # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+    #                                sigla_muni, sigla_muni))
     # aaaa <- data_micro %>% st_drop_geometry() %>%
     #   group_by(hex) %>%
     #   summarise(n = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
@@ -1668,8 +1721,8 @@ graficos <- function(munis = "all"){
                                                                                           V0606 == 4 ~ "Pardos",
                                                                                           V0606 == 5 ~ "Indígenas"))
     #ajeitar o formato
-    grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
-                                   sigla_muni, sigla_muni))
+    # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+    #                                sigla_muni, sigla_muni))
     # aaaa <- data_micro %>% st_drop_geometry() %>%
     #   group_by(hex) %>%
     #   summarise(n = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
@@ -1925,11 +1978,11 @@ graficos <- function(munis = "all"){
 
     
     
-    aglomerados_natend300 <- assentamentos %>% st_transform(decisao_muni$epsg) %>%
+    aglomerados_natend300 <- assentamentos2 %>% st_transform(decisao_muni$epsg) %>%
       st_difference(dados_peds_buffer_300) %>% st_as_sf() %>%
       mutate(area_ntad = st_area(.))
     
-    assentamentos_area <- assentamentos %>%
+    assentamentos_area <- assentamentos2 %>%
       mutate(area_total = st_area(.)) %>%
       select(NM_AGSN, area_total)
     
@@ -1963,8 +2016,8 @@ graficos <- function(munis = "all"){
 #     
 #     ratio <- (max(img$y)-min(img$y))/(max(img$x)-min(img$x))
     
-    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                   sigla_muni, sigla_muni), layer= "areas")
+    # dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+    #                                sigla_muni, sigla_muni), layer= "areas")
     # mapview(dados_areas)
     
     
@@ -1985,26 +2038,67 @@ graficos <- function(munis = "all"){
               alpha=1,
               size = 0)+
       
+
+      
+      
+      scale_fill_manual(name = "População",
+                        breaks = c("1", "2", "3", "4"),
+                        values = c("1" = "#FEF8ED",
+                                   "2" = "#fee6c3",
+                                   "3" = "#fac690",
+                                   "4" = "#e9a250"
+                                   
+                                   # "#33b099" = "#33b099",
+                                   # "aglomerados" = "#0f805e"
+                                   # 'n_urb' = '#d8faf0'
+                        ),
+                        label = c("1" = "25% menos populosos",
+                                  
+                                  "2" = "25% a 50% menos populosos",
+                                  "3" = "25% a 50% mais populosos",
+                                  "4" = "25% mais populosos"
+                                  # "#33b099" = "Cobertura de 300m",
+                                  # "aglomerados" = "Aglomerados subnormais"
+                                  # "n_urb" = "Área urbanizada"
+                        )) +
+      
+      guides(#fill = guide_legend(byrow = TRUE),
+        # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
+        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250"),
+                                                color = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250")),
+                            order = 1,
+                            byrow = TRUE)
+      ) +
+      
+      new_scale_fill() +
+      
+      
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "grey45"),
+              # fill = "#d8faf0",
+              fill = NA,
+              aes(color = "urb"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
-              fill = NA,
+              linetype = "solid",
+              # fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.8,
-              alpha= 0.7)  +
+              linewidth = 0.4,
+              alpha= 0.8)  +
+      
+      new_scale_fill() +
       
       geom_sf(data = dados_areas %>% st_transform(3857),
               # aes(size = 2),
-              aes(color = "grey70"),
+              aes(color = "areas"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
               fill = NA,
+              linetype = "solid",
               # stroke = 2,
               # size = 2,
-              linewidth = 0.5,
+              linewidth = 0.4,
               alpha= 0.7) +
       
 
@@ -2018,23 +2112,47 @@ graficos <- function(munis = "all"){
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
 
       
-      geom_sf(data = st_transform(aglomerados_natend300, 3857),
-              aes(color = '#0f805e'),
-              # color = '#0f805e',
-              # color = NA,
-              # fill = "#0f805e",
-              fill = NA,
-              alpha = 0.6,
-              linewidth = 1.0) +
+      # geom_sf(data = st_transform(aglomerados_natend300, 3857),
+      #         aes(color = '#0f805e'),
+      #         # color = '#0f805e',
+      #         # color = NA,
+      #         # fill = "#0f805e",
+      #         fill = NA,
+      #         alpha = 0.6,
+      #         linewidth = 1.0) +
+    
+    geom_sf(data = aglomerados_natend300 %>% st_union(),
+            # aes(fill = "#d96e0a"),
+            aes(color = "aglomerados"),
+            # "#0f805e"
+            fill = cor_ag,
+            linewidth = 0.5,
+            # color = NA,
+            show.legend = "polygon",
+            alpha = 0.5)+
+      
+    
       scale_color_manual(name = "Uso do solo",
-                         values = c("grey45" = "grey45",
-                                    "grey70" = "grey70",
-                                    "#0f805e" = "#0f805e"),
-                         label = c("grey45" = "Área urbanizada",
-                                   "grey70" = "Bairros",
-                                   "#0f805e" = "Aglomerados subnormais")
+                         breaks = c("areas", "urb", "aglomerados"),
+                         values = c(#"urb" = "#d8faf0",
+                           "urb" = "#8F040E",
+                           "areas" = "grey60",
+                           "aglomerados" = cor_ag),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                                   "aglomerados" = "Aglomerados Subnormais")
       )+
       
+      guides(#fill = guide_legend(byrow = TRUE),
+        colour = guide_legend(override.aes = list(fill = c("white",
+                                                           # "#d8faf0",
+                                                           "white",
+                                                           cor_ag)
+                                                  # colour = c("grey25", "white", "white")
+        ))
+        # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
+        #                     order = 1)
+      ) +
       # 
       # scale_color_manual(name = "Aglomerados subnormais",
       #                    values = c("#0f805e" = "#0f805e"),
@@ -2042,7 +2160,7 @@ graficos <- function(munis = "all"){
       # )+
       
       # scale_fill_viridis_b() +
-
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.5) +
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
@@ -2084,18 +2202,6 @@ graficos <- function(munis = "all"){
       #   # colors
       # ) +
       
-    scale_fill_manual(name = "População",
-                      values = c("1" = "#FEF8ED",
-                                 
-                                 "2" = "#FED49A",
-                                 "3" = "#FDA065",
-                                 "4" = "#D96542"),
-                      label = c("1" = "25% menos populosos",
-                                
-                                "2" = "25% a 50% menos populosos",
-                                "3" = "25% a 50% mais populosos",
-                                "4" = "25% mais populosos")) +
-      
       # scale_fill_viridis_c(direction = -1,option = "inferno", name = "População não atendida") +
       # scale_fill_manual(values = c("1" = "#FEF8ED",
       #                              
@@ -2130,9 +2236,27 @@ graficos <- function(munis = "all"){
     #                   label = "Aglomerados\nSubnormais") +
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
-    
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    ggnewscale::new_scale_color() +
       
+      geom_sf(data = st_transform(terminais, 3857),
+              aes(color = 'terminais'),
+              # color = '#0f805e',
+              # color = NA,
+              alpha = 1,
+              fill = "grey20",
+              size  = 2.5,
+              shape = 15,
+              linewidth = 0.3) +
+      
+      scale_color_manual(name = "Infraestrutura de<br>Transporte Público",
+                         values = c(
+                                    "terminais" = "grey20"),
+                         label = c(
+                                   "terminais" = "Terminais de Integração")
+      )+
+      
+    
+
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
                                   text_family = "encode_sans_bold",
@@ -2142,7 +2266,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -2170,10 +2294,10 @@ graficos <- function(munis = "all"){
       legend.key.height = unit(1,"line"),
       legend.key = element_blank(),
       legend.text=element_text(size=25, family = "encode_sans_light"),
-      legend.title=element_text(size=30, family = "encode_sans_bold"),
+      legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.25),
+      legend.position = c(0.29, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2185,8 +2309,21 @@ graficos <- function(munis = "all"){
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
-      guides(fill = guide_legend(byrow = TRUE,
-                                 order = 2)) +
+      guides(#fill = guide_legend(byrow = TRUE),
+        color = guide_legend(override.aes = list(fill = c("white"
+        ),
+        shape = c(
+                  15
+        ),
+        # colour = c("#2B6CB0","black"),
+        size = c(
+                 2
+        ),
+        linetype = c(
+                     0
+        )
+        ),
+        order = 3)) +
       aproxima_muni(sigla_muni = sigla_muni)
     
     ggsave(map_aglomerados_ntad,
@@ -2354,7 +2491,8 @@ frequencias2 <- frequencias %>% mutate(cond = case_when(headway_medio <= 15 ~ '<
                                         '30-60 minutos',
                                         '>60 minutos')))
 viagens <- read_rds(sprintf('../data/tp_frequencias/muni_%s/rotas_viagens_%s.rds',
-                            sigla_muni, sigla_muni)) %>% mutate(headway_medio = 60/n_viagens_h) %>%
+                            sigla_muni, sigla_muni)) %>%
+  # mutate(headway_medio = 60/n_viagens_h) %>%
   mutate(headway_medio = ifelse(headway_medio >30 , 31, headway_medio)) %>%
   mutate(cond = case_when(headway_medio <= 5 ~ '< 5 minutos',
                         headway_medio <= 10 ~ '5-10 minutos',
@@ -2364,97 +2502,97 @@ viagens <- read_rds(sprintf('../data/tp_frequencias/muni_%s/rotas_viagens_%s.rds
 
 labels_freq <- c(seq(0,25,5),">30")
 breaks_freq <- seq(0,30,5)
-limits_freq <- c(0,30)
+limits_freq <- c(0,31)
 
     # mapview(frequencias2)
 
-    map_frequencias <- ggplot() +
-      # geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
-      # coord_equal() +
-      # scale_fill_identity()+
-      # # nova escala
-      # new_scale_fill() +
+    # map_frequencias <- ggplot() +
+    #   # geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+    #   # coord_equal() +
+    #   # scale_fill_identity()+
+    #   # # nova escala
+    #   # new_scale_fill() +
+    # 
+    #   # geom_sf(data = simplepolys %>% st_transform(3857),
+    #   #         # aes(size = 2),
+    #   #         # aes(color = "#21367d"),
+    #   #         aes(color = 'black'),
+    #   #         # fill = NA,
+    #   #         # stroke = 2,
+    #   #         # size = 2,
+    #   #         linewidth = 0.3,
+    #   #         alpha= 0.8)  +
+    #   # theme_map() +
+    #   geom_sf(data = st_transform(viagens, 3857),
+    #           # aes(fill = cond),
+    #           fill = '#21367d',
+    #           # fill = NA,
+    #           color = NA,
+    #           alpha = .5,
+    #           size = 0.7) +
+    # 
+    #   # geom_sf(data = assentamentos,
+    #   #         aes(fill = "#d96e0a"),
+    #   #         # fill = "#d96e0a",
+    #   #         size = 1.3,
+    #   #         color = NA,
+    #   #         show.legend = "polygon",
+    #   #         alpha = 0.8)+
+    # 
+    #   # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
+    # 
+    #   geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
+    # 
+    #   labs(fill = '') +
+    #   labs(color = "") +
+    # 
+    #   scale_fill_manual(values = c('#21367d'='#21367d'
+    #                                # "#d96e0a" ="#d96e0a"
+    #                                # '#CFF0FF' = "#CFF0FF"
+    #   ),
+    #   labels = c('#21367d'=""
+    #              # "#d96e0a"="Aglomerados\nSubnormais"
+    #              # '#CFF0FF'="Área urbanizada\n(Mapbiomas 2021)"
+    #   ))+
+    # 
+    #   scale_color_identity(labels = c("black" = "Área urbanizada\n(Mapbiomas 2021)",
+    #                                   blue = ""), guide = "legend") +
+    # 
+    #   facet_wrap(~ cond, ncol = 2) +
+    # 
+    #   theme(
+    #     # strip.text.x = element_text(size=rel(1.2)),
+    #     # strip.background = element_blank(),
+    #     # panel.background = element_rect(fill = NA, colour = NA),
+    #     # legend.background = element_blank(),
+    #     axis.text = element_blank(),
+    #     axis.title = element_blank(),
+    #     axis.ticks = element_blank(),
+    # 
+    #     panel.grid = element_blank()
+    #     # plot.margin=unit(c(2,0,0,0),"mm"),
+    #     # legend.key.width=unit(2,"line"),
+    #     # legend.key.height = unit(.5,"cm"),
+    #     # legend.text=element_text("Tipo", size=rel(1)),
+    #     # legend.title=element_text(size=rel(1)),
+    #     # plot.title = element_text(hjust = 0, vjust = 4),
+    #     # strip.text = element_text(size = 10),
+    #     # legend.position = c(0.25, 0.15),
+    #     # legend.spacing.y = unit(0.1, 'cm'),
+    #     # legend.margin = margin(-0.45,0,0,0, unit="cm")
+    #     # legend.margin = margin(t = -80)
+    #   ) +
+    #   aproxima_muni(sigla_muni = sigla_muni)
+    #   # guides(fill = guide_legend(byrow = TRUE))
+    # # width = 16; height = 16
+    # # map_empregos
+    # # map_frequencias
 
-      # geom_sf(data = simplepolys %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         # aes(color = "#21367d"),
-      #         aes(color = 'black'),
-      #         # fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.3,
-      #         alpha= 0.8)  +
-      # theme_map() +
-      geom_sf(data = st_transform(viagens, 3857),
-              # aes(fill = cond),
-              fill = '#21367d',
-              # fill = NA,
-              color = NA,
-              alpha = .5,
-              size = 0.7) +
-
-      # geom_sf(data = assentamentos,
-      #         aes(fill = "#d96e0a"),
-      #         # fill = "#d96e0a",
-      #         size = 1.3,
-      #         color = NA,
-      #         show.legend = "polygon",
-      #         alpha = 0.8)+
-
-      # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
-
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,color = 'grey70', size = .1) +
-
-      labs(fill = '') +
-      labs(color = "") +
-
-      scale_fill_manual(values = c('#21367d'='#21367d'
-                                   # "#d96e0a" ="#d96e0a"
-                                   # '#CFF0FF' = "#CFF0FF"
-      ),
-      labels = c('#21367d'=""
-                 # "#d96e0a"="Aglomerados\nSubnormais"
-                 # '#CFF0FF'="Área urbanizada\n(Mapbiomas 2021)"
-      ))+
-
-      scale_color_identity(labels = c("black" = "Área urbanizada\n(Mapbiomas 2021)",
-                                      blue = ""), guide = "legend") +
-
-      facet_wrap(~ cond, ncol = 2) +
-
-      theme(
-        # strip.text.x = element_text(size=rel(1.2)),
-        # strip.background = element_blank(),
-        # panel.background = element_rect(fill = NA, colour = NA),
-        # legend.background = element_blank(),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        axis.ticks = element_blank(),
-
-        panel.grid = element_blank()
-        # plot.margin=unit(c(2,0,0,0),"mm"),
-        # legend.key.width=unit(2,"line"),
-        # legend.key.height = unit(.5,"cm"),
-        # legend.text=element_text("Tipo", size=rel(1)),
-        # legend.title=element_text(size=rel(1)),
-        # plot.title = element_text(hjust = 0, vjust = 4),
-        # strip.text = element_text(size = 10),
-        # legend.position = c(0.25, 0.15),
-        # legend.spacing.y = unit(0.1, 'cm'),
-        # legend.margin = margin(-0.45,0,0,0, unit="cm")
-        # legend.margin = margin(t = -80)
-      ) +
-      aproxima_muni(sigla_muni = sigla_muni)
-      # guides(fill = guide_legend(byrow = TRUE))
-    # width = 16; height = 16
-    # map_empregos
-    # map_frequencias
-
-    ggsave(map_frequencias,
-           device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/13-frequencias_%s.png", sigla_muni, sigla_muni),
-           dpi = 400,
-           width = width, height = height, units = "cm" )
+    # ggsave(map_frequencias,
+    #        device = "png",
+    #        filename =  sprintf("../data/map_plots_transports/muni_%s/13-frequencias_%s.png", sigla_muni, sigla_muni),
+    #        dpi = 400,
+    #        width = width, height = height, units = "cm" )
     
     
     
@@ -2465,7 +2603,10 @@ limits_freq <- c(0,30)
               "#dfc27d", "#bf812d","#8c510a", "#543005")
     
     
-    cor_ntad <- "#957A03"
+    # cor_ntad <- "#957A03" #coco de bosta
+    cor_ntad <- "#daa520" #amarelo
+    
+    cor_ag_freq <- "#2B6CB0"
     
     map_frequencias2 <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2532,38 +2673,65 @@ limits_freq <- c(0,30)
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
 
       
-      geom_sf(data = st_transform(aglomerados_natend300, 3857),
+      # geom_sf(data = st_transform(aglomerados_natend300, 3857),
+      #         aes(color = 'assentamentos'),
+      #         # color = '#0f805e',
+      #         # color = NA,
+      #         # fill = "#0f805e",
+      #         fill = NA,
+      #         alpha = 0.6,
+      #         linewidth = 1.0) +
+      
+      geom_sf(data = st_transform(assentamentos, 3857),
               aes(color = 'assentamentos'),
               # color = '#0f805e',
               # color = NA,
               # fill = "#0f805e",
-              fill = NA,
-              alpha = 0.6,
-              linewidth = 1.0) +
+              # fill = NA,
+              fill = cor_ag_freq,
+              alpha = 0.5,
+              linewidth = 0.7) +
+      
       scale_color_manual(name = "Uso do solo",
                          breaks = c('urb', "areas", "assentamentos", "ntad"),
                          values = c("urb" = "grey50",
                                     "areas" = "#fefedf",
-                                    "assentamentos" = "#0F805E",
+                                    "assentamentos" = cor_ag_freq,
                                     "ntad" = cor_ntad),
                          label = c("urb" = "Área urbanizada",
-                                   "areas" = "Áreas de planejamento",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                    "assentamentos" = "Aglomerados subnormais",
                                    "ntad" = "População não atendida")
       )+
       
+      guides(color = guide_legend(override.aes = list(fill = c("white", "white", cor_ag_freq, cor_ntad),
+                                                      color = c("grey50", "#fdfc99", cor_ag_freq, cor_ntad)),
+                                  order = 1)) +
 
-      # 
+      ggnewscale::new_scale_color() +
       # scale_color_manual(name = "Aglomerados subnormais",
       #                    values = c("#0f805e" = "#0f805e"),
       #                    label = c("#0f805e" = "Palmas")
       # )+
-      
+      geom_sf(data = st_transform(terminais, 3857),
+              aes(color = 'terminais'),
+              # color = '#0f805e',
+              # color = NA,
+              alpha = 1,
+              fill = "#ead136",
+              size  = 2.5,
+              shape = 15,
+              linewidth = 0.3) +
       # scale_fill_viridis_b() +
       
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
-    
+      scale_color_manual(name = "Infraestrutura de<br>Transporte Público",
+                         values = c(
+                                    "terminais" = "#ead136"),
+                         label = c(
+                                   "terminais" = "Terminais de Integração")
+      )+
     # geom_sf(data = assentamentos,
     #         # aes(fill = "#d96e0a"),
     #         aes(fill = "#5766cc"),
@@ -2620,7 +2788,7 @@ limits_freq <- c(0,30)
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2628,7 +2796,7 @@ limits_freq <- c(0,30)
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -2656,10 +2824,10 @@ limits_freq <- c(0,30)
       legend.key.height = unit(1,"line"),
       legend.key = element_blank(),
       legend.text=element_text(size=25, family = "encode_sans_light"),
-      legend.title=element_text(size=30, family = "encode_sans_bold"),
+      legend.title=ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.33),
+      legend.position = c(0.81, 0.35),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2667,21 +2835,34 @@ limits_freq <- c(0,30)
       legend.background = element_blank(),
       # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
       #                                      colour = "#E0DFE3"),
-      legend.spacing.y = unit(0.4, 'cm'),
+      legend.spacing.y = unit(0.1, 'cm'),
       legend.box.just = "left"
       # legend.margin = margin(t = -80)
     ) +
+      guides(#fill = guide_legend(byrow = TRUE),
+        color = guide_legend(override.aes = list(fill = c("white"
+        ),
+        shape = c(
+                  15
+        ),
+        # colour = c("#2B6CB0","black"),
+        size = c(
+                 2
+        ),
+        linetype = c(
+                     0
+        )
+        ),
+        order = 3)) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("white", "white", "white", cor_ntad),
-                                                      color = c("grey50", "#fdfc99", "#0F805E", cor_ntad)),
-                                  order = 1))
+      aproxima_muni(sigla_muni = sigla_muni)
+
     #511277 roxo
     #142577 azul
     #957A03 amarelo queimado
     ggsave(map_frequencias2,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s_new2.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/15-frequencias_buffer_%s_new_certo.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
     
@@ -3477,7 +3658,7 @@ limits_freq <- c(0,30)
     #        width = width, height = height, units = "cm" )
     
 
-# Mapa tarifa versal com menos classes ------------------------------------
+# Mapa tarifa versao com menos classes ------------------------------------
 
     cor_ag <- "#2B6CB0"
     map_tarifa <- ggplot() +
@@ -3496,7 +3677,7 @@ limits_freq <- c(0,30)
       geom_sf(data = dados_areas %>% st_transform(3857),
               aes(color = "areas"),
               fill = NA,
-              linewidth = 0.7,
+              linewidth = 0.5,
               alpha= 0.7) +
       
       geom_sf(data = simplepolys %>% st_transform(3857),
@@ -3507,7 +3688,7 @@ limits_freq <- c(0,30)
       
       geom_sf(data = assentamentos,
               aes(color = "ag"),
-              linewidth = 0.3,
+              linewidth = 0.5,
               fill = cor_ag,
               # fill = NA,
               show.legend = "polygon",
@@ -3590,7 +3771,7 @@ limits_freq <- c(0,30)
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       
       theme(
         strip.text.x = element_text(size=rel(1.2)),
@@ -3609,7 +3790,7 @@ limits_freq <- c(0,30)
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.18, 0.32),
+        legend.position = c(0.24, 0.22),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -3694,7 +3875,7 @@ limits_freq <- c(0,30)
     
     renda_pnad <- read.csv('../data/pnadc/rendas_medias_quartil_capitais_pnadc_2022_2.csv')
     
-    renda_pnad <- renda_pnad %>% filter(Capital == "Município de Aracaju (SE)") %>%
+    renda_pnad <- renda_pnad %>% filter(Capital == "Município de Belém (PA)") %>%
       mutate(Quartil = case_when(Quartil == "q1" ~ 1,
                                  Quartil == "q2" ~ 2,
                                  Quartil == "q3" ~ 3,
@@ -3707,7 +3888,7 @@ limits_freq <- c(0,30)
              tarifa_grupo = tarifa/mean) %>%
       select(genero = Genero, cor = Raca, quintil_renda = Quartil, tarifa_grupo, ID_juntar)
       
-    
+    #completar com renda da pnadc
     
     recorte_tarifa <- data_micro2 %>%
       filter(Rend_pc >0) %>%
@@ -3728,24 +3909,64 @@ limits_freq <- c(0,30)
       ungroup() %>%
       select(ID_juntar, id, n) %>% left_join(renda_pnad, by = "ID_juntar")
     
-    medias_quartis <- recorte_tarifa %>% group_by(quintil_renda) %>%
-      summarise(media_quartil = weighted.mean(tarifa_grupo, w = n))
+    #######
     
-    recorte_tarifa_quartis <- data_micro2 %>%
-      # filter(Rend_pc >0) %>%
-      # mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
-      # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
-      mutate(
-        quintil_renda = ntile(Rend_pc, 4)) %>%
-      # mutate(total = "total") %>% 
-      mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
-             cor = case_when(cor == "pard_am_ing" ~ "Pretos",
-                             cor == "pretos" ~ "Pretos",
-                             cor == "brancos" ~ "Brancos")) %>%
+    #recorte apenas gênero e renda
+    
+    recorte_tarifa_genero <- recorte_tarifa %>%
+      ungroup() %>%
+      group_by(genero, quintil_renda) %>%
+      summarise(tarifa_grupo = weighted.mean(tarifa_grupo, n))
+    
+    #recorte apenas raça/cor e renda
+    
+    recorte_tarifa_cor <- recorte_tarifa %>%
+      ungroup() %>%
+      group_by(cor, quintil_renda) %>%
+      summarise(tarifa_grupo = weighted.mean(tarifa_grupo, n))
+    
+    #recorte apenas raça/cor
+    
+    recorte_tarifa_cor2 <- recorte_tarifa %>%
+      ungroup() %>%
+      group_by(cor) %>%
+      summarise(tarifa_grupo = weighted.mean(tarifa_grupo, n))
+    
+    #recorte apenas genero
+    
+    recorte_tarifa_gen2 <- recorte_tarifa %>%
+      ungroup() %>%
+      group_by(genero) %>%
+      summarise(tarifa_grupo = weighted.mean(tarifa_grupo, n))
+    
+    #recorte apenas renda
+    
+    recorte_tarifa_renda <- recorte_tarifa %>%
+      ungroup() %>%
       group_by(quintil_renda) %>%
-      summarise(min = min(Rend_pc, na.rm = T),
-                mediana = median(Rend_pc, na.rm = T),
-                max = max(Rend_pc, na.rm = T))
+      summarise(tarifa_grupo = weighted.mean(tarifa_grupo, n))
+    
+    recorte_tarifa_geral <- recorte_tarifa %>%
+      ungroup() %>%
+      summarise(tarifa_grupo = weighted.mean(tarifa_grupo, n))
+    # medias_quartis <- recorte_tarifa %>% group_by(quintil_renda) %>%
+    #   summarise(media_quartil = weighted.mean(tarifa_grupo, w = n))
+    # 
+    # recorte_tarifa_quartis <- data_micro2 %>%
+    #   # filter(Rend_pc >0) %>%
+    #   # mutate(tarifa_renda = (tarifa)/(Rend_pc*1302)) %>%
+    #   # mutate(teste = ifelse(is.element(hex,dados_hex_intersect_freq), "OK","N"))  %>% 
+    #   mutate(
+    #     quintil_renda = ntile(Rend_pc, 4)) %>%
+    #   # mutate(total = "total") %>% 
+    #   mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+    #          cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+    #                          cor == "pretos" ~ "Pretos",
+    #                          cor == "brancos" ~ "Brancos")) %>%
+    #   group_by(quintil_renda) %>%
+    #   summarise(min = min(Rend_pc, na.rm = T),
+    #             mediana = median(Rend_pc, na.rm = T),
+    #             max = max(Rend_pc, na.rm = T))
     
     
     pop_max_tarifa <-plyr::round_any(max(recorte_tarifa$n),10^(n_int_digits(max(recorte_tarifa$n))), f = ceiling)
