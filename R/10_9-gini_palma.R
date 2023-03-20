@@ -3,7 +3,7 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'poa'
+sigla_muni <- 'slz'
 width <- 16
 height <- 10
 
@@ -36,8 +36,8 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
   data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                 sigla_muni, sigla_muni))
   
-  grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
-                                 sigla_muni, sigla_muni))
+  # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+  #                                sigla_muni, sigla_muni))
   
   #checar setores com todos os renda_class_pc == n_col
   
@@ -161,7 +161,7 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
 
 
 
-desigualdade_function(sigla_muni = "poa",
+desigualdade_function(sigla_muni = "rma",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
               type_acc = "CMA")
@@ -170,7 +170,7 @@ gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "poa",
+desigualdade_function(sigla_muni = "rma",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -179,7 +179,7 @@ gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "poa",
+desigualdade_function(sigla_muni = "rma",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA")
@@ -300,7 +300,7 @@ write.xlsx(desigualdade_all_tmi, sprintf('../data/ind_desigualdade/muni_%s/muni_
 
 # mode1 <- "bike"
 
-times <- c("60", "30", "15")
+times <- c("45", "30", "15")
 
 dados_cma <- desigualdade_all_cma %>%
   
@@ -595,8 +595,8 @@ plot_palma_cma <- ggplot(dados_cma,
            width = dados_cma$largura*0.7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,4,0.5),
-    limits = c(0,4)) +
+    breaks = seq(0,4.5,0.5),
+    limits = c(0,4.5)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -787,7 +787,7 @@ ggsave(plot_palma_tmi,
 
 # Razão de Medias por Cor CMA - Valores ----------------------------------------------------------
 
-times <- c("60", "30", "15")
+times <- c("45", "30", "15")
 
 razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
@@ -806,8 +806,8 @@ razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                  sigla_muni, sigla_muni))
   
-  grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
-                                 sigla_muni, sigla_muni))
+  # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+  #                                sigla_muni, sigla_muni))
   
   #checar setores com todos os renda_class_pc == n_col
   
@@ -1032,7 +1032,7 @@ razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "poa", "CMA", times = c("60","30","15"))
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "slz", "CMA", times = c("45","30","15"))
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
@@ -1984,9 +1984,9 @@ dados_acc_hex <- dados_acc %>%
   dados_acc_hex <- dados_acc %>%
     st_drop_geometry() %>%
     group_by(id_hex) %>%
-    summarise(med_acc_cmatt45 = mean(CMATT60, na.rm = T),
-              med_acc_cmast45 = mean(CMAST60, na.rm = T),
-              med_acc_cmamt45 = mean(CMAMT60, na.rm = T)) %>%
+    summarise(med_acc_cmatt45 = mean(CMATT45, na.rm = T),
+              med_acc_cmast45 = mean(CMAST45, na.rm = T),
+              med_acc_cmamt45 = mean(CMAMT45, na.rm = T)) %>%
     left_join(dados_hex, by = c("id_hex"="id_hex")) %>%
     st_as_sf() %>%
     st_transform(4083)
@@ -2004,7 +2004,7 @@ quadras <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_
                            sigla_muni, sigla_muni),
                    layer = "areas")
 # mapview(quadras)
-quadras <- quadras %>% st_transform(4083) %>% mutate(area = NOME)
+quadras <- quadras %>% st_transform(4083) %>% mutate(area = bairro)
 
 quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
 # mapview(quadras_acc)
@@ -2198,15 +2198,18 @@ area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosol
   st_union()
 # mapview(simplepolys)
 
-simplepolys <- st_simplify(area_urbanizada, dTolerance = 300) %>%
+simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
   st_make_valid() %>%
   st_transform(decisao_muni$epsg) %>%
-  st_buffer(2) %>%
+  st_buffer(150) %>%
   st_union() 
 
 assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                   sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-  mutate(title = "Assentamentos Precários")
+  mutate(title = "Assentamentos Precários") %>% st_make_valid() %>%
+  st_union() %>%
+  st_make_valid() %>%
+  st_simplify(dTolerance = 150)
 
 
 dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
@@ -2221,6 +2224,7 @@ dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/m
                                sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
 
 options(scipen = 99999999)
+cor_ag <- "#96d6c2"
 
 plot3 <- ggplot()+
   geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2252,17 +2256,17 @@ plot3 <- ggplot()+
                               # , labels = c(0, "35", "70%")
   ) +
   
-  labs(fill = "População da quadra (hab)") +
+  labs(fill = "População do bairro (hab)") +
   
   ggnewscale::new_scale_fill() +
   
   geom_sf(data = assentamentos,
           # aes(fill = "#d96e0a"),
-          aes(color = "#0A7E5C"),
+          aes(color = "ag"),
           
           # fill = "#d96e0a",
           linewidth = 0.3,
-          fill = "#0A7E5C",
+          fill = cor_ag,
           show.legend = "polygon",
           alpha = 0.7)+
   
@@ -2274,34 +2278,34 @@ plot3 <- ggplot()+
   
   geom_sf(data = dados_areas %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#615C5C"),
+          aes(color = "areas"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = .7,
+          linewidth = .4,
           alpha= 0.7) +
   
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#852C2C"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
-          linewidth = 0.5,
+          linewidth = 0.4,
           alpha= 0.7)  +
   
   
   scale_color_manual(name = "Uso do solo",
-                     values = c("#852C2C" = "#852C2C",
-                                "#0A7E5C" = "#0A7E5C",
-                                "#615C5C" = "#615C5C"),
-                     label = c("#852C2C" = "Área urbanizada",
-                               "#0A7E5C" = "Aglomerados subnormais",
-                               "#615C5C" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
+                     values = c("urb" = "#852C2C",
+                                "ag" = cor_ag,
+                                "areas" = "#615C5C"),
+                     label = c("urb" = "Área urbanizada",
+                               "ag" = "Aglomerados subnormais",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
   )+
   
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
@@ -2365,10 +2369,11 @@ ggspatial::annotation_scale(style = "ticks",
     legend.key.height = unit(0.75,"line"),
     legend.key = element_blank(),
     legend.text=element_text(size=25, family = "encode_sans_light"),
-    legend.title=element_text(size=30, family = "encode_sans_bold"),
+    legend.title= element_text(size=30, family = "encode_sans_bold"),
+    # legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.20, 0.32),
+    legend.position = c(0.22, 0.30),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -2394,7 +2399,7 @@ ggspatial::annotation_scale(style = "ticks",
 # #       
 #                                          ) +
 aproxima_muni(sigla_muni = sigla_muni) +
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white")),
+  guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white")),
                               byrow = T,
                               order = 1,
                               keyheight = unit(0.75,"line")),
