@@ -17,7 +17,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'noh'
+sigla_muni <- 'slz'
 
 
 graficos <- function(munis = "all"){
@@ -64,12 +64,16 @@ graficos <- function(munis = "all"){
     simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
       st_make_valid() %>%
       st_transform(decisao_muni$epsg) %>%
-      st_buffer(2) %>%
+      st_buffer(150) %>%
       st_union() 
     
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                       sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-      mutate(title = "Assentamentos Precários")
+      mutate(title = "Assentamentos Precários") %>% st_make_valid() %>%
+      st_union() %>%
+      st_make_valid() %>%
+      st_simplify(dTolerance = 150)
+
     # mapview(assentamentos)
     
     dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
@@ -80,9 +84,17 @@ graficos <- function(munis = "all"){
       summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
       st_as_sf() %>% mutate(quintil = as.factor(ntile(pop_total, 4)))
     
-    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                   sigla_muni, sigla_muni), layer= "areas") %>%
-      st_make_valid()
+    if (sigla_muni == "slz"){
+      
+      dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                     sigla_muni, sigla_muni), layer= "centro") %>% st_transform(decisao_muni$epsg) %>%
+        st_make_valid()
+      
+    } else {
+      dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                     sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+      
+    }
     # mapview(dados_areas)
     # data_complete <- data_mhex %>% left_join(data_muni, by = c("id_hex"="Cod_setor")) %>% 
       # mutate(area = st_area(.)/10^6) %>%
@@ -187,7 +199,7 @@ graficos <- function(munis = "all"){
 # Mapa de empregos --------------------------------------------------------
 
     hist(dados_hex$n_jobs)
-    max_jobs <- 200
+    max_jobs <- 2000
     dados_empregos <- dados_hex %>% filter(n_jobs >0) %>%
       mutate(n_jobs = ifelse(n_jobs > max_jobs, max_jobs, n_jobs))
     
@@ -259,7 +271,7 @@ graficos <- function(munis = "all"){
               linewidth = 0.3,
               fill = "#0F805E",
               show.legend = "polygon",
-              alpha = 0.5)+
+              alpha = 0.3)+
       
       scale_color_manual(name = "Uso do solo",
                          breaks = c("ag", "urb", "areas"),
@@ -373,7 +385,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.30),
+      legend.position = c(0.24, 0.22),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -540,7 +552,7 @@ graficos <- function(munis = "all"){
               linewidth = 0.3,
               fill = "#d96e0a",
               show.legend = "polygon",
-              alpha = 0.7)+
+              alpha = 0.3)+
       
       scale_color_manual(name = "Uso do solo",
                          breaks = c("ag", "urb", "areas"),
@@ -608,7 +620,7 @@ graficos <- function(munis = "all"){
 
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -616,7 +628,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -647,7 +659,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.30),
+      legend.position = c(0.82, 0.26),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1132,7 +1144,7 @@ graficos <- function(munis = "all"){
 
     dados_saude_basico <- dados_hex %>% filter(S002 >0)# %>%
       # mutate(S002 = ifelse(S002 > 5, 5, S002))
-    total_saude_basico <- sum(dados_hex$E002)
+    total_saude_basico <- sum(dados_hex$S002, na.rm = T)
     
     map_saude_basico <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1172,7 +1184,7 @@ graficos <- function(munis = "all"){
               linewidth = 0.4,
               fill = "#d96e0a",
               show.legend = "polygon",
-              alpha = 0.7)+
+              alpha = 0.3)+
       
       scale_color_manual(name = "Uso do solo",
                          values = c("urb" = "#8F040E",
@@ -1260,7 +1272,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.26),
+      legend.position = c(0.24, 0.20),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1411,7 +1423,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.26),
+        legend.position = c(0.28, 0.20),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -1450,7 +1462,7 @@ graficos <- function(munis = "all"){
 
     dados_saude_alta <- dados_hex %>% filter(S004 >0) #%>%
       # mutate(S004 = ifelse(S004 > 2, 2, S004))
-    sum(dados_hex$S004)
+    sum(dados_hex$S004, na.rm = T)
     # hist(dados_saude_alta$S004)
     map_saude_alta <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1559,7 +1571,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.26),
+      legend.position = c(0.26, 0.18),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2492,10 +2504,118 @@ graficos <- function(munis = "all"){
            dpi = 300,
            width = width, height = height, units = "cm" )
 
-# Escolas Infantil --------------------------------------------------------
 
+
+
+# soma de escolas e saude RMA ---------------------------------------------
+
+    
+    if (sigla_muni == "rma"){
+      
+      aju <- geobr::read_municipality(2800308)
+      nss <- geobr::read_municipality(2804805)
+      bac <- geobr::read_municipality(2800605)
+      sac <- geobr::read_municipality(2806701)
+      
+      source_escolas <- "censo_escolar"
+      file_educacao <- sprintf('../data-raw/educacao/%s/2021/muni_%s_educacao_2021/muni_%s_geocode_2021.rds',source_escolas,  sigla_muni,  sigla_muni)
+      dados_educacao <- read_rds(file_educacao) %>%
+        # mutate(health_low = ifelse(ATUACAO == "Atencao Basica",
+        #                            1, health_low)
+        # ) %>%
+        mutate(E001 = 1,
+               E002 = ifelse(QT_MAT_B > 0,1,0),
+               E003 = ifelse(QT_MAT_F > 0,1,0),
+               E004 = ifelse(QT_MAT_M > 0 | QT_MAT_P > 0,1,0),
+               M001 = QT_MAT_B + QT_MAT_F + QT_MAT_I+QT_MAT_M+QT_MAT_P,
+               M002 = QT_MAT_B+QT_MAT_I,
+               M003 = QT_MAT_F,
+               M004 = QT_MAT_M+QT_MAT_P) %>%
+        #                            1, health_low)) %>%
+        select(E001, E002, E003, E004, M001, M002,M003,M004)
+      
+      source_saude <- "cnes"
+      
+      file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s_%s_geocoded_2019.rds',source_saude,  sigla_muni,
+                            source_saude,  sigla_muni, source_saude)
+      dados_saude <- read_rds(file_saude) %>% mutate(S001 = 1) %>%
+        select(S001, S002 = health_low, S003 = health_med, S004 = health_high)
+      
+      
+      d_aju <- dados_educacao %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(aju %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_esc_i = sum(E002, na.rm = T),
+                  n_esc_f = sum(E003, na.rm = T),
+                  n_esc_m = sum(E004, na.rm = T)) %>%
+        mutate(muni = "aju")
+      
+      d_nss <- dados_educacao %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(nss %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_esc_i = sum(E002, na.rm = T),
+                  n_esc_f = sum(E003, na.rm = T),
+                  n_esc_m = sum(E004, na.rm = T)) %>%
+        mutate(muni = "nss")
+      
+      d_bac <- dados_educacao %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(bac %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_esc_i = sum(E002, na.rm = T),
+                  n_esc_f = sum(E003, na.rm = T),
+                  n_esc_m = sum(E004, na.rm = T)) %>%
+        mutate(muni = "bac")
+      
+      d_sac <- dados_educacao %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(sac %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_esc_i = sum(E002, na.rm = T),
+                  n_esc_f = sum(E003, na.rm = T),
+                  n_esc_m = sum(E004, na.rm = T)) %>%
+        mutate(muni = "sac")
+      
+      resumo <- rbind(d_aju, d_nss, d_bac, d_sac)
+      
+      
+      #saude
+      
+      d_aju <- dados_saude %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(aju %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_saude_b = sum(S002, na.rm = T),
+                  n_saude_a = sum(S004, na.rm = T)) %>%
+        mutate(muni = "aju")
+      
+      d_nss <- dados_saude %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(nss %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_saude_b = sum(S002, na.rm = T),
+                  n_saude_a = sum(S004, na.rm = T)) %>%
+        mutate(muni = "nss")
+      
+      d_bac <- dados_saude %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(bac %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_saude_b = sum(S002, na.rm = T),
+                  n_saude_a = sum(S004, na.rm = T)) %>%
+        mutate(muni = "bac")
+      
+      d_sac <- dados_saude %>% st_transform(decisao_muni$epsg) %>%
+        st_filter(sac %>% st_transform(decisao_muni$epsg)) %>%
+        summarise(n_saude_b = sum(S002, na.rm = T),
+                  n_saude_a = sum(S004, na.rm = T)) %>%
+        mutate(muni = "sac")
+      
+      resumo_saude<- rbind(d_aju, d_nss, d_bac, d_sac)
+      
+      
+      
+    }
+    
+    
+
+# Escolas infantil --------------------------------------------------------
+
+    
+    
     dados_escolas_infantil <- dados_hex %>% filter(E002 >0)
     total_escolas_infantil <- sum(dados_hex$E002)
+    
+    
+    
     # mutate(S001 = ifelse(M001 > 5, 5, S001))
     map_escolas_infantil <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -2536,7 +2656,7 @@ graficos <- function(munis = "all"){
               linewidth = 0.4,
               fill = "#2B6CB0",
               show.legend = "polygon",
-              alpha = 0.5)+
+              alpha = 0.3)+
       
       geom_sf(data = st_transform(dados_escolas_infantil, 3857),
               aes(fill = factor(E002)),
@@ -2610,7 +2730,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.18, 0.25),
+        legend.position = c(0.24, 0.18),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2751,7 +2871,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.23),
+        legend.position = c(0.27, 0.18),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2891,7 +3011,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.19, 0.21),
+        legend.position = c(0.25, 0.17),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
