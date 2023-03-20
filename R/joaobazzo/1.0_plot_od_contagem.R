@@ -7,8 +7,8 @@ library(magrittr)
 
 
 # Renda ------
-c1 <- c("Municipais","10 - 15 SM"    ,78,7,15)
-c2 <- c("Municipais","5 - 10 SM"     ,78,6,16)
+c1 <- c("Municipais","10 - 15 SM"    ,78, 7,15)
+c2 <- c("Municipais","5 - 10 SM"     ,78, 6,16)
 c3 <- c("Municipais","3 - 5 SM"      ,66,11,23)
 c4 <- c("Municipais","2 - 3 SM"      ,54,16,30)
 c5 <- c("Municipais","1 - 2 SM"      ,27,27,46)
