@@ -12,7 +12,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'noh'
+sigla_muni <- 'rma'
 # library(elementalist)
 # rm(list = ls())
 # width <- 14
@@ -131,7 +131,7 @@ tema_CMA <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.19, 0.33),
+    legend.position = c(0.80, 0.28),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -199,12 +199,15 @@ mapas_cma <- function(sigla_muni,
   simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
     st_make_valid() %>%
     st_transform(decisao_muni$epsg) %>%
-    st_buffer(2) %>%
+    st_buffer(150) %>%
     st_union() 
   
   assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                     sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-    mutate(title = "Assentamentos Precários")
+    mutate(title = "Assentamentos Precários") %>% st_make_valid() %>%
+    st_union() %>%
+    st_make_valid() %>%
+    st_simplify(dTolerance = 150)
   
   
   dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
@@ -386,6 +389,23 @@ mapas_cma <- function(sigla_muni,
     # options(scipen = 1000000000)
     # fazer plots
     #adicionar if com escala viridis para o tmi
+    
+    #"#0A7E5C" Verde
+    # # cor_ag <- "#ffecd1" #crayola
+    # cor_ag <- "#15616d" #azul/verde
+    # # cor_ag <- "#8b9d83" 
+    # cor_ag <- "#b8b3e9"
+    # cor_ag <- "#90b494" #cambridge blue
+    # cor_ag <- "#436C95" #azul
+    # # cor_ag <- "#a4152d" #vinho
+    # cor_ag <- "#579bd3" #azul claro
+    # cor_ag <- "#70cede" #azul mais verde
+    # # cor_ag <- "#DE8070" #cor de tijolo
+    # cor_ag <- "#7d88c8" #roxo claro
+    # cor_ag <- "#67b5a2" #verde vclaro
+    # cor_ag <- "#ecc3bf" #rosa
+    cor_ag <- "#96d6c2" #verde final
+    
     plot3 <- ggplot()+
       geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -393,7 +413,7 @@ mapas_cma <- function(sigla_muni,
       # nova escala
       new_scale_fill() +
       
-      geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6, size = 0)+
+      geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=0.8, size = 0)+
       
       
       viridis::scale_fill_viridis(option = "B",
@@ -422,7 +442,7 @@ mapas_cma <- function(sigla_muni,
               fill = NA,
               # stroke = 2,
               # size = 2,
-              linewidth = 0.7,
+              linewidth = 0.4,
               alpha= 0.7) +
       
       geom_sf(data = assentamentos,
@@ -430,10 +450,10 @@ mapas_cma <- function(sigla_muni,
               aes(color = "assentamentos"),
               
               # fill = "#d96e0a",
-              linewidth = 0.7,
-              fill = "#0A7E5C",
+              linewidth = 0.5,
+              fill = cor_ag,
               show.legend = "polygon",
-              alpha = 0.7)+
+              alpha = 0.5)+
       
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
@@ -448,7 +468,7 @@ mapas_cma <- function(sigla_muni,
       
       scale_color_manual(name = "Uso do solo",
                          breaks = c("assentamentos", "bairros", "urb"),
-                         values = c("assentamentos" = "#0A7E5C",
+                         values = c("assentamentos" = cor_ag,
                                     "urb" = "#fefedf",
                                     "bairros" = "grey60"),
                          label = c("urb" = "Área urbanizada",
@@ -456,7 +476,7 @@ mapas_cma <- function(sigla_muni,
                                    "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
                          )+
       
-      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey70", size = 2) +
+      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey50", linewidth = 0.4) +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -487,7 +507,7 @@ mapas_cma <- function(sigla_muni,
       # tema+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -495,14 +515,14 @@ mapas_cma <- function(sigla_muni,
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
 
       tema_CMA() +
       
       aproxima_muni(sigla_muni = sigla_muni) +
       
-      guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
-                                                      color = c("#0A7E5C", "grey60", "#fdfc99"),
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white"),
+                                                      color = c(cor_ag, "grey60", "#fdfc99"),
                                                       linewidth = c(1,1,1)),
                                   order = 2))
 
@@ -510,10 +530,20 @@ mapas_cma <- function(sigla_muni,
       # guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C", "white", "white"),
       #                                                 color = c("#0A7E5C", "grey60", "#fdfc99")),
       #                             order = 2))
-    
+    # indicador <- paste(oportunidade,modo, type_acc, time, "minutos")
+    # acess_escrever <- acess %>% mutate("{indicador}" := valor) %>% select({indicador})
+    # 
+    # suppressWarnings(dir.create(sprintf('../data/map_plots_acc/muni_%s/dados/', sigla_muni)))
+    # 
+    # write_sf(acess_escrever, sprintf("../data/map_plots_acc/muni_%s/dados/muni_%s.gpkg",
+    #                                  sigla_muni, sigla_muni),
+    #          layer = paste(type_acc , sigla_op, paste(time, collapse = '')))
     
     rm(acess, dados_areas, pop_counts, assentamentos,
-       simplepolys, area_urbanizada, map_tiles, dados_hex, data_contorno)
+       simplepolys, area_urbanizada, map_tiles,
+       dados_hex,
+       # acess_escrever,
+       data_contorno)
     
     gc(verbose = FALSE)
     
@@ -671,15 +701,15 @@ mapas_cma <- function(sigla_muni,
   
 }
   
-# mapas_cma(sigla_muni = "poa",
+# mapas_cma(sigla_muni = "pal",
 #           type_acc = "CMA",
-#           mode1 = "transit",
-#           oportunidade = "empregos",
-#           sigla_op = "TT",
-#           titulo_leg = "Empregos",
-#           time = 45,
+#           mode1 = "walk",
+#           oportunidade = "lazer",
+#           sigla_op = "LZ",
+#           titulo_leg = "Eq. de Lazer",
+#           time = 60,
 #           width = 16.5,
-#           height = 16.5)  
+#           height = 16.5)
 
 
 library("future")
@@ -856,7 +886,7 @@ lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_
 
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'dou',
+                    sigla_muni = 'rma',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
@@ -878,7 +908,7 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
 ##########
 
 
-lista_modos <- rep("bike", 56)
+lista_modos <- rep("walk", 56)
 
 lista_tempos <- c(rep(15, 14), rep(30,14), rep(45, 14),  rep(60, 14))
 
@@ -927,7 +957,7 @@ lista_titulo_leg <- rep(c("Empregos",
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'pal',
+                    sigla_muni = 'slz',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
@@ -1029,7 +1059,7 @@ lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_
 
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'noh',
+                    sigla_muni = 'bel',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
