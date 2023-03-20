@@ -42,7 +42,7 @@ write_gtfs(teste, "../r5r/network/2022/muni_pal/gtfs_pal.zip")
 
 # FUNCAO PARA CONSTRUIR network -------------------------
 # graph.obj é salvo na pasta './otp/graphs/ano/cidade
-sigla_muni <- 'noh'
+sigla_muni <- 'rma'
 ano <- 2022
 
 construir_graph_muni <- function(sigla_muni, ano) {
