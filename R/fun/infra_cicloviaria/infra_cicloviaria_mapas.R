@@ -18,7 +18,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'slz'
+sigla_muni <- 'cit'
 
 #gráficos de ciclovias
 
@@ -286,7 +286,7 @@ graficos <- function(munis = "all"){
     simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
       st_make_valid() %>%
       st_transform(decisao_muni$epsg) %>%
-      st_buffer(150) %>%
+      st_buffer(2) %>%
       st_union() 
     
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
@@ -401,17 +401,17 @@ graficos <- function(munis = "all"){
       #         color = NA,alpha = .7, linewidth = 1) +
 
       
-      geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
-              aes(color = "areas"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              fill = NA,
-              linetype = "solid",
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.4,
-              alpha= 0.7) +
+      # geom_sf(data = dados_areas %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         aes(color = "areas"),
+      #         # color = "grey45",
+      #         # aes(fill = '#CFF0FF'),
+      #         fill = NA,
+      #         linetype = "solid",
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.4,
+      #         alpha= 0.7) +
       
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
@@ -437,7 +437,7 @@ graficos <- function(munis = "all"){
       guides(#fill = guide_legend(byrow = TRUE),
         colour = guide_legend(override.aes = list(fill = c("white",
                                                            # "#d8faf0",
-                                                           "white",
+                                                           # "white",
                                                            cor_ag)
                                                   # colour = c("grey25", "white", "white")
         ))
@@ -500,7 +500,7 @@ graficos <- function(munis = "all"){
             legend.title=element_text(size=28, family = "encode_sans_bold"),
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10),
-            legend.position = c(0.29, 0.31),
+            legend.position = c(0.20, 0.30),
             legend.box.background = element_rect(fill=alpha('white', 0.7),
                                                  colour = "#A09C9C",
                                                  linewidth = 0.8,
@@ -601,17 +601,17 @@ graficos <- function(munis = "all"){
       
       
       
-      geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
-              aes(color = "areas"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              fill = NA,
-              linetype = "solid",
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.4,
-              alpha= 0.7) +
+      # geom_sf(data = dados_areas %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         aes(color = "areas"),
+      #         # color = "grey45",
+      #         # aes(fill = '#CFF0FF'),
+      #         fill = NA,
+      #         linetype = "solid",
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.4,
+      #         alpha= 0.7) +
       
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
@@ -636,7 +636,7 @@ graficos <- function(munis = "all"){
       guides(#fill = guide_legend(byrow = TRUE),
         colour = guide_legend(override.aes = list(fill = c("white",
                                                            # "#d8faf0",
-                                                           "white",
+                                                           # "white",
                                                            cor_ag)
                                                   # colour = c("grey25", "white", "white")
         ))
@@ -689,7 +689,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=28, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.29, 0.31),
+      legend.position = c(0.20, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
