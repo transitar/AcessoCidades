@@ -17,8 +17,35 @@ font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
 font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
-sigla_muni <- 'noh'
+
+#Seleção do município pela sigla:
+
+sigla_muni <- 'cit'
 ano <- 2019
+
+# salvar setores em gpkg
+
+# setores <- function(sigla_muni){
+# 
+#   setor <- read_rds(sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',
+#                             sigla_muni))
+#   bairro <- setor %>%
+#     st_make_valid() %>%
+#     group_by(name_neighborhood) %>%
+#     dplyr::summarise() %>%
+#     st_cast()
+# 
+#   
+#   # mapview(setor, zcol = "name_neighborhood")
+#   # mapview(bairro)
+#   write_sf(setor, sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.gpkg',
+#                           sigla_muni))
+#   suppressWarnings(dir.create('../data-raw/bairros_setores_censitarios/2019/', recursive = T))
+#   write_sf(bairro, sprintf('../data-raw/bairros_setores_censitarios/2019/bairros_%s_2019.gpkg',
+#                           sigla_muni))
+# 
+# }
+# walk(munis_list$munis_df$abrev_muni, setores)
 
 tema <- function(base_size) {
   
@@ -81,8 +108,17 @@ graficos <- function(munis = "all"){
                                sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
     
     
-    dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
-                                   sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+    if (sigla_muni == "slz"){
+      
+      dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                     sigla_muni, sigla_muni), layer= "centro") %>% st_transform(decisao_muni$epsg) %>%
+        st_make_valid()
+      
+    } else {
+      dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
+                                     sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
+      
+    }
     # mapview(dados_areas)
     area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
                                        sigla_muni)) %>% filter(DN == 24) %>%
@@ -103,8 +139,8 @@ graficos <- function(munis = "all"){
     
     assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                       sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-      mutate(title = "Assentamentos Precários")
-    
+      mutate(title = "Assentamentos Precários") %>% st_make_valid() %>% st_union() %>%
+      st_simplify(dTolerance = 150)
     
     dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                         sigla_muni, sigla_muni))
@@ -165,6 +201,30 @@ graficos <- function(munis = "all"){
     
     st_write(pop_counts,sprintf("../data/microssimulacao/muni_%s/population_counts_%s.gpkg",
                                 sigla_muni, sigla_muni), append = F)
+    
+    
+    area_urb <- simplepolys %>% st_as_sf() %>% mutate(tipo = "urb")
+    
+    pop_counts2 <- dados_simulacao %>%
+      group_by(hex) %>%
+      summarise(pop_total = n()) %>% left_join(dados_hex, by = c("hex" = "id_hex")) %>%
+      st_as_sf() %>%
+      mutate(area = as.numeric(st_area(.)/10^6)) %>%
+      mutate(densidade_pop = pop_total/area)
+    #densidade populacional na area urbanizada
+    
+    #para rma
+    # aracaju <- geobr::read_municipality(code_muni = 2800308)
+    # dados_simulacao_aju <- pop_counts2 %>%  st_transform(decisao_muni$epsg) %>%
+    #   st_filter(aracaju %>% st_transform(decisao_muni$epsg))
+    # 
+    # densidade_pop_urb <- dados_simulacao_aju %>% st_transform(decisao_muni$epsg) %>%
+    #   st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+    #   summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
+    
+    densidade_pop_urb <- pop_counts2 %>% st_transform(decisao_muni$epsg) %>%
+      st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+      summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
     
     # st_write(pop_counts, 'pop_poa.shp')
     
@@ -294,8 +354,11 @@ graficos <- function(munis = "all"){
 
     # cor_ag_densidade <- "#d7b377" #bullywood
     # cor_ag_densidade <- "#e9eb9e"
-    cor_ag_densidade <- "#0A7E5C"#crayola
+    # cor_ag_densidade <- "#0A7E5C"#crayola
     # cor_ag_densidade <- "#d8f793" #mindaro green
+    # cor_ag_densidade <- "#3170B2"#azul
+    cor_ag_densidade <- "#96d6c2" #verde final"#azul
+    # cor_ag_densidade <- "#957902"#dourado
     
     hist(pop_counts$pop_total)
     #limite de população (caso seja necessário fixar um valor máximo)
@@ -341,17 +404,23 @@ graficos <- function(munis = "all"){
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
-      geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
-              aes(color = "areas"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.7,
-              alpha= 0.7) +
       
+      
+      # 
+      # geom_sf(data = dados_areas %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         aes(color = "areas"),
+      #         # color = "grey45",
+      #         # aes(fill = '#CFF0FF'),
+      #         fill = NA,
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.7,
+      #         alpha= 0.7) +
+      
+    
+    
+    
       # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
       #         color = NA,alpha = .7, linewidth = 1) +
       # geom_sf(data = st_transform(dados_linhas, 3857),
@@ -384,7 +453,7 @@ graficos <- function(munis = "all"){
               aes(color = "ag"),
               
               # fill = "#d96e0a",
-              linewidth = 0.3,
+              linewidth = 0.5,
               fill = cor_ag_densidade,
               show.legend = "polygon",
               alpha = 0.5)+
@@ -392,8 +461,8 @@ graficos <- function(munis = "all"){
       
       scale_color_manual(name = "Uso do solo",
                          breaks = c("ag", "urb", "areas"),
-                         values = c("urb" = "#9dd1f1",
-                                    "areas" = "grey45",
+                         values = c("urb" = "#fefedf",
+                                    "areas" = "grey60",
                                     "ag" = cor_ag_densidade),
                          label = c("urb" = "Área urbanizada",
                                    "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
@@ -451,7 +520,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = .3) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey50", linewidth = .4) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -493,7 +562,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.34),
+      legend.position = c(0.19, 0.31),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -507,8 +576,11 @@ graficos <- function(munis = "all"){
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c(cor_ag_densidade, "white", "white"),
-                                                      alpha = c(0.5, rep(0.1,2))),
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag_densidade,
+                                                               # "white",
+                                                               "white"),
+                                                      alpha = c(0.5,
+                                                                rep(0.1,1))),
                                   order = 1))
     
     
@@ -518,7 +590,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_pop_density,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s_new.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s_new2.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
@@ -727,8 +799,8 @@ graficos <- function(munis = "all"){
     
     # mapview(renda, zcol = "renda")
     
-    grid_micro <- read_rds(sprintf("../data/microssimulacao/muni_%s/grid_muni_%s.rds",
-                                   sigla_muni, sigla_muni))
+    # grid_micro <- read_rds(sprintf("../data/microssimulacao/muni_%s/grid_muni_%s.rds",
+    #                                sigla_muni, sigla_muni))
     
 
 # Mapa de Renda Antigo ----------------------------------------------------
@@ -837,7 +909,7 @@ graficos <- function(munis = "all"){
     
     cor_ag <- "#dbad6a"
     # hist(renda$renda)
-    renda_max_limite <- 6
+    renda_max_limite <- 4
     
     if (renda_max_limite == F){
       
@@ -877,16 +949,16 @@ graficos <- function(munis = "all"){
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
-      geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
-              aes(color = "areas"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.7,
-              alpha= 0.7) +
+      # geom_sf(data = dados_areas %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         aes(color = "areas"),
+      #         # color = "grey45",
+      #         # aes(fill = '#CFF0FF'),
+      #         fill = NA,
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.3,
+      #         alpha= 0.7) +
       
       # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
       #         color = NA,alpha = .7, linewidth = 1) +
@@ -912,7 +984,7 @@ graficos <- function(munis = "all"){
             fill = NA,
             # stroke = 2,
             # size = 2,
-            linewidth = 0.5,
+            linewidth = 0.3,
             alpha= 0.7)  +
       
       geom_sf(data = assentamentos,
@@ -999,7 +1071,7 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", size = .1) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -1041,7 +1113,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.34),
+      legend.position = c(0.19, 0.2),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1055,8 +1127,11 @@ graficos <- function(munis = "all"){
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)  +
-      guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white"),
-                                                      alpha = c(0.5, rep(0.1,2))),
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag,
+                                                               # "white",
+                                                               "white"),
+                                                      alpha = c(0.5,
+                                                                rep(0.1,1))),
                                   order = 1))
     
     
@@ -1066,7 +1141,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_renda,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_new_%s.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_new_%s_sem_zoom.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
@@ -1087,8 +1162,8 @@ data_micro <- dados_simulacao  %>%
                                V0606 == 3 ~ "Amarelos",
                                V0606 == 4 ~ "Pardos",
                                V0606 == 5 ~ "Indígenas"),
-            genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens")) #%>%
-      # filter(V0606 != "Amarelos" | V0606 != "Indígenas")
+            genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens")) %>%
+      filter(V0606 != "Amarelos" | V0606 != "Indígenas")
     
     
 data_recorte <- data_micro %>%
@@ -1161,7 +1236,7 @@ data_recorte_cor2_hex <- data_recorte_cor2 %>%
                           n[cor == "Pretos"], 0)#,
          # pardos = ifelse(is_empty(n[cor == "Pardos"]) == F,
          #                 n[cor == "Pardos"], 0),
-         
+         # 
          
          
   ) %>%
@@ -1170,7 +1245,7 @@ data_recorte_cor2_hex <- data_recorte_cor2 %>%
          # pardos,
          pretos)
 
-write_sf(data_recorte_cor2_hex, sprintf('../data/microssimulacao/muni_%s/dados_cor_%s2.gpkg', sigla_muni, sigla_muni))
+write_sf(data_recorte_cor2_hex, sprintf('../data/microssimulacao/muni_%s/dados_cor_%s_dif.gpkg', sigla_muni, sigla_muni))
 
 # dados para os mapas - recorte de genero
 
@@ -1286,19 +1361,19 @@ map_pop_homens <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#2B6CB0"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#2B6CB0',
           show.legend = "polygon",
@@ -1307,7 +1382,7 @@ map_pop_homens <- ggplot() +
   # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -1316,13 +1391,13 @@ map_pop_homens <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#2B6CB0", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#2B6CB0" = "#2B6CB0"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#2B6CB0"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -1395,8 +1470,12 @@ map_pop_homens <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#2B6CB0","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#2B6CB0",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -1418,26 +1497,28 @@ map_pop_mulheres <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
+  
   geom_sf(data = assentamentos,
-          aes(color = "#f6dc8d"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#f6dc8d',
           show.legend = "polygon",
-          alpha = 0.5)+
+          alpha = 0.3)+
   
+  # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -1446,13 +1527,13 @@ map_pop_mulheres <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#f6dc8d", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#f6dc8d" = "#f6dc8d"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#f6dc8d"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -1526,8 +1607,12 @@ map_pop_mulheres <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#f6dc8d","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#f6dc8d",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -1561,43 +1646,43 @@ map_pop_dif_gen <- ggplot() +
           size = 0)+
   
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#0f805e"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#0f805e',
           show.legend = "polygon",
           alpha = 0.3)+
   
-  
+  # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
           linewidth = 0.3,
-          alpha= 0.4)  +
+          alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#0f805e", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#0f805e" = "#0f805e"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#0f805e" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#0f805e"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   scale_fill_distiller("Habitantes",
@@ -1665,8 +1750,12 @@ map_pop_dif_gen <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#0f805e","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#0f805e",
+                                                            # "white", 
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
@@ -1745,19 +1834,19 @@ map_pop_brancos <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#2B6CB0"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#2B6CB0',
           show.legend = "polygon",
@@ -1766,7 +1855,7 @@ map_pop_brancos <- ggplot() +
   # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -1775,13 +1864,13 @@ map_pop_brancos <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#2B6CB0", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#2B6CB0" = "#2B6CB0"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#2B6CB0"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -1860,8 +1949,12 @@ theme(
   # legend.margin = margin(t = -80)
 ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#2B6CB0","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#2B6CB0",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -1884,26 +1977,28 @@ map_pop_pretos <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
+  
   geom_sf(data = assentamentos,
-          aes(color = "#f6dc8d"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#f6dc8d',
           show.legend = "polygon",
-          alpha = 0.5)+
+          alpha = 0.3)+
   
+  # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -1912,13 +2007,13 @@ map_pop_pretos <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#f6dc8d", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#f6dc8d" = "#f6dc8d"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#f6dc8d"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -1995,8 +2090,12 @@ map_pop_pretos <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#f6dc8d","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#f6dc8d",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -2035,40 +2134,40 @@ map_pop_dif_cor <- ggplot() +
           size = 0)+
 
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
+  
+  geom_sf(data = assentamentos,
+          aes(color = "ag"),
+          size = 1.3,
+          fill = '#f6dc8d',
+          show.legend = "polygon",
+          alpha = 0.3)+
+  
+  # ggnewscale::new_scale_color() +
+  geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "areas"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
           linewidth = 0.3,
-          alpha= 0.7) +
-  
-  geom_sf(data = assentamentos,
-          aes(color = "ag"),
-          size = 1.3,
-          fill = '#f8e169',
-          show.legend = "polygon",
-          alpha = 0.3)+
-  
-
-geom_sf(data = simplepolys %>% st_transform(3857),
-        # aes(size = 2),
-        aes(color = "urb"),
-        # color = "grey45",
-        # aes(fill = '#CFF0FF'),
-        fill = NA,
-        # stroke = 2,
-        # size = 2,
-        linewidth = 0.3,
-        alpha= 0.4)  +
+          alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
                      breaks = c("ag", "urb", "areas"),
                      values = c("urb" = "#8f040e",
                                 "areas" = "grey60",
-                                "ag" = "#f8e169"),
+                                "ag" = "#f6dc8d"),
                      label = c("urb" = "Área urbanizada",
                                "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
                                "ag" = "Ag. subnormais")
@@ -2143,8 +2242,12 @@ theme(
   # legend.margin = margin(t = -80)
 ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-         override.aes = list(fill = c("#f8e169","white", "white"),
-                             alpha = c(0.2,0.7,0.7)))) +
+         override.aes = list(fill = c("#f8e169",
+                                      # "white",
+                                      "white"),
+                             alpha = c(0.2,
+                                       # 0.7,
+                                       0.7)))) +
 
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
@@ -2200,19 +2303,19 @@ map_pop_amarelos <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#2B6CB0"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#2B6CB0',
           show.legend = "polygon",
@@ -2221,7 +2324,7 @@ map_pop_amarelos <- ggplot() +
   # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -2230,13 +2333,13 @@ map_pop_amarelos <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#2B6CB0", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#2B6CB0" = "#2B6CB0"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#2B6CB0"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -2315,8 +2418,12 @@ map_pop_amarelos <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#2B6CB0","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#2B6CB0",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -2348,26 +2455,28 @@ map_pop_indigenas <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
+  
   geom_sf(data = assentamentos,
-          aes(color = "#f6dc8d"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#f6dc8d',
           show.legend = "polygon",
-          alpha = 0.5)+
+          alpha = 0.3)+
   
+  # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -2376,13 +2485,13 @@ map_pop_indigenas <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#f6dc8d", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#f6dc8d" = "#f6dc8d"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#f6dc8d"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -2460,8 +2569,12 @@ map_pop_indigenas <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#f6dc8d","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#f6dc8d",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -2536,19 +2649,19 @@ map_pop_resp_homens <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#2B6CB0"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#2B6CB0',
           show.legend = "polygon",
@@ -2557,7 +2670,7 @@ map_pop_resp_homens <- ggplot() +
   # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -2566,13 +2679,13 @@ map_pop_resp_homens <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#2B6CB0", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#2B6CB0" = "#2B6CB0"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#2B6CB0" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#2B6CB0"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -2652,8 +2765,12 @@ map_pop_resp_homens <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#2B6CB0","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#2B6CB0",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -2676,26 +2793,28 @@ map_pop_resp_mulheres <- ggplot() +
           alpha=.8,
           size = 0)+
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
+  
   geom_sf(data = assentamentos,
-          aes(color = "#f6dc8d"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#f6dc8d',
           show.legend = "polygon",
-          alpha = 0.5)+
+          alpha = 0.3)+
   
+  # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
@@ -2704,13 +2823,13 @@ map_pop_resp_mulheres <- ggplot() +
           linewidth = 0.3,
           alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#f6dc8d", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#f6dc8d" = "#f6dc8d"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#f6dc8d" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#f6dc8d"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   
@@ -2787,8 +2906,12 @@ map_pop_resp_mulheres <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#f6dc8d","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#f6dc8d",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
 
@@ -2820,43 +2943,43 @@ map_pop_dif_resp_gen <- ggplot() +
           size = 0)+
   
   
-  geom_sf(data = dados_areas %>% st_transform(3857),
-          # aes(size = 2),
-          aes(color = "grey60"),
-          # color = "grey45",
-          # aes(fill = '#CFF0FF'),
-          fill = NA,
-          # stroke = 2,
-          # size = 2,
-          linewidth = 0.3,
-          alpha= 0.7) +
+  # geom_sf(data = dados_areas %>% st_transform(3857),
+  #         # aes(size = 2),
+  #         aes(color = "areas"),
+  #         # color = "grey45",
+  #         # aes(fill = '#CFF0FF'),
+  #         fill = NA,
+  #         # stroke = 2,
+  #         # size = 2,
+  #         linewidth = 0.3,
+  #         alpha= 0.7) +
   
   geom_sf(data = assentamentos,
-          aes(color = "#0f805e"),
+          aes(color = "ag"),
           size = 1.3,
           fill = '#0f805e',
           show.legend = "polygon",
           alpha = 0.3)+
   
-  
+  # ggnewscale::new_scale_color() +
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
-          aes(color = "#8f040e"),
+          aes(color = "urb"),
           # color = "grey45",
           # aes(fill = '#CFF0FF'),
           fill = NA,
           # stroke = 2,
           # size = 2,
           linewidth = 0.3,
-          alpha= 0.4)  +
+          alpha= 0.7)  +
   scale_color_manual(name = "Uso do solo",
-                     breaks = c("#0f805e", "#8f040e", "grey60"),
-                     values = c("#8f040e" = "#8f040e",
-                                "grey60" = "grey60",
-                                "#0f805e" = "#0f805e"),
-                     label = c("#8f040e" = "Área urbanizada",
-                               "grey60" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
-                               "#0f805e" = "Ag. subnormais")
+                     breaks = c("ag", "urb", "areas"),
+                     values = c("urb" = "#8f040e",
+                                "areas" = "grey60",
+                                "ag" = "#0f805e"),
+                     label = c("urb" = "Área urbanizada",
+                               "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                               "ag" = "Ag. subnormais")
   )+
   
   scale_fill_distiller("Habitantes",
@@ -2929,8 +3052,12 @@ map_pop_dif_resp_gen <- ggplot() +
     # legend.margin = margin(t = -80)
   ) +
   guides(colour = guide_legend(nrow = 3, order = 1,
-                               override.aes = list(fill = c("#0f805e","white", "white"),
-                                                   alpha = c(0.2,0.7,0.7)))) +
+                               override.aes = list(fill = c("#0f805e",
+                                                            # "white",
+                                                            "white"),
+                                                   alpha = c(0.2,
+                                                             # 0.7,
+                                                             0.7)))) +
   
   # guides(fill = guide_legend(byrow = TRUE)) +
   aproxima_muni_recortes(sigla_muni = sigla_muni)
