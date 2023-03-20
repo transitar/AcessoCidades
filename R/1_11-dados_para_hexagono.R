@@ -12,6 +12,13 @@ create_diretorios <- function(sigla_muni){
 
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
+save_hex_gpkg <- function(sigla_muni){
+  
+  hex <- read_rds(sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni))
+  write_sf(hex,sprintf('../data/hex_municipio/hex_%s_%s_09.gpkg', ano, sigla_muni))
+}
+walk(munis_list$munis_df$abrev_muni, save_hex_gpkg)
+
 # source_emp = rais / aop
 # source_escolas = censo_escolar / aop / muni
 # source_lazer = osm / muni
@@ -20,7 +27,7 @@ walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'noh'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "rais"
+sigla_muni <- 'rma'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "aop"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -31,8 +38,8 @@ infos_to_hex <- function(sigla_muni, ano) {
   data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                  sigla_muni, sigla_muni))
   #ajeitar o formato
-  grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
-                                 sigla_muni, sigla_muni))
+  # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+  #                                sigla_muni, sigla_muni))
   
   #checar setores com todos os renda_class_pc == n_col
   
@@ -60,11 +67,21 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   
   #empregos
+  file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', 2019, sigla_muni)
+  hex <- read_rds(file_hex)
+  # teste <- hex %>% mutate(area = st_area(.)) %>% mutate(areakm2 = as.numeric(area)/10^6)
+  # mapview(hex)
+  
+  #leitura do shape do município
+  file_shape <- sprintf('../data-raw/municipios/%s/municipio_%s_%s.rds', 2019, sigla_muni, 2019)
+  shape_muni <- read_rds(file_shape)
+  # mapview(shape_muni)
   
   #leitura dos dados de empregos
   if (source_emp == "aop"){
     
-    empregos <- aopdata::read_landuse(city = sigla_muni, year = 2019, geometry = TRUE) 
+    empregos <- aopdata::read_landuse(city = sigla_muni, year = 2019, geometry = TRUE)
+
     hex3 <- empregos %>% select(n_jobs = T001, id_hex) %>% st_drop_geometry()
     
   } else {
@@ -77,15 +94,6 @@ infos_to_hex <- function(sigla_muni, ano) {
   #leitura dos hexágonos
   
   ano <- 2019
-  file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)
-  hex <- read_rds(file_hex)
-  # teste <- hex %>% mutate(area = st_area(.)) %>% mutate(areakm2 = as.numeric(area)/10^6)
-  # mapview(hex)
-  
-  #leitura do shape do município
-  file_shape <- sprintf('../data-raw/municipios/%s/municipio_%s_%s.rds', ano, sigla_muni, ano)
-  shape_muni <- read_rds(file_shape)
-  # mapview(shape_muni)
   
   
   # intersection <- st_intersection(x = hex, y = empregos)
@@ -348,7 +356,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   hex_lazer <- sf::st_join(hex_empty %>% st_transform(decisao_muni$epsg), dados_lazer)
   
-  hex_lazer2 <- hex_lazer %>% mutate(count = ifelse(is.na(osm_id)== TRUE,
+  hex_lazer2 <- hex_lazer %>% mutate(count = ifelse(is.na(type)== TRUE,
                                          0,
                                          1)) %>%
     st_drop_geometry() %>%
@@ -443,7 +451,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   teste <- hex_total_sf 
   # mapview(teste, zcol = "n_jobs")
-  #
+  # mapview(teste, zcol = "lazer_tot")
   
   # teste <- hex_jobs %>% filter(h3_resolution > 0)
   # mapview(teste, zcol = 'n_jobs', alpha.regions = 0.6)
