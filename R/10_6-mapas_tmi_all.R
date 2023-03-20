@@ -9,7 +9,7 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'noh'
+sigla_muni <- 'rma'
 mode1 <- "bike"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
@@ -140,7 +140,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.19, 0.33),
+    legend.position = c(0.80, 0.28),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -215,13 +215,17 @@ mapas_tmi <- function(sigla_muni,
   simplepolys <- st_make_valid(area_urbanizada) %>% st_simplify(area_urbanizada, dTolerance = 300) %>%
     st_make_valid() %>%
     st_transform(decisao_muni$epsg) %>%
-    st_buffer(2) %>%
+    st_buffer(150) %>%
     st_union() 
   
   assentamentos <- read_rds(sprintf('../data-raw/assentamentos_precarios/muni_%s_assentamentos_precarios/muni_%s.rds',
                                     sigla_muni, sigla_muni)) %>% st_transform(3857) %>%
-    mutate(title = "Assentamentos Precários")
+    mutate(title = "Assentamentos Precários") %>% st_make_valid() %>%
+    st_union() %>%
+    st_make_valid() %>%
+    st_simplify(dTolerance = 500)
   
+  # mapview(assentamentos)
   
   dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                       sigla_muni, sigla_muni))
@@ -462,7 +466,7 @@ mapas_tmi <- function(sigla_muni,
             linewidth = 0.5,
             fill = "#f1886e",
             show.legend = "polygon",
-            alpha = 0.7)+
+            alpha = 0.3)+
     
      geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
@@ -516,7 +520,7 @@ mapas_tmi <- function(sigla_muni,
   # tema+
   
   ggspatial::annotation_scale(style = "ticks",
-                              location = "br",
+                              location = "bl",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -524,7 +528,7 @@ mapas_tmi <- function(sigla_muni,
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-    ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+    ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
     
     
     
@@ -990,12 +994,45 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'dou',
+                    sigla_muni = 'rma',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
                     height = 16.5)
 
+# Aplicação só um modo ----------------------------------------------------
+
+lista_modos <- c(rep(rep("walk", 9),4))
+
+lista_tempos <- c(rep(15, 9), rep(30,9), rep(45, 9), rep(60, 9))
+
+lista_oportunidade <- rep(c(
+  rep("escolas", 4),
+  rep("saude", 4),
+  "lazer"),4)
+
+lista_siglaop <- rep(c(
+  "ET", "EI", "EF", "EM",
+  "ST", "SB", "SM", "SA",
+  "LZ"), 4)
+
+lista_titulo_leg <- rep(c(
+  rep("escolas", 4),
+  rep("Eq. de saúde", 4),
+  "Eq. de lazer"), 4)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+library("future")
+seed = TRUE
+plan(multisession)
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
+                    sigla_muni = 'slz',
+                    type_acc = "TMI",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
 
 
 # Aplicação para todos os tempos com bikes e paraciclos -------------------
@@ -1106,7 +1143,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'noh',
+                    sigla_muni = 'bel',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
