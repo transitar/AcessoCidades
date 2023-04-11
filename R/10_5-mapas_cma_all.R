@@ -19,11 +19,11 @@ sigla_muni <- 'rma'
 # height <- 10
 
 # sigla_muni <- 'dou'
-mode1 <- "bike"
+mode1 <- "transit"
 oportunidade <- "lazer"
 titulo_leg <- "Eq. de lazer"
 sigla_op <- "LZ"
-time <- 15
+time <- 45
 # time <- c(15,30,45,60)
 type_acc <- "CMA"
 
@@ -784,7 +784,7 @@ lista_tempos <- c(rep(15,14), rep(30, 14))
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'poa',
+                    sigla_muni = 'noh',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
@@ -908,7 +908,7 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
 ##########
 
 
-lista_modos <- rep("walk", 56)
+lista_modos <- rep("transit", 56)
 
 lista_tempos <- c(rep(15, 14), rep(30,14), rep(45, 14),  rep(60, 14))
 
@@ -957,7 +957,7 @@ lista_titulo_leg <- rep(c("Empregos",
 lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'slz',
+                    sigla_muni = 'noh',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
@@ -1060,6 +1060,51 @@ lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
                     sigla_muni = 'bel',
+                    type_acc = "CMA",
+                    cols = 1,
+                    width = 16.5,
+                    height = 16.5)
+
+
+
+
+
+
+# Aplicação todos os modos e tempos e uma oportunidade --------------------
+
+library("future")
+plan(multisession)
+
+lista_modos <- c(rep("transit", 4), rep("walk", 4), rep("bike", 4))
+
+lista_tempos <- rep(c(rep(15, 1), rep(30,1), rep(45, 1),  rep(60, 1)),3)
+
+lista_oportunidade <- rep(rep(c("lazer"),4),3)
+
+lista_siglaop <- rep(rep(c("LZ"), 4),3)
+
+lista_titulo_leg <- rep(rep(c("Eq. de lazer"), 4),3)
+
+# lista_titulo_leg <- rep(rep(c("Empregos",
+#                               c("Matrículas totais",
+#                                 "Matrículas em E. infantil<br>",
+#                                 "Matrículas em E. fundamental<br>",
+#                                 "Matrículas em E. médio<br>"),
+#                               c("Escolas totais",
+#                                 "Escolas de E. infantil<br>",
+#                                 "Escolas de E. fundamental<br>",
+#                                 "Escolas de E. médio<br>"),
+#                               c("Eq. de saúde totais<br>",
+#                                 "Eq. de Saúde básica<br>",
+#                                 "Eq. de Saúde média complexidade<br>",
+#                                 "Eq. de Saúde alta complexidade<br>"),
+#                               "Eq. de Lazer"), 4),3)
+
+lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+
+
+furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
+                    sigla_muni = 'rma',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
