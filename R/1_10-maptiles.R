@@ -51,7 +51,7 @@ baixar_map_tile_ceramic <- function(ano, sigla_muni) {
   
   temp_sf <- read_rds(muni_folder_path_shape) 
   
-  temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(5000)
+  temp_sf2 <- temp_sf %>% st_transform(4326) %>% st_buffer(20000)
   # }
   # mapview(temp_sf)
   
