@@ -9,8 +9,8 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'noh'
-mode1 <- "transit"
+sigla_muni <- 'cit'
+mode1 <- "bike"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
 sigla_op <- "EF"
@@ -140,7 +140,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.20, 0.34),
+    legend.position = c(0.20, 0.28),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -447,16 +447,16 @@ mapas_tmi <- function(sigla_muni,
     
     ggnewscale::new_scale_fill() +
     
-    geom_sf(data = dados_areas %>% st_transform(3857),
-            # aes(size = 2),
-            aes(color = "bairros"),
-            # color = "grey45",
-            # aes(fill = '#CFF0FF'),
-            fill = NA,
-            # stroke = 2,
-            # size = 2,
-            linewidth = 0.7,
-            alpha= 0.7) +
+    # geom_sf(data = dados_areas %>% st_transform(3857),
+    #         # aes(size = 2),
+    #         aes(color = "bairros"),
+    #         # color = "grey45",
+    #         # aes(fill = '#CFF0FF'),
+    #         fill = NA,
+    #         # stroke = 2,
+    #         # size = 2,
+    #         linewidth = 0.7,
+    #         alpha= 0.7) +
 
     geom_sf(data = assentamentos,
             # aes(fill = "#d96e0a"),
@@ -528,7 +528,7 @@ mapas_tmi <- function(sigla_muni,
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
-    ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+    ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
     
     
     
@@ -548,10 +548,16 @@ mapas_tmi <- function(sigla_muni,
     #                                  colour = NA)
   # #       
   #                                          ) +
-  aproxima_muni(sigla_muni = sigla_muni) +
-    guides(color = guide_legend(override.aes = list(fill = c("#f1886e", "white", "white"),
-                                                    color = c("#f1886e", "grey60", "#fcfb76"),
-                                                    linewidth = c(1,1,1)),
+  aproxima_muni_zoom(sigla_muni = sigla_muni) +
+    guides(color = guide_legend(override.aes = list(fill = c("#f1886e",
+                                                             # "white",
+                                                             "white"),
+                                                    color = c("#f1886e",
+                                                              # "grey60",
+                                                              "#fcfb76"),
+                                                    linewidth = c(1,
+                                                                  # 1,
+                                                                  1)),
                                 order = 1))
     
     # rm(acess)
@@ -762,7 +768,7 @@ mapas_tmi <- function(sigla_muni,
   
   
   ggsave(plot3, 
-         file= sprintf("../data/map_plots_acc/muni_%s/%s/%s/%s/%s_%s_%s_%s.png",
+         file= sprintf("../data/map_plots_acc/muni_%s/%s/%s/%s/%s_%s_%s_%s_zoom.png",
                        sigla_muni, modo, type_acc , oportunidade, sigla_muni, type_acc , sigla_op, paste(time, collapse = '')), 
          dpi = 350, width = 16.5, height = 16.5, units = "cm")
   
@@ -1143,7 +1149,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'noh',
+                    sigla_muni = 'cit',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,

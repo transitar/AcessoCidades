@@ -12,14 +12,14 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'rma'
+sigla_muni <- 'cit'
 # library(elementalist)
 # rm(list = ls())
 # width <- 14
 # height <- 10
 
 # sigla_muni <- 'dou'
-mode1 <- "transit"
+mode1 <- "bike"
 oportunidade <- "lazer"
 titulo_leg <- "Eq. de lazer"
 sigla_op <- "LZ"
@@ -131,7 +131,7 @@ tema_CMA <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.80, 0.28),
+    legend.position = c(0.20, 0.28),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -434,16 +434,16 @@ mapas_cma <- function(sigla_muni,
       
       ggnewscale::new_scale_fill() +
       
-      geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
-              aes(color = "bairros"),
-              # color = "grey45",
-              # aes(fill = '#CFF0FF'),
-              fill = NA,
-              # stroke = 2,
-              # size = 2,
-              linewidth = 0.4,
-              alpha= 0.7) +
+      # geom_sf(data = dados_areas %>% st_transform(3857),
+      #         # aes(size = 2),
+      #         aes(color = "bairros"),
+      #         # color = "grey45",
+      #         # aes(fill = '#CFF0FF'),
+      #         fill = NA,
+      #         # stroke = 2,
+      #         # size = 2,
+      #         linewidth = 0.4,
+      #         alpha= 0.7) +
       
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
@@ -476,7 +476,7 @@ mapas_cma <- function(sigla_muni,
                                    "bairros" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)])
                          )+
       
-      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey50", linewidth = 0.4) +
+      geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey40", linewidth = 0.4) +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -507,7 +507,7 @@ mapas_cma <- function(sigla_muni,
       # tema+
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -515,15 +515,21 @@ mapas_cma <- function(sigla_muni,
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
 
       tema_CMA() +
       
-      aproxima_muni(sigla_muni = sigla_muni) +
+      aproxima_muni_zoom(sigla_muni = sigla_muni) +
       
-      guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white"),
-                                                      color = c(cor_ag, "grey60", "#fdfc99"),
-                                                      linewidth = c(1,1,1)),
+      guides(color = guide_legend(override.aes = list(fill = c(cor_ag,
+                                                               # "white",
+                                                               "white"),
+                                                      color = c(cor_ag,
+                                                                # "grey60",
+                                                                "#fdfc99"),
+                                                      linewidth = c(1,
+                                                                    # 1,
+                                                                    1)),
                                   order = 2))
 
       # aproxima_muni(sigla_muni = sigla_muni) +
@@ -689,7 +695,7 @@ mapas_cma <- function(sigla_muni,
     
     
     ggsave(plot3, 
-           file= sprintf("../data/map_plots_acc/muni_%s/%s/%s/%s/%s_%s_%s_%s.png",
+           file= sprintf("../data/map_plots_acc/muni_%s/%s/%s/%s/%s_%s_%s_%s_zoom.png",
                          sigla_muni, modo, type_acc , oportunidade, sigla_muni, type_acc , sigla_op, paste(time, collapse = '')), 
            dpi = 300, width = width, height = height, units = "cm")
   
@@ -905,7 +911,11 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
 
 
 
-##########
+
+
+# Aplicação somente um modo -----------------------------------------------
+
+
 
 
 lista_modos <- rep("transit", 56)
@@ -1059,7 +1069,7 @@ lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_
 
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_cma,
-                    sigla_muni = 'bel',
+                    sigla_muni = 'cit',
                     type_acc = "CMA",
                     cols = 1,
                     width = 16.5,
