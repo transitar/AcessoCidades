@@ -8,7 +8,7 @@ source('./R/fun/setup.R')
 
 # create folders
 
-sigla_muni <- 'bel'
+sigla_muni <- 'cit'
 ano <- 2022
 
 #criação dos diretório de rede dos municípios
@@ -60,7 +60,7 @@ walk(munis_list$munis_modo[ano_modo == 2022 & modo == "todos"]$abrev_muni, copy_
 # walk(munis_list$munis_modo[ano_modo == 2019 & modo == "todos"]$abrev_muni, copy_gtfs, ano1 = 2019)
 
 #stopped here
-sigla_muni1 <- 'bel'
+sigla_muni1 <- 'cit'
 ano1 <- 2022
 # copy other r5 files ----------------------------
 copy_r5_files <- function(sigla_muni1, ano1){
