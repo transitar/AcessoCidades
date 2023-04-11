@@ -1,7 +1,7 @@
 #criação de graphs no r5r
 rm(list = ls(all.names = T)); gc(full = T)
 
-options(java.parameters = '-Xmx5G')
+options(java.parameters = '-Xmx4G')
 # system("java -version")
 library(r5r)
 library(gtfstools)
@@ -42,7 +42,7 @@ write_gtfs(teste, "../r5r/network/2022/muni_pal/gtfs_pal.zip")
 
 # FUNCAO PARA CONSTRUIR network -------------------------
 # graph.obj é salvo na pasta './otp/graphs/ano/cidade
-sigla_muni <- 'rma'
+sigla_muni <- 'noh'
 ano <- 2022
 
 construir_graph_muni <- function(sigla_muni, ano) {
