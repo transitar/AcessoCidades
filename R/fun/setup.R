@@ -192,9 +192,12 @@ aproxima_muni <- function(sigla_muni) {
     # coord_sf(ylim = c(-136461,-165126), xlim = c(-5414704,  -5384011), expand = FALSE)
     
   } else if (sigla_muni == "cit") {
+    #zoom
+    coord_sf(ylim = c(-2339207,-2389118), xlim = c(-4625581,-4562226), expand = FALSE)
+    # coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
     
-    coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
-    # coord_sf(ylim = c(-2363809,-2383122), xlim = c(-4594910,  -4571315), expand = FALSE)
+    
+    
 
 
   }
@@ -245,7 +248,6 @@ aproxima_muni_recortes <- function(sigla_muni) {
     coord_sf(ylim = c(1.291373*(-5383505--5405857)-165932,-165932), xlim = c(-5405857, -5383505), expand = FALSE)
    
   }  else if (sigla_muni == "cit") {
-    
     coord_sf(ylim = c(1.291373*(-4573728--4586249)-2382024,-2382024), xlim = c(-4586249, -4573728), expand = FALSE)
   }
 
@@ -319,7 +321,10 @@ aproxima_muni_zoom <- function(sigla_muni) {
     
   } else if (sigla_muni == "cit"){
     
-    coord_sf(ylim = c(-2339207,-2389118), xlim = c(-4625581,-4562226), expand = FALSE)
+    coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
+    
+    #sem zoom
+    # coord_sf(ylim = c(-2339207,-2389118), xlim = c(-4625581,-4562226), expand = FALSE)
 
   }
   
