@@ -18,7 +18,7 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'cit'
+sigla_muni <- 'poa'
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -156,13 +156,13 @@ dados_micro_sf <- hex_muni %>% left_join(data_micro2, by = c("id_hex"="hex"))
 #outros -> id_g
 
 data_complete <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id_g) %>%
+  drop_na(id) %>%
   group_by(id_hex, genero, cor) %>%
   summarise(n = n(), renda_per_capita = mean(Rend_pc))
 
 
 data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id_g) %>%
+  drop_na(id) %>%
   group_by(id_hex, genero) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc))  %>%
@@ -178,7 +178,7 @@ data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
 
 
 data_complete_cor <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id_g) %>%
+  drop_na(id) %>%
   group_by(id_hex, cor) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc)) %>%
@@ -363,16 +363,16 @@ map_lisa_cor <- ggplot()+
                               3857), aes(fill = cluster_bp), colour = NA, alpha=1, size = 0)+
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
 
-  # geom_sf(data = dados_areas %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "bairros"),
-  #         # color = "grey45",
-  #         # aes(fill = '#CFF0FF'),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = 0.3,
-  #         alpha= 0.7) +
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "bairros"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
   
   geom_sf(data = assentamentos,
           aes(colour = "assentamentos"),
@@ -417,7 +417,7 @@ map_lisa_cor <- ggplot()+
                                ),
                     labels = c('Not significant' = 'Não significativo',
                                'High-High' = '> Predominância de brancos',
-                               'Low-Low' = '> Predominância de negros',
+                               'Low-Low' = '< Predominância de brancos',
                                'Low-High' = '+ Negros próximos a brancos',
                                'High-Low' = '+ Brancos próximos a negros'
                                )) +
@@ -435,18 +435,18 @@ map_lisa_cor <- ggplot()+
   
   tema()+
   
-  theme(legend.position = c(0.22,0.26)) +
+  theme(legend.position = c(0.22,0.24)) +
 
   aproxima_muni(sigla_muni = sigla_muni) +
   
   guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
-                                                           # "white",
+                                                           "white",
                                                            "white"),
                                                   color = c("#0A7E5C",
-                                                            # "grey50",
+                                                            "grey50",
                                                             "#fde9be"),
                                                   linewidth = c(1,
-                                                                # 1,
+                                                                1,
                                                                 1)),
                               order = 2))
   
