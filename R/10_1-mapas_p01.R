@@ -20,7 +20,7 @@ font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
 
 #Seleção do município pela sigla:
 
-sigla_muni <- 'cit'
+sigla_muni <- 'noh'
 ano <- 2019
 
 # salvar setores em gpkg
@@ -213,19 +213,50 @@ graficos <- function(munis = "all"){
       mutate(densidade_pop = pop_total/area)
     #densidade populacional na area urbanizada
     
-    #para rma
-    # aracaju <- geobr::read_municipality(code_muni = 2800308)
-    # dados_simulacao_aju <- pop_counts2 %>%  st_transform(decisao_muni$epsg) %>%
-    #   st_filter(aracaju %>% st_transform(decisao_muni$epsg))
-    # 
-    # densidade_pop_urb <- dados_simulacao_aju %>% st_transform(decisao_muni$epsg) %>%
-    #   st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
-    #   summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
+    # para rma
+    if (sigla_muni == "rma"){
+    #shapes dos municipios
+    arj <- geobr::read_municipality(code_muni = 2800308)
+    nss <- geobr::read_municipality(code_muni = 2804805)
+    bac <- geobr::read_municipality(code_muni = 2800605)
+    sac <- geobr::read_municipality(code_muni = 2806701)
+    
+    #separadação da microssimulação por municipio
+    
+    dados_simulacao_aju <- pop_counts2 %>%  st_transform(decisao_muni$epsg) %>%
+      st_filter(arj %>% st_transform(decisao_muni$epsg))
+    dados_simulacao_nss <- pop_counts2 %>%  st_transform(decisao_muni$epsg) %>%
+      st_filter(nss %>% st_transform(decisao_muni$epsg))
+    dados_simulacao_bac <- pop_counts2 %>%  st_transform(decisao_muni$epsg) %>%
+      st_filter(bac %>% st_transform(decisao_muni$epsg))
+    dados_simulacao_sac <- pop_counts2 %>%  st_transform(decisao_muni$epsg) %>%
+      st_filter(sac %>% st_transform(decisao_muni$epsg))
+
+    densidade_pop_urb_aju <- dados_simulacao_aju %>% st_transform(decisao_muni$epsg) %>%
+      st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+      summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
+    
+    densidade_pop_urb_nss <- dados_simulacao_nss %>% st_transform(decisao_muni$epsg) %>%
+      st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+      summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
+    
+    densidade_pop_urb_bac <- dados_simulacao_bac %>% st_transform(decisao_muni$epsg) %>%
+      st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+      summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
+    
+    densidade_pop_urb_sac <- dados_simulacao_sac %>% st_transform(decisao_muni$epsg) %>%
+      st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+      summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
     
     densidade_pop_urb <- pop_counts2 %>% st_transform(decisao_muni$epsg) %>%
       st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
       summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
     
+    } else {
+    densidade_pop_urb <- pop_counts2 %>% st_transform(decisao_muni$epsg) %>%
+      st_join(area_urb %>% st_transform(decisao_muni$epsg)) %>% filter(tipo == "urb") %>%
+      summarise(densidade_urb = mean(densidade_pop)) %>% pull(densidade_urb)
+    }
     # st_write(pop_counts, 'pop_poa.shp')
     
     # area_urbanizada <- read_sf(sprintf('../data-raw/mapbiomas/area_urbanizada/usosolo_%s.gpkg',
@@ -362,7 +393,7 @@ graficos <- function(munis = "all"){
     
     hist(pop_counts$pop_total)
     #limite de população (caso seja necessário fixar um valor máximo)
-    pop_max_limite <- 1600
+    pop_max_limite <- 4000
     
     if (pop_max_limite == F){
       
@@ -407,16 +438,16 @@ graficos <- function(munis = "all"){
       
       
       # 
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.7,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.7,
+              alpha= 0.7) +
       
     
     
@@ -562,7 +593,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.19, 0.31),
+      legend.position = c(0.24, 0.24),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -577,10 +608,10 @@ graficos <- function(munis = "all"){
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
       guides(color = guide_legend(override.aes = list(fill = c(cor_ag_densidade,
-                                                               # "white",
+                                                               "white",
                                                                "white"),
                                                       alpha = c(0.5,
-                                                                rep(0.1,1))),
+                                                                rep(0.1,2))),
                                   order = 1))
     
     
@@ -590,7 +621,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_pop_density,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s_new2.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/1-densidade_populacional_%s_new3.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
@@ -909,7 +940,7 @@ graficos <- function(munis = "all"){
     
     cor_ag <- "#dbad6a"
     # hist(renda$renda)
-    renda_max_limite <- 4
+    renda_max_limite <- 6
     
     if (renda_max_limite == F){
       
@@ -949,16 +980,16 @@ graficos <- function(munis = "all"){
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.3,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.3,
+              alpha= 0.7) +
       
       # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
       #         color = NA,alpha = .7, linewidth = 1) +
@@ -1128,10 +1159,10 @@ graficos <- function(munis = "all"){
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)  +
       guides(color = guide_legend(override.aes = list(fill = c(cor_ag,
-                                                               # "white",
+                                                               "white",
                                                                "white"),
                                                       alpha = c(0.5,
-                                                                rep(0.1,1))),
+                                                                rep(0.1,2))),
                                   order = 1))
     
     
@@ -1141,7 +1172,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_renda,
            device = "png",
-           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_new_%s_sem_zoom.png',
+           filename =  sprintf('../data/map_plots_population/muni_%s/2-renda_per_capita_new_%s_sem_zoom2.png',
                                sigla_muni,
                                sigla_muni),
            dpi = 300,
