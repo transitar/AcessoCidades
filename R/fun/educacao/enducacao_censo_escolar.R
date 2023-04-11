@@ -213,7 +213,7 @@ educacao_filter <- function(ano, download = FALSE) {
   chave_google_maps <- readline(prompt = "API key google maps: ")
   register_google(key = chave_google_maps)
   
-  sigla_muni <- "bel"
+  sigla_muni <- "cit"
   escolas_censo_muni <- function(sigla_muni){
     
     if (sigla_muni == "rma"){
