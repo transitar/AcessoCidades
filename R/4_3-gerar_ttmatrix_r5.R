@@ -5,7 +5,7 @@ rm(list = ls(all.names = T)); gc()
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-5XmxG')
+options(java.parameters = '-4XmxG')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -25,7 +25,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'rma'; ano <- 2022; modo <- c("WALK", "TRANSIT")
+sigla_munii <- 'noh'; ano <- 2022; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -78,13 +78,13 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     date <- '2022-10-20'
   }
   if (sigla_munii == 'noh') {
-    date <- '2022-12-08'
+    date <- '2023-01-05'
   }
   if (sigla_munii == 'slz') {
     date <- '2022-12-08'
   }
   if (sigla_munii == 'bel') {
-    date <- '2022-12-08'
+    date <- '2023-01-12'
   }
   
   # if (modes == "todos") {
@@ -266,6 +266,12 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     
   }
   
+  # ttm_walk <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_walk_%s_%s_r5_pico.csv",
+  #                           ano,
+  #                           sigla_munii,
+  #                           ano,
+  #                           sigla_munii))
+  
   dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_munii), recursive = T)
   a <- Sys.time()
   ttm_bike <- travel_time_matrix(r5r_core = setup,
@@ -294,6 +300,12 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   
   setDT(ttm_bike)
 
+  
+  # ttm_bike <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_bike_%s_%s_r5_pico.csv",
+  #                           ano,
+  #                           sigla_munii,
+  #                           ano,
+  #                           sigla_munii))
   
   
   ttm_bike[, mode := "bike"]
@@ -389,6 +401,10 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                         sigla_munii))
   }
   
+  # ttm_bike <- data.table::fread('../r5r/routing/2022/muni_bel/ttmatrix_bike_2022_bel_r5_pico.csv')
+  # ttm_walk <- data.table::fread('../r5r/routing/2022/muni_bel/ttmatrix_walk_2022_bel_r5_pico.csv')
+  
+  # ttm <- rbind(ttm_pico, ttm_bike, ttm_walk)
   # rm(ttm)
   r5r::stop_r5()
   
