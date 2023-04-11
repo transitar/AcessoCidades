@@ -317,7 +317,26 @@ aproxima_muni_zoom <- function(sigla_muni) {
     
     coord_sf(ylim = c(-2511960,-2558183), xlim = c(-6057297,-6171192), expand = FALSE)
     
+  } else if (sigla_muni == "cit"){
+    
+    coord_sf(ylim = c(-2339207,-2389118), xlim = c(-4625581,-4562226), expand = FALSE)
+
   }
+  
+}
+
+aproxima_muni_zoom_paraciclos <- function(sigla_muni) {
+  
+
+    if (sigla_muni == "bel"){
+    
+    coord_sf(ylim = c(-148051,-164339), xlim = c(-5406472,-5388222), expand = FALSE)
+
+    } else if (sigla_muni == "rma"){
+      
+      coord_sf(ylim = c(-1216661,-1231094), xlim = c(-4132955,-4111730), expand = FALSE)
+      
+    }
   
 }
 
@@ -451,7 +470,7 @@ munis_list <- list(
     "dou",       2019,     5003702, "Dourados", "MS", 1,
     "con",       2019,     3118601, "Contagem", "MG", 1,
     "vic",       2019,     2933307, "Vitória da Conquista", "BA", 1,
-    "cit",       2019,     3201209, "Cachoeiro do Itapemirim", "ES", 1,
+    "cit",       2019,     3201209, "Cachoeiro de Itapemirim", "ES", 1,
     "pal",       2019,     1721000, "Palmas", "TO", 1
     
     
