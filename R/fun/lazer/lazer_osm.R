@@ -4,7 +4,7 @@ source('./R/fun/setup.R')
 # 
 # key <- 'leisure'
 # value <- c()
-sigla_muni <- 'rma'
+sigla_muni <- 'cit'
 
 create_diretorios <- function(sigla_muni){
   
@@ -129,6 +129,9 @@ lazer_osm <- function(munis = 'all'){
     
     q_leisure_playground_sf <- q_leisure_playground$osm_polygons %>% st_as_sf() %>%
       st_centroid()
+    
+    q_leisure_playground_sf <- q_leisure_playground$osm_points %>% st_as_sf() %>%
+      st_centroid()
     # mapview(q_leisure_playground_sf)
     st_write(q_leisure_playground_sf, sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
                                         sigla_muni,
@@ -228,7 +231,7 @@ lazer_osm <- function(munis = 'all'){
 
     #leitura do arquivo filtrado:
     
-    
+    # mapview(q_leisure_playground_sf)
     
     q_library_sf <- st_read(sprintf('../data-raw/lazer/osm/muni_%s_lazer_osm/muni_%s_lazer_osm_full.gpkg',
                                    sigla_muni,
@@ -333,18 +336,19 @@ lazer_osm <- function(munis = 'all'){
                                                            name = name) %>% mutate(type = "picnic")
     
     
-    lazer2 <- rbind(q_library_sf2,
+    lazer2 <- rbind(
+      # q_library_sf2,
                     q_leisure_park_sf2,
                     # q_leisure_golf_sf2,
                     q_leisure_garden_sf2,
                     # q_leisure_nature_sf2,
                     q_leisure_pitch_sf2,
-                    q_leisure_playground_sf2,
+                    # q_leisure_playground_sf2,
                     q_leisure_stadium_sf2,
                     q_leisure_dog_sf2,
                     q_leisure_praia_sf2,
                     q_tourist_attraction_sf2,
-                    q_tourist_pier_sf2,
+                    # q_tourist_pier_sf2,
                     q_tourist_centre_sf2#,
                     # q_tourist_picnic_sf2
                     )
