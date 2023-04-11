@@ -18,7 +18,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'cit'
+sigla_muni <- 'noh'
 
 #gráficos de ciclovias
 
@@ -62,7 +62,7 @@ graficos <- function(munis = "all"){
     decisao_muni <- read_excel('../planilha_municipios.xlsx',
                                sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
     
-    #Dados de Bairros / Áreas 
+    #Dados de Bairros / Áreas
     
     if(sigla_muni == "pal"){
       
@@ -401,17 +401,17 @@ graficos <- function(munis = "all"){
       #         color = NA,alpha = .7, linewidth = 1) +
 
       
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         linetype = "solid",
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.4,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              linetype = "solid",
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.7) +
       
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
@@ -437,7 +437,7 @@ graficos <- function(munis = "all"){
       guides(#fill = guide_legend(byrow = TRUE),
         colour = guide_legend(override.aes = list(fill = c("white",
                                                            # "#d8faf0",
-                                                           # "white",
+                                                           "white",
                                                            cor_ag)
                                                   # colour = c("grey25", "white", "white")
         ))
@@ -500,7 +500,7 @@ graficos <- function(munis = "all"){
             legend.title=element_text(size=28, family = "encode_sans_bold"),
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10),
-            legend.position = c(0.20, 0.30),
+            legend.position = c(0.18, 0.32),
             legend.box.background = element_rect(fill=alpha('white', 0.7),
                                                  colour = "#A09C9C",
                                                  linewidth = 0.8,
@@ -520,7 +520,7 @@ graficos <- function(munis = "all"){
     ggsave(map_ciclovias,
            # scale = 0.61,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_%s_new_2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -600,18 +600,18 @@ graficos <- function(munis = "all"){
       
       
       
-      
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         linetype = "solid",
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.4,
-      #         alpha= 0.7) +
+
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              linetype = "solid",
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.7) +
       
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
@@ -636,8 +636,9 @@ graficos <- function(munis = "all"){
       guides(#fill = guide_legend(byrow = TRUE),
         colour = guide_legend(override.aes = list(fill = c("white",
                                                            # "#d8faf0",
-                                                           # "white",
-                                                           cor_ag)
+                                                           "white",
+                                                           cor_ag
+                                                           )
                                                   # colour = c("grey25", "white", "white")
         ))
         # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
@@ -689,7 +690,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=28, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.30),
+      legend.position = c(0.18, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -710,7 +711,7 @@ graficos <- function(munis = "all"){
     ggsave(map_ciclovias_buffer,
            # scale = 0.61,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/4-ciclovias_buffer_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/4-ciclovias_buffer_%s_new_2.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -2196,7 +2197,7 @@ graficos <- function(munis = "all"){
     paraciclos <- paraciclos %>% st_transform(decisao_muni$epsg)
     
     paraciclos_buffer <- paraciclos %>% st_transform(decisao_muni$epsg) %>%
-      st_buffer(30) %>% st_union() %>% st_as_sf()
+      st_buffer(80) %>% st_union() %>% st_as_sf()
     
     
     dados_oportunidades <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
@@ -2240,7 +2241,7 @@ graficos <- function(munis = "all"){
 
 
     hist(empregos2$n_jobs)
-    max_jobs <- 1200
+    max_jobs <- 3000
     dados_empregos <- empregos2 %>% filter(n_jobs >0) %>%
       mutate(n_jobs = ifelse(n_jobs > max_jobs, max_jobs, n_jobs))
     
@@ -2394,7 +2395,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey85", size = .4) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "br",
+                                  location = "bl",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2433,7 +2434,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.23, 0.27),
+      legend.position = c(0.82, 0.38),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2446,7 +2447,7 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni(sigla_muni = sigla_muni)
+      aproxima_muni_zoom_paraciclos(sigla_muni = sigla_muni)
       
     
     
@@ -2455,7 +2456,7 @@ graficos <- function(munis = "all"){
     # map_empregos
     ggsave(map_paraciclos_empregos,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/20_paraciclos_empregos_%s.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/20_paraciclos_empregos_2%s.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 16.5, height = 16.5, units = "cm" )
     
