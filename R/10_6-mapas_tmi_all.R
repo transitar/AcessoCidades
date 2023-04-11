@@ -9,8 +9,8 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'rma'
-mode1 <- "bike"
+sigla_muni <- 'noh'
+mode1 <- "transit"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
 sigla_op <- "EF"
@@ -140,7 +140,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.80, 0.28),
+    legend.position = c(0.20, 0.34),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -429,7 +429,7 @@ mapas_tmi <- function(sigla_muni,
     #         size = 1.3,
     #         colour = NA)  +
     
-    geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.6, size = 0)+
+    geom_sf(data = st_transform(acess, 3857), aes(fill = valor), colour = NA, alpha=.8, size = 0)+
     
     viridis::scale_fill_viridis(option = "D",
                                 direction = -1,
@@ -520,7 +520,7 @@ mapas_tmi <- function(sigla_muni,
   # tema+
   
   ggspatial::annotation_scale(style = "ticks",
-                              location = "bl",
+                              location = "br",
                               text_family = "encode_sans_bold",
                               text_cex = 3,
                               line_width = 1,
@@ -958,7 +958,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'poa',
+                    sigla_muni = 'noh',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
@@ -994,7 +994,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'rma',
+                    sigla_muni = 'bel',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
@@ -1002,7 +1002,7 @@ furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
 
 # Aplicação só um modo ----------------------------------------------------
 
-lista_modos <- c(rep(rep("walk", 9),4))
+lista_modos <- c(rep(rep("transit", 9),4))
 
 lista_tempos <- c(rep(15, 9), rep(30,9), rep(45, 9), rep(60, 9))
 
@@ -1028,7 +1028,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'slz',
+                    sigla_muni = 'noh',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
@@ -1143,7 +1143,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'bel',
+                    sigla_muni = 'noh',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
