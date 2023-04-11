@@ -55,10 +55,10 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     ttmatrix <- fread(sprintf("../r5r/routing/%s/muni_%s/ttmatrix_all_%s_%s_r5.csv",
                                  ano, sigla_muni, ano, sigla_muni))
     
-    ttmatrix2 <- ttmatrix %>%
-      filter(origin %in% hex_com_pop)
+    # ttmatrix2 <- ttmatrix %>%
+    #   filter(origin %in% hex_com_pop)
     
-    ttmatrix <- ttmatrix2
+    # ttmatrix <- ttmatrix2
     
     if (modo == "ativo") ttmatrix <- ttmatrix[mode %in% c("bike", "walk")] else ttmatrix
     
