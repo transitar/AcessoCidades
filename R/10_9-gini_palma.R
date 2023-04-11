@@ -3,7 +3,7 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'slz'
+sigla_muni <- 'bel'
 width <- 16
 height <- 10
 
@@ -19,7 +19,9 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
+
+#automatizr escolha do tempo
+desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc, times){
   
   message(paste("Rodando",sigla_muni, "\n"))
   
@@ -86,11 +88,11 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
   if (type_acc == "CMA"){
     
     if (mode1 == "transit"){
-  names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "30")]
+  names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% times[1])]
   } else if (mode1 == "bike"){
-    names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "15")]
+    names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% times[2])]
   } else if (mode1 == "walk"){
-    names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% "15")]
+    names_cols <- names(dados_acc)[which(names(dados_acc) %like% type_acc & names(dados_acc) %like% times[3])]
   }
   
   
@@ -161,28 +163,31 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc){
 
 
 
-desigualdade_function(sigla_muni = "rma",
+desigualdade_function(sigla_muni = "bel",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
-              type_acc = "CMA")
+              type_acc = "CMA",
+              times = c(45,30,15))
 gini_temp_transit <- gini_data_frame
 gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "rma",
+desigualdade_function(sigla_muni = "bel",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
-              type_acc = "CMA")
+              type_acc = "CMA",
+              times = c(45,30,15))
 gini_temp_bike <- gini_data_frame
 gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "rma",
+desigualdade_function(sigla_muni = "bel",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
-              type_acc = "CMA")
+              type_acc = "CMA",
+              times = c(45,30,15))
 gini_temp_walk <- gini_data_frame
 gini_temp_walk_selec <- gini_selec
 palma_temp_walk <- palma_data_frame
@@ -479,7 +484,7 @@ plot_gini_cma <- ggplot(dados_cma,
     axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_gini_cma, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/7-muni_%s_grafico_desigualdade_cma_new.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/7-muni_%s_grafico_desigualdade_cma_new2.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = width, height = height, units = "cm")
 
@@ -1032,7 +1037,7 @@ razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "slz", "CMA", times = c("45","30","15"))
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "bel", "CMA", times = c("45","30","15"))
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
 medias_razoes_acc <- medias_razoes_acc %>% drop_na()
 # head(medias_razoes_acc_cor)
@@ -1156,8 +1161,8 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
   
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,1.5,0.25),
-    limits = c(0,1.5)) +
+    breaks = seq(0,2,0.25),
+    limits = c(0,2)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -2004,7 +2009,7 @@ quadras <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_
                            sigla_muni, sigla_muni),
                    layer = "areas")
 # mapview(quadras)
-quadras <- quadras %>% st_transform(4083) %>% mutate(area = bairro)
+quadras <- quadras %>% st_transform(4083) %>% mutate(area = name)
 
 quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
 # mapview(quadras_acc)
@@ -2061,16 +2066,20 @@ pop_quadras <- pop_counts %>% st_transform(4083) %>%
   left_join(quadras) %>%
   st_as_sf()
 
-mapview(pop_quadras, zcol =  "pop_quadra")
+# mapview(pop_quadras, zcol =  "pop_quadra")
 
 quadras_final <- quadras_acc_med  %>% left_join(pop_quadras %>% st_drop_geometry()) %>% filter(pop_quadra>100)
 
 quadras_final_melhores <- quadras_acc_med_melhores  %>% left_join(pop_quadras %>% st_drop_geometry()) %>% filter(pop_quadra>100)
 
-quadras_final %>% filter(pop_quadra>100) %>% mapview()
+# quadras_final %>% filter(pop_quadra>100) %>% mapview()
 
 quadras_acc_med2 <- quadras_final %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
   arrange(acc_med_cmatt45)
+
+# quadras_acc_med3 <- quadras_acc_med2 %>% mutate(acc_med_cmatt45 = acc_med_cmatt45*100,
+#                                                 acc_med_cmast45 = acc_med_cmast45*100,
+#                                                 acc_med_cmaet45 = acc_med_cmaet45*100)
 
 quadras_acc_med2_melhores <- quadras_final_melhores %>% filter(acc_med_cmatt45 > 0 & is.na(pop_quadra)==F) %>%
   arrange(desc(acc_med_cmatt45))
@@ -2096,7 +2105,7 @@ mapview(quadras_percentil)
 } else if (type_acc == "TMI"){
   
   data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/tmi/acc_tmi_%s.rds',
-                                 sigla_muni, sigla_muni)) %>% filter(mode == "transit")
+                                 sigla_muni, sigla_muni)) %>% filter(mode == modo_acc)
   
   dados_acc <- left_join(dados_hex, data_acess, by = c("id_hex"="origin")) %>% st_as_sf()
   
@@ -2157,7 +2166,9 @@ mapview(quadras_percentil)
   quadras_acc_med2 <- quadras_final %>% filter(acc_med_tmist > 0 & is.na(pop_quadra)==F & pop_quadra > 100) %>%
     arrange(-acc_med_tmist)
   
-  quadras10 <- quadras_acc_med2[1:11,]
+  quadras10 <- quadras_acc_med2[1:10,]
+  quadras10_mais <- quadras_acc_med2 %>% arrange(acc_med_tmist)
+  quadras10_mais <- quadras10_mais[1:10,]
   
   teste <- left_join(quadras, quadras10 %>% st_drop_geometry()) %>%
     filter(is.na(acc_med_tmist)==F) %>%
@@ -2240,7 +2251,6 @@ plot3 <- ggplot()+
   #         colour = NA)  +
   
   geom_sf(data = st_transform(quadras_percentil, 3857), aes(fill = pop_quadra) , colour = NA, alpha=.6, size = 0)+
-  
   
   viridis::scale_fill_viridis(option = "B",
                               labels = scales::label_number(decimal.mark = ",",
@@ -2347,7 +2357,7 @@ ggspatial::annotation_scale(style = "ticks",
                             pad_x = unit(0.35, "cm"),
                             pad_y = unit(0.35, "cm")
 ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
   
   
   
@@ -2373,7 +2383,7 @@ ggspatial::annotation_scale(style = "ticks",
     # legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.30),
+    legend.position = c(0.30, 0.30),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -2425,7 +2435,7 @@ aproxima_muni(sigla_muni = sigla_muni) +
 
 ggsave(plot3,
        device = "png",
-       file= sprintf("../data/ind_desigualdade/muni_%s/11-muni_%s_bairros_menor_acc.png",
+       file= sprintf("../data/ind_desigualdade/muni_%s/11-muni_%s_bairros_menor_acc_45min.png",
                      sigla_muni,
                      sigla_muni),
              
