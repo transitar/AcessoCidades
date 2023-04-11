@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'bel'
+sigla_muni <- 'cit'
 ano_cnes <- 2022
-estado <- 'PA'
+estado <- 'ES'
 
 
 library(ggmap)
@@ -61,9 +61,9 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
   # mapview(hex_scholl, zcol = 'E001')
   #cod_uf faltando o ultimo digito nos dados do cnes
   
-  dados_leitos <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/leitos_%s_%s.dbc',
-                                             estado, tolower(estado), ano_cnes)) %>%
-    filter(CODUFMUN == munis_list$munis_metro[abrev_muni == sigla_muni]$code_muni)
+  # dados_leitos <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/leitos_%s_%s.dbc',
+  #                                            estado, tolower(estado), ano_cnes)) %>%
+  #   filter(CODUFMUN == munis_list$munis_metro[abrev_muni == sigla_muni]$code_muni)
   
   dados_estabelecimentos <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/estabelecimentos_%s_%s.dbc',
                                                        estado, tolower(estado), ano_cnes))
