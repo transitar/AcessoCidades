@@ -14,11 +14,11 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'pal'
-mode1 <- "walk"
-oportunidade <- "saude"
-titulo_leg <- "Eq. de saúde"
-sigla_op <- "SA"
+sigla_muni <- 'rma'
+mode1 <- "transit"
+oportunidade <- "lazer"
+titulo_leg <- "Eq. de lazer"
+sigla_op <- "LZ"
 # time <- c(15,30,45,60)
 time <- 30
 type_acc <- "TMI"
@@ -124,8 +124,8 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   max_pop <- nrow(data_micro)
   
-  grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
-                                 sigla_muni, sigla_muni))
+  # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+  #                                sigla_muni, sigla_muni))
   
   #checar setores com todos os renda_class_pc == n_col
   
@@ -992,8 +992,8 @@ faz_grafico_e_salva <- function(sigla_muni,
   }
   
   
-  mapas_cma_clev(sigla_muni = 'pal',type_acc = "TMI", mode1 = "transit", oportunidade = "lazer",
-                 sigla_op = "LZ", titulo_leg = "Eq. de Lazer", time = 30,
+  mapas_cma_clev(sigla_muni = 'rma',type_acc = "TMI", mode1 = "walk", oportunidade = "lazer",
+                 sigla_op = "LZ", titulo_leg = "Eq. de lazer", time = 15,
   cols = 1,
   width = 15,
   height = 10)
@@ -1113,6 +1113,33 @@ faz_grafico_e_salva <- function(sigla_muni,
                       width = 15,
                       height = 10)
 
+# Aplicação todos os tempos e modos, apenas uma oportunidade --------------
+
+  library("future")
+  plan(multisession)
+  
+  lista_modos <- c(rep("transit", 4), rep("walk", 4), rep("bike", 4))
+  
+  lista_tempos <- rep(c(rep(15, 1), rep(30,1), rep(45, 1), rep(60,1)),3)
+  
+  lista_oportunidade <- rep(rep(c("lazer"),4),3)
+  
+  lista_siglaop <- rep(rep(c("LZ"), 4),3)
+  
+  lista_titulo_leg <- rep(rep(c("Eq. de Lazer"), 4),3)
+  
+  
+  
+  lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+  
+  furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
+                      sigla_muni = 'rma',
+                      type_acc = "CMA",
+                      cols = 1,
+                      width = 15,
+                      height = 10)
+  
+  
 # Aplicação para CMA todos os tempos sem TP -------------------------------
 
   library("future")
@@ -1150,7 +1177,45 @@ faz_grafico_e_salva <- function(sigla_muni,
                       cols = 1,
                       width = 15,
                       height = 10)
+
+# aplicação somente tp ----------------------------------------------------
+
   
+  library("future")
+  plan(multisession)
+  
+  lista_modos <- c(rep("transit", 56))
+  
+  lista_tempos <- rep(c(rep(15, 14), rep(30,14), rep(45, 14), rep(60,14)),1)
+  
+  lista_oportunidade <- rep(rep(c("empregos",
+                                  rep("matriculas",4),
+                                  rep("escolas", 4),
+                                  rep("saude", 4),
+                                  "lazer"),4),1)
+  
+  lista_siglaop <- rep(rep(c("TT",
+                             "MT", "MI", "MF", "MM",
+                             "ET", "EI", "EF", "EM",
+                             "ST", "SB", "SM", "SA",
+                             "LZ"), 4),1)
+  
+  lista_titulo_leg <- rep(rep(c("Empregos",
+                                rep("Matrículas",4),
+                                rep("Escolas", 4),
+                                rep("Eq. de Saúde", 4),
+                                "Eq. de Lazer"), 4),1)
+  
+  
+  
+  lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+  
+  furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
+                      sigla_muni = 'noh',
+                      type_acc = "CMA",
+                      cols = 1,
+                      width = 15,
+                      height = 10)  
   
 # Aplicação para todos os modos incluindo BK e PR -------------------------
 
@@ -1258,7 +1323,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   seed = TRUE
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'rma',
+                      sigla_muni = 'noh',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
