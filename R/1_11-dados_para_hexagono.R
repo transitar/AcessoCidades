@@ -27,7 +27,7 @@ walk(munis_list$munis_df$abrev_muni, save_hex_gpkg)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'rma'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "aop"
+sigla_muni <- 'cit'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "rais"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -319,6 +319,8 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   # mapview(hex5, zcol = 'M001')
   
+  # hex <- hex %>% st_drop_geometry() %>% select(-lazer_tot)
+  
 
   file_lazer <- sprintf('../data-raw/lazer/%s/muni_%s_lazer_%s/muni_%s_lazer_%s.rds',source_lazer,
                         sigla_muni, source_lazer,  sigla_muni, source_lazer)
@@ -461,6 +463,8 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   write_rds(hex_total_sf, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds", sigla_muni, sigla_muni))
   
+  # hex <- read_rds(sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds", sigla_muni, sigla_muni))
+  # write_sf(hex, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.gpkg", sigla_muni, sigla_muni))
 
   # mapview(hex_total_sf, zcol = "n_jobs")
 
