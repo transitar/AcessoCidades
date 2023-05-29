@@ -66,7 +66,7 @@ tmp_plot <- data.table::rbindlist(list(july,ago,set))
 
 # text ------------
 tmp_plot1 <- copy(tmp_plot)
-tmp_plot1[,util := fifelse(date_week_f %in% c('sábado','domingo')
+tmp_plot1[,util := fifelse(date_week_f %in% c('Sáb.','Dom.')
                           ,"weekend","weekday")]
 tmp_plot1 <- tmp_plot1[,{
   total <- sum(total)
@@ -74,6 +74,7 @@ tmp_plot1 <- tmp_plot1[,{
   media <- total / dias
   list(total,dias,media)
   },by = .(util,aplicacao_f)]
+tmp_plot1[aplicacao_f == "Escolar / Professor"]
 tmp_plot1[,prop := round(100 * media/sum(media),2),by =.(util)]
 tmp_plot1[,sum(media),by = .(util)]
 
