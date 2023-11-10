@@ -27,7 +27,7 @@ walk(munis_list$munis_df$abrev_muni, save_hex_gpkg)
 
 #leitura dos dados de empregos
 
-sigla_muni <- 'cit'; ano <- 2018; source_saude <- 'cnes'; source_lazer <- 'osm'; source_escolas <- "censo_escolar"; source_emp <- "rais"
+sigla_muni <- 'man'; ano <- 2018; source_saude <- 'aop'; source_lazer <- 'osm'; source_escolas <- "aop"; source_emp <- "aop"
 
 infos_to_hex <- function(sigla_muni, ano) {
   
@@ -266,7 +266,7 @@ infos_to_hex <- function(sigla_muni, ano) {
       #                            1, health_low)
       # ) %>%
       mutate(E001 = 1,
-             E002 = ifelse(QT_MAT_B > 0,1,0),
+             E002 = ifelse(QT_MAT_B > 0 | QT_MAT_I > 0,1,0),
              E003 = ifelse(QT_MAT_F > 0,1,0),
              E004 = ifelse(QT_MAT_M > 0 | QT_MAT_P > 0,1,0),
              M001 = QT_MAT_B + QT_MAT_F + QT_MAT_I+QT_MAT_M+QT_MAT_P,
@@ -464,7 +464,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   write_rds(hex_total_sf, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds", sigla_muni, sigla_muni))
   
   # hex <- read_rds(sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds", sigla_muni, sigla_muni))
-  # write_sf(hex, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.gpkg", sigla_muni, sigla_muni))
+  write_sf(hex_total_sf, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.gpkg", sigla_muni, sigla_muni))
 
   # mapview(hex_total_sf, zcol = "n_jobs")
 
