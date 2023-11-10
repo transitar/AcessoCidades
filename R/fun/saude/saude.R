@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'cit'
+sigla_muni <- 'man'
 ano_cnes <- 2022
-estado <- 'ES'
+estado <- 'AM'
 
 
 library(ggmap)
