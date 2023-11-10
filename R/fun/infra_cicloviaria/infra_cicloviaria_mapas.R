@@ -18,7 +18,8 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'noh'
+sigla_muni <- 'pal'
+aprox_muni <- 0
 
 #gráficos de ciclovias
 
@@ -38,7 +39,15 @@ graficos <- function(munis = "all"){
     # path_muni_data_censo <- sprintf('../data-raw/censo_2021_info_muni_treated_v2/muni_%s.rds',sigla_muni)
     # path_muni_hex <- sprintf('../data/hex_municipio/hex_2019_%s_09.rds', sigla_muni)
     # path_muni_setor <- sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',sigla_muni)
-    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+    if (aprox_muni == 1){
+      
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+      
+    } else {
+      
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+      
+    }
     
     # data_muni <- read_rds(path_muni_data_censo) %>%  mutate(Cod_setor = as.character(Cod_setor))
     # data_msetor <- read_rds(path_muni_setor)
@@ -84,6 +93,13 @@ graficos <- function(munis = "all"){
       bairros2 <- bairros %>% st_make_valid()
     }
     # mapview(bairros2)
+    
+    if (sigla_muni %in% c("cit", "man")){
+      aguas <- st_read(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+                               sigla_muni,
+                               sigla_muni),
+                       layer = 'aguas')
+    }
     
     #dados de bikes
 
@@ -266,7 +282,10 @@ graficos <- function(munis = "all"){
     dados_ciclovias_buffer <- dados_ciclovias %>% st_transform(decisao_muni$epsg) %>%
       st_buffer(300) %>% st_union() %>% st_as_sf()
     dados_ciclovias_buffer2 <- dados_ciclovias_buffer %>% as.data.frame()
+    
+    suppressWarnings(dir.create(sprintf('../data/ciclovias/%s/', sigla_muni), recursive = T))
     # mapview(dados_ciclovias_buffer)
+    write_sf(dados_ciclovias_buffer2, sprintf('../data/ciclovias/%s/buffer_300_%s.gpkg', sigla_muni, sigla_muni))
     
 
 # Dados de layers do mapa -------------------------------------------------
@@ -311,6 +330,7 @@ graficos <- function(munis = "all"){
 # Mapa de ciclovias -------------------------------------------------------
 
     cor_ag <- "#2B6CB0"
+    cor_aguas <- "#92c1e3"
     
     map_ciclovias <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -380,6 +400,7 @@ graficos <- function(munis = "all"){
       ) +
       
       new_scale_fill() +
+      
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
               # fill = "#d8faf0",
@@ -412,7 +433,7 @@ graficos <- function(munis = "all"){
               # size = 2,
               linewidth = 0.4,
               alpha= 0.7) +
-      
+      # 
       geom_sf(data = assentamentos,
               # aes(fill = "#d96e0a"),
               aes(color = "aglomerados"),
@@ -422,7 +443,7 @@ graficos <- function(munis = "all"){
               # color = NA,
               show.legend = "polygon",
               alpha = 0.5)+
-      
+
       scale_color_manual(name = "Uso do solo",
                          breaks = c("areas", "urb", "aglomerados"),
                          values = c(#"urb" = "#d8faf0",
@@ -438,7 +459,8 @@ graficos <- function(munis = "all"){
         colour = guide_legend(override.aes = list(fill = c("white",
                                                            # "#d8faf0",
                                                            "white",
-                                                           cor_ag)
+                                                           cor_ag
+                                                           )
                                                   # colour = c("grey25", "white", "white")
         ))
         # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
@@ -459,6 +481,10 @@ graficos <- function(munis = "all"){
                          values = c("ciclo" = "#4b0082"),
                          label = c("ciclo" = "Ciclovias/Ciclofaixas")
       )+
+      
+      #Camada de águas
+      
+      # geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
 
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -469,6 +495,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
                                   ) +
+      
       ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
@@ -500,7 +527,7 @@ graficos <- function(munis = "all"){
             legend.title=element_text(size=28, family = "encode_sans_bold"),
             plot.title = element_text(hjust = 0, vjust = 4),
             strip.text = element_text(size = 10),
-            legend.position = c(0.18, 0.32),
+            legend.position = c(0.18, 0.31),
             legend.box.background = element_rect(fill=alpha('white', 0.7),
                                                  colour = "#A09C9C",
                                                  linewidth = 0.8,
@@ -520,10 +547,233 @@ graficos <- function(munis = "all"){
     ggsave(map_ciclovias,
            # scale = 0.61,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_%s_new_2.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_%s_new.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
+
+# Mapa ciclovias SVG ------------------------------------------------------
+
+    cor_ag <- "#2B6CB0"
+    cor_aguas <- "#92c1e3"
     
+    map_ciclovias_svg <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      
+      # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
+      geom_sf(data = st_transform(pop_counts, 3857),
+              aes(fill = quintil),
+              colour = NA,
+              alpha=1,
+              size = 0)+
+      
+      # labs(color = 'Infraestrutura Cicloviária',
+      #      fill = 'População') +
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.8) +
+      
+      scale_fill_manual(name = "População",
+                        breaks = c("1", "2", "3", "4"),
+                        #laranjas mais claros
+                        values = c("1" = "#FEF8ED",
+                                   "2" = "#fee6c3",
+                                   "3" = "#fac690",
+                                   "4" = "#e9a250"
+                                   
+                                   # "#33b099" = "#33b099",
+                                   # "aglomerados" = "#0f805e"
+                                   # 'n_urb' = '#d8faf0'
+                        ),
+                        
+                        #laranjas forte
+                        # values = c("1" = "#FEF8ED",
+                        #            "2" = "#FED49A",
+                        #            "3" = "#FDA065",
+                        #            "4" = "#D96542"
+                        #            
+                        #            # "#33b099" = "#33b099",
+                        #            # "aglomerados" = "#0f805e"
+                        #            # 'n_urb' = '#d8faf0'
+                        # ),
+                        label = c("1" = "25% menos populosos",
+                                  
+                                  "2" = "25% a 50% menos populosos",
+                                  "3" = "25% a 50% mais populosos",
+                                  "4" = "25% mais populosos"
+                                  # "#33b099" = "Cobertura de 300m",
+                                  # "aglomerados" = "Aglomerados subnormais"
+                                  # "n_urb" = "Área urbanizada"
+                        )) +
+      #laranjas mais fortes
+      # guides(#fill = guide_legend(byrow = TRUE),
+      #   # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
+      #   fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
+      #                                           color = c("#FEF8ED", "#FED49A", "#FDA065", "#D96542")),
+      #                       order = 1,
+      #                       byrow = TRUE)
+      # ) +
+      #laranjas mais fracos
+      guides(#fill = guide_legend(byrow = TRUE),
+        # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
+        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250"),
+                                                color = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250")),
+                            order = 1,
+                            byrow = TRUE)
+      ) +
+      
+      new_scale_fill() +
+      
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              # fill = "#d8faf0",
+              fill = NA,
+              aes(color = "urb"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              linetype = "solid",
+              # fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.8)  +
+      
+      new_scale_fill() +
+      # new_scale_color() +
+      
+      # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
+      #         color = NA,alpha = .7, linewidth = 1) +
+      
+      
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              linetype = "solid",
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.7) +
+      # 
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "aglomerados"),
+              # "#0f805e"
+              fill = cor_ag,
+              linewidth = 0.5,
+              # color = NA,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
+      scale_color_manual(name = "Uso do solo",
+                         breaks = c("areas", "urb", "aglomerados"),
+                         values = c(#"urb" = "#d8faf0",
+                           "urb" = "#8F040E",
+                           "areas" = "grey60",
+                           "aglomerados" = cor_ag),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                                   "aglomerados" = "Aglomerados Subnormais")
+      )+
+      
+      guides(#fill = guide_legend(byrow = TRUE),
+        colour = guide_legend(override.aes = list(fill = c("white",
+                                                           # "#d8faf0",
+                                                           "white",
+                                                           cor_ag
+        )
+        # colour = c("grey25", "white", "white")
+        ))
+        # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
+        #                     order = 1)
+      ) +
+      
+      ggnewscale::new_scale_color() +
+      
+      geom_sf(data = st_transform(dados_ciclovias, 3857),
+              aes(color = 'ciclo'),
+              # color = '#0f805e',
+              # color = NA,
+              alpha = 1,
+              linewidth = 1.0) +
+      
+      scale_color_manual(name = "Infraestrutura Cicloviária",
+                         # values = c("ciclo" = "#8F040E"),
+                         values = c("ciclo" = "#4b0082"),
+                         label = c("ciclo" = "Ciclovias/Ciclofaixas")
+      )+
+      
+      #Camada de águas
+      
+      # geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+      
+      ggspatial::annotation_scale(style = "ticks",
+                                  location = "br",
+                                  text_family = "encode_sans_bold",
+                                  text_cex = 1,
+                                  line_width = 1,
+                                  width_hint = 0.10,
+                                  pad_x = unit(0.35, "cm"),
+                                  pad_y = unit(0.35, "cm")
+      ) +
+      
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      # geom_sf(data = assentamentos,
+      #         aes(colour = "white"),
+      #         fill = NA,
+      #         size = 1.3)+
+      # scale_fill_manual(values = c('#33b099'='#33b099',"#d96e0a" ="#d96e0a", '#CFF0FF' = "#CFF0FF"),
+      #                   labels = c('#33b099'="Cobertura de 300m","#d96e0a"="Aglomerados\nSubnormais",
+      #                              '#CFF0FF'="Área urbanizada\n(Mapbiomas 2021)")
+      # ) +
+      # 
+      # scale_color_identity(labels = c("#21367d" = "",
+      #                                 blue = ""), guide = "legend") +
+    # labs(color = "Área urbanizada\n(Mapbiomas 2021)")+
+    # tema_populacao()
+    theme(
+      strip.text.x = element_text(size=rel(1.2)),
+      strip.background = element_blank(),
+      panel.background = element_rect(fill = NA, colour = NA),
+      axis.text = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank(), 
+      panel.grid = element_blank(),
+      plot.margin=unit(c(0,0,0,0),"mm"),
+      legend.margin = margin(unit(c(10,10,5,10),"mm")),
+      legend.key.width=unit(2,"line"),
+      legend.key.height = unit(1,"line"),
+      legend.key = element_blank(),
+      legend.text=element_text(size=8, family = "encode_sans_light"),
+      legend.title=element_text(size=10, family = "encode_sans_bold"),
+      plot.title = element_text(hjust = 0, vjust = 4),
+      strip.text = element_text(size = 10),
+      legend.position = c(0.19, 0.31),
+      legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                           colour = "#A09C9C",
+                                           linewidth = 0.8,
+                                           linetype = "solid"),
+      legend.background = element_blank(),
+      # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+      #                                      colour = "#E0DFE3"),
+      legend.spacing.y = unit(0.1, 'cm'),
+      legend.box.just = "left"
+      # legend.margin = margin(t = -80)
+    ) +
+      guides(#fill = guide_legend(byrow = TRUE),
+        color = guide_legend(override.aes = list(fill = c("white")))) +
+      aproxima_muni(sigla_muni = sigla_muni)
+    # width = 16; height = 16
+    # map_empregos
+    ggsave(map_ciclovias_svg,
+           # scale = 0.61,
+           device = "svg",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/1-ciclovias_%s_new.svg", sigla_muni, sigla_muni),
+           dpi = 300,
+           width = 1.62*13, height = 13, units = "cm" )    
 
 # Ciclovias Buffer --------------------------------------------------------
     cor_ag <- "#2B6CB0"
@@ -547,7 +797,7 @@ graficos <- function(munis = "all"){
       
       # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
       
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.8) +
+      # geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.8) +
       
       scale_fill_manual(name = "População",
                         breaks = c("1", "2", "3", "4"),
@@ -602,7 +852,7 @@ graficos <- function(munis = "all"){
       
 
       geom_sf(data = dados_areas %>% st_transform(3857),
-              # aes(size = 2),
+
               aes(color = "areas"),
               # color = "grey45",
               # aes(fill = '#CFF0FF'),
@@ -662,6 +912,11 @@ graficos <- function(munis = "all"){
       )+
       
       
+      #Camada de águas
+      
+      # geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+      
+      
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
                                   text_family = "encode_sans_bold",
@@ -690,7 +945,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=28, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.32),
+      legend.position = c(0.20, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -711,7 +966,7 @@ graficos <- function(munis = "all"){
     ggsave(map_ciclovias_buffer,
            # scale = 0.61,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/4-ciclovias_buffer_%s_new_2.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/4-ciclovias_buffer_%s_new_insta.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 1.62*13, height = 13, units = "cm" )
     
@@ -720,6 +975,202 @@ graficos <- function(munis = "all"){
     
     # setor <- read_rds('../data-raw/setores_censitarios/2019/setores_pal_2019.rds')
     # mapview(setor)
+
+# Mapa buffer SVG ---------------------------------------------------------
+
+    cor_ag <- "#2B6CB0"
+    
+    map_ciclovias_buffer_svg <- ggplot() +
+      geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
+      coord_equal() +
+      scale_fill_identity()+
+      # nova escala
+      new_scale_fill() +
+      geom_sf(data = st_transform(pop_counts, 3857),
+              aes(fill = quintil),
+              colour = NA,
+              alpha=1,
+              size = 0)+
+      
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", size = .1) +
+      
+      # aes(size = 2),
+      
+      
+      # c("#FEF5EC","#F5AF72","#E88D23","#d96e0a","#EF581B")
+      
+      # geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey70", linewidth = 0.8) +
+      
+      scale_fill_manual(name = "População",
+                        breaks = c("1", "2", "3", "4"),
+                        values = c("1" = "#FEF8ED",
+                                   "2" = "#fee6c3",
+                                   "3" = "#fac690",
+                                   "4" = "#e9a250"
+                                   
+                                   # "#33b099" = "#33b099",
+                                   # "aglomerados" = "#0f805e"
+                                   # 'n_urb' = '#d8faf0'
+                        ),
+                        label = c("1" = "25% menos populosos",
+                                  
+                                  "2" = "25% a 50% menos populosos",
+                                  "3" = "25% a 50% mais populosos",
+                                  "4" = "25% mais populosos"
+                                  # "#33b099" = "Cobertura de 300m",
+                                  # "aglomerados" = "Aglomerados subnormais"
+                                  # "n_urb" = "Área urbanizada"
+                        )) +
+      
+      guides(#fill = guide_legend(byrow = TRUE),
+        # color = guide_legend(override.aes = list(fill = c("white", "#d8faf0", "#0f805e"))),
+        fill = guide_legend(override.aes = list(fill = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250"),
+                                                color = c("#FEF8ED", "#fee6c3", "#fac690", "#e9a250")),
+                            order = 1,
+                            byrow = TRUE)
+      ) +
+      
+      new_scale_fill() +
+      
+      geom_sf(data = simplepolys %>% st_transform(3857),
+              # aes(size = 2),
+              # fill = "#d8faf0",
+              fill = NA,
+              aes(color = "urb"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              linetype = "solid",
+              # fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.8)  +
+      
+      new_scale_fill() +
+      # labs(color = 'Infraestrutura Cicloviária',
+      #      fill = 'População') +
+      
+      
+      
+      
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              linetype = "solid",
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.4,
+              alpha= 0.7) +
+      
+      geom_sf(data = assentamentos,
+              # aes(fill = "#d96e0a"),
+              aes(color = "aglomerados"),
+              # "#0f805e"
+              fill = cor_ag,
+              linewidth = 0.5,
+              # color = NA,
+              show.legend = "polygon",
+              alpha = 0.5)+
+      
+      scale_color_manual(name = "Uso do solo",
+                         breaks = c("areas", "urb", "aglomerados"),
+                         values = c("urb" = "#8F040E",
+                                    "areas" = "grey60",
+                                    "aglomerados" = cor_ag),
+                         label = c("urb" = "Área urbanizada",
+                                   "areas" = munis_recorte_limites$legenda[which(munis_recorte_limites$abrev_muni==sigla_muni)],
+                                   "aglomerados" = "Aglomerados Subnormais")
+      )+
+      
+      guides(#fill = guide_legend(byrow = TRUE),
+        colour = guide_legend(override.aes = list(fill = c("white",
+                                                           # "#d8faf0",
+                                                           "white",
+                                                           cor_ag
+        )
+        # colour = c("grey25", "white", "white")
+        ))
+        # fill = guide_legend(override.aes = list(fill = "#FEF8ED", "#FED49A", "#FDA065", "#D96542"),
+        #                     order = 1)
+      ) +
+      
+      ggnewscale::new_scale_color() +
+      # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
+      #         color = NA,alpha = .7, linewidth = 1) +
+      geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),
+              aes(color = 'buffer'),
+              # color = '#0f805e',
+              # color = NA,
+              fill = "grey70",
+              alpha = 0.7,
+              linewidth = 1.0) +
+      
+      scale_color_manual(name = "Infraestrutura Cicloviária",
+                         values = c("buffer" = "#4b0082"),
+                         label = c("buffer" = "Cobertura de 300m")
+      )+
+      
+      
+      #Camada de águas
+      
+      # geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+      
+      
+      ggspatial::annotation_scale(style = "ticks",
+                                  location = "br",
+                                  text_family = "encode_sans_bold",
+                                  text_cex = 1,
+                                  line_width = 1,
+                                  width_hint = 0.10,
+                                  pad_x = unit(0.35, "cm"),
+                                  pad_y = unit(0.35, "cm")
+      ) +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
+      
+      theme(
+        strip.text.x = element_text(size=rel(1.2)),
+        strip.background = element_blank(),
+        panel.background = element_rect(fill = NA, colour = NA),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(), 
+        panel.grid = element_blank(),
+        plot.margin=unit(c(0,0,0,0),"mm"),
+        legend.margin = margin(unit(c(10,10,5,10),"mm")),
+        legend.key.width=unit(2,"line"),
+        legend.key.height = unit(1,"line"),
+        legend.key = element_blank(),
+        legend.text=element_text(size=8, family = "encode_sans_light"),
+        legend.title=element_text(size=10, family = "encode_sans_bold"),
+        plot.title = element_text(hjust = 0, vjust = 4),
+        strip.text = element_text(size = 10),
+        legend.position = c(0.20, 0.32),
+        legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                             colour = "#A09C9C",
+                                             linewidth = 0.8,
+                                             linetype = "solid"),
+        legend.background = element_blank(),
+        # legend.background = element_rect(fill=alpha('#F4F4F4', 0.5),
+        #                                      colour = "#E0DFE3"),
+        legend.spacing.y = unit(0.1, 'cm'),
+        legend.box.just = "left"
+        # legend.margin = margin(t = -80)
+      ) +
+      guides(#fill = guide_legend(byrow = TRUE),
+        color = guide_legend(override.aes = list(fill = c("grey70")),
+                             order = 3)) +
+      aproxima_muni(sigla_muni = sigla_muni)
+    # width = 16; height = 16
+    # map_empregos
+    ggsave(map_ciclovias_buffer_svg,
+           # scale = 0.61,
+           device = "svg",
+           filename =  sprintf("../data/map_plots_transports/muni_%s/4-ciclovias_buffer_%s_new_insta.svg", sigla_muni, sigla_muni),
+           dpi = 300,
+           width = 1.62*13, height = 13, units = "cm" )
     
     
         
@@ -743,6 +1194,43 @@ graficos <- function(munis = "all"){
     # mapview(dados_hex_intersect)
     
     id_hex_intersects <- dados_hex_intersect$id_hex %>% unique()
+    
+    if (sigla_muni == "rma"){
+      
+      arj <- geobr::read_municipality(code_muni = 2800308) %>% select(name_muni)
+      nss <- geobr::read_municipality(code_muni = 2804805) %>% select(name_muni)
+      bac <- geobr::read_municipality(code_muni = 2800605) %>% select(name_muni)
+      sac <- geobr::read_municipality(code_muni = 2806701) %>% select(name_muni)
+      
+      hex_aju <- dados_hex %>%  st_transform(decisao_muni$epsg) %>%
+        st_intersection(arj %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "aju") %>%
+        mutate(area = as.numeric(st_area(.)))
+      
+      hex_nss <- dados_hex %>%  st_transform(decisao_muni$epsg) %>%
+        st_intersection(nss %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "nss") %>%
+        mutate(area = as.numeric(st_area(.)))
+      
+      hex_bac <- dados_hex %>%  st_transform(decisao_muni$epsg) %>%
+        st_intersection(bac %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "bac") %>%
+        mutate(area = as.numeric(st_area(.)))
+      
+      hex_sac <- dados_hex %>%  st_transform(decisao_muni$epsg) %>%
+        st_intersection(sac %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "sac") %>%
+        mutate(area = as.numeric(st_area(.)))
+      
+      dados_hex_rma <- rbind(hex_aju,
+                                   hex_nss,
+                                   hex_bac,
+                                   hex_sac)
+      # mapview(dados_hex_rma)
+      dados_hex_rma <- dados_hex_rma %>% group_by(id_hex) %>%
+        arrange(-area) %>%
+        slice(1) %>%
+        ungroup()
+      
+      
+      
+    }
     # mapview(dados_hex_in)
     #dados da microssimulação
     
@@ -954,6 +1442,36 @@ graficos <- function(munis = "all"){
       recorte_rr <- rbind(recorte_rr, para_completar_recorte_rr)
       
     } else {
+      
+      if (sigla_muni == "rma"){
+        
+        recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
+          # mutate(total = "total") %>% 
+          mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+                 cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                                 cor == "pretos" ~ "Pretos",
+                                 cor == "brancos" ~ "Brancos")) %>%
+          mutate(
+            quintil_renda = ntile(Rend_pc, 4)) %>%
+          
+          left_join(dados_hex_rma %>% select(id_hex, sigla_muni),
+                    by = c('hex' = 'id_hex')) %>%
+          # quintil_renda = case_when(Rend_pc < 7.1 ~ 1,
+          #                           Rend_pc < 60 ~ 2,
+          #                           Rend_pc < 398 ~ 3,
+          #                           Rend_pc >399 ~ 4)) %>%
+          group_by(cor, quintil_renda, genero, teste, sigla_muni) %>% summarise(n = n()) %>% 
+          ungroup() %>% group_by(cor, quintil_renda, genero, sigla_muni) %>% 
+          summarise(prop = round(n[teste == "OK"]/sum(n),digits = 2), n = n[teste == "OK"]) %>%
+          mutate(class = paste(genero, cor))%>%
+          mutate(id = paste(class, quintil_renda))
+        
+        resumo.infra_clico <- weighted.mean(recorte_rr$prop, w = recorte_rr$n)
+        
+        medias_munis_rma <- recorte_rr %>% group_by(sigla_muni) %>%
+          summarise(media_muni = sum(prop * n)/sum(n))
+        
+      }
     
     recorte_rr <- data_micro2 %>% mutate(teste = ifelse(is.element(hex,id_hex_intersects), "OK","N"))  %>% 
       # mutate(total = "total") %>% 
@@ -1234,6 +1752,79 @@ graficos <- function(munis = "all"){
                                  override.aes = list(fill = rep("white", 3))))
     }
     
+    #insta
+    
+    # plot_cleveland_ciclo <- ggplot(recorte_rr, aes(prop, as.character(quintil_renda))) +
+    #   geom_line(aes(group = quintil_renda), linewidth = 1.5, color = "grey70")+
+    #   geom_point(aes(color = class, size= n), shape = 1, stroke = 1.5) +
+    #   guides(fill=guide_legend(title="Gênero e cor")) +
+    #   scale_fill_manual(values = c("#ADBEF0", "#174DE8", "#EBB814", "#B39229"),
+    #   )+
+    #   # scale_size(range=c(0,10),
+    #   #            # breaks=c(0,5,10),
+    #   #            # labels=c("5000","10000","15000"),
+    #   #            name = "Habitantes",
+    #   #            guide="legend") +
+    #   scale_size_continuous( range = c(0,escala),
+    #                          limits = c(0,pop_max),
+    #                          breaks = c(break_leap,break_leap*2, break_leap*3),
+    #                          name = "Habitantes",
+    #                          guide = "legend")
+    # 
+    # 
+    # p_c_ciclo <- plot_cleveland_ciclo + scale_color_manual(name = "Gênero e Cor",
+    #                                                        values = c("Homens Brancos"="#ADBEF0",
+    #                                                                   "Homens Pretos"="#5766cc",
+    #                                                                   "Mulheres Brancos" = "#33b099",
+    #                                                                   "Mulheres Pretos"="#d96e0a"),
+    #                                                        labels = c("Homens Brancos"="Homens Brancos",
+    #                                                                   "Homens Pretos"="Homens Negros",
+    #                                                                   "Mulheres Brancos"="Mulheres Brancas",
+    #                                                                   "Mulheres Pretos"="Mulheres Negras"))+
+    #   # scale_x_continuous(labels = c("0 Min.","5 Min."), # baixa complexidade car    
+    #   #                    limits = c(0,5), # baixa complexidade car                   
+    #   #                    breaks = seq(0,5, by=5))+ # media complexidade a pé                   
+    #   # scale_y_discrete(expand = c(1,1)) +
+    #   labs(title = "Proporção da população com acesso à infraestrutura cicloviária")+  
+    #   #labs(title = "Tempo mínimo por transporte público até o estabelecimento \nde saúde mais próximo",
+    #   # subtitle = "Estabelecimentos de saúde de baixa complexidade\n20 maiores cidades do Brasil (2019)")+
+    #   # theme_minimal() +
+    #   xlab("% de habitantes do recorte") +
+    #   ylab("Quartil de renda per capita") +
+    #   scale_x_continuous(labels = scales::percent,
+    #                      limits = c(range1,range2),
+    #                      breaks = seq(range1,range2, passo)) +
+    #   scale_y_discrete(labels = c("1º Quartil", "2º Quartil", "3º Quartil", "4º Quartil")) +
+    #   theme_bw() +
+    #   theme(#axis.title = element_blank(),
+    #     panel.grid.minor = element_blank(),
+    #     panel.border = element_blank(),
+    #     panel.grid = element_blank(),
+    #     legend.background = element_blank(),
+    #     panel.background = element_blank(),
+    #     legend.direction = "vertical",
+    #     legend.position = "bottom",
+    #     legend.box = NULL,
+    #     plot.background = element_rect(colour = "white"),
+    #     text = element_text(family = "sans",
+    #                         # face = "bold",
+    #                         size = 10),
+    #     
+    #     plot.title = element_text(size = 10, margin = margin(b=10), family = "encode_sans_bold"),
+    #     plot.subtitle = element_text(size=7, color = "darkslategrey", margin = margin(b = 25)),
+    #     plot.caption = element_text(size = 8, margin = margin(t=10), color = "grey70", hjust = 0),
+    #     legend.title = element_text(size = 10, family = "encode_sans_bold"),
+    #     legend.text = element_text(size = 8, family = "encode_sans_light"),
+    #     axis.text = element_text(size = 8, family = "encode_sans_light"),
+    #     axis.title = element_text(size = 10, family = "encode_sans_bold"),
+    #     legend.box.background = element_blank()) +
+    #   guides(colour = guide_legend(order = 1,
+    #                                override.aes = list(fill = rep("white", 4))),
+    #          size = guide_legend(order = 2,
+    #                              override.aes = list(fill = rep("white", 3))))
+    
+    
+    
     
     #escrita do gráfico
     
@@ -1246,15 +1837,16 @@ graficos <- function(munis = "all"){
              width = 15, height = 11, units = "cm" )
       
     } else {
+      
     ggsave(p_c_ciclo,
            device = "png",
-           filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_cleveland_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_cleveland_%s_new_insta.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 15, height = 10, units = "cm" )
     }
     # ggsave(p_c_ciclo,
-    #        device = "png",
-    #        filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_TESTE_%s.png", sigla_muni, sigla_muni),
+    #        device = "svg",
+    #        filename =  sprintf("../data/map_plots_transports/muni_%s/10-ciclovias_insta_svg_%s.svg", sigla_muni, sigla_muni),
     #        dpi = 300,
     #        width = 15, height = 10, units = "cm" )
     
@@ -2173,14 +2765,15 @@ graficos <- function(munis = "all"){
                                         sigla_muni, sigla_muni),
                                 layer = "paraciclos"
       ) %>% mutate(Tipo = "Público", id=1) %>% st_transform(decisao_muni$epsg) %>%
-        select(name = Name, id, Tipo) %>% st_zm(drop = T)
+        # select(name = Name, id, Tipo)%>%
+        st_zm(drop = T)
       
       dados_paraciclos_osm <- read_sf(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
                                               sigla_muni, sigla_muni),
                                       layer = "paraciclos") %>% st_transform(decisao_muni$epsg) %>%
         select(name, id = osm_id, Tipo)
       paraciclos <- rbind(dados_paraciclos_muni, dados_paraciclos_osm) 
-      
+      # paraciclos <- dados_paraciclos_muni
     } else if (decisao_muni$fonte_paraciclos == "osm"){
       
       
@@ -2241,7 +2834,7 @@ graficos <- function(munis = "all"){
 
 
     hist(empregos2$n_jobs)
-    max_jobs <- 3000
+    max_jobs <- 300
     dados_empregos <- empregos2 %>% filter(n_jobs >0) %>%
       mutate(n_jobs = ifelse(n_jobs > max_jobs, max_jobs, n_jobs))
     
@@ -2395,7 +2988,7 @@ graficos <- function(munis = "all"){
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey85", size = .4) +
       
       ggspatial::annotation_scale(style = "ticks",
-                                  location = "bl",
+                                  location = "br",
                                   text_family = "encode_sans_bold",
                                   text_cex = 3,
                                   line_width = 1,
@@ -2403,7 +2996,7 @@ graficos <- function(munis = "all"){
                                   pad_x = unit(0.35, "cm"),
                                   pad_y = unit(0.35, "cm")
       ) +
-      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+      ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       # geom_sf(data = assentamentos,
       #         aes(colour = "white"),
       #         fill = NA,
@@ -2434,7 +3027,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.82, 0.38),
+      legend.position = c(0.20, 0.40),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -2447,7 +3040,7 @@ graficos <- function(munis = "all"){
       # legend.margin = margin(t = -80)
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
-      aproxima_muni_zoom_paraciclos(sigla_muni = sigla_muni)
+      aproxima_muni(sigla_muni = sigla_muni)
       
     
     
