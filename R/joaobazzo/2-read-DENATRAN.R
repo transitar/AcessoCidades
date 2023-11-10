@@ -1,6 +1,6 @@
 #
 # initial config----------------
-#
+source('./R/fun/setup.R')
 
 rm(list=ls())
 gc(reset = T)
@@ -33,6 +33,8 @@ state_geobr <- geobr::read_state() %>%
 state <- state_geobr %>% 
   dplyr::select(abbrev_state) %>% 
   unlist() %>% as.vector()
+
+state <- munis_list$munis_df$abrev_estado
 
 
 # function read individually since 2001 -------------
@@ -107,6 +109,14 @@ dtfiles <- data.table(path = c(
   year =     c(2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021)
 )
 
+
+dtfiles <- data.table(path = c(
+  "../data-raw/DENATRAN/frota_munic_modelo_janeiro_2022.xlsx"),
+  sheet =    c(1),
+  startrow = c(2),
+  year =     c(2022)
+)
+
 #
 # check if this reading properly--------
 # PS: for january, it's okay!
@@ -127,6 +137,7 @@ dtfiles <- data.table(path = c(
 
 #
 # read and fix data ----------------
+i = 1
 #
 obs <- lapply(1:nrow(dtfiles),function(i){ # i = 1
   
@@ -160,6 +171,11 @@ obs[,TOTAL_MOTOS := MOTOCICLETA + MOTONETA]
 
 muni_geom <- geobr::read_municipality(code_muni = "all") %>% 
   data.table::setDT()
+
+muni_geom<- munis_names
+muni_geom[,name_muni := toupper_noaccent(muni)]
+muni_geom[,muni_uf := paste0(name_muni,"-",uf)]
+
 muni_geom[,name_muni := toupper_noaccent(name_muni)]
 muni_geom[,muni_uf := paste0(name_muni,"-",abbrev_state)]
 # 
@@ -239,25 +255,32 @@ obs <- obs[,CODE := as.character(CODE)][!is.na(ANO),]
 #
 # add population info from IBGE  ---------------------
 #
-
+obs <- obs %>% mutate(muni_uf = paste0(MUNICIPIO, "-", UF))
 
 ibge <- readr::read_rds("data/pop_2010-2021.rds")
 ibge[,ano := as.character(ano)]
 obs[,ANO := as.character(ANO)]
 
-obs[ibge,on = c("CODE" = "municipio_codigo","ANO" = "ano"),pop := i.valor]
+obs[muni_geom,on = c("muni_uf" = "muni_uf"),pop := i.pop_2022]
 
+obs2 <- obs %>% drop_na(pop)
+
+dourados <- obs %>% filter(MUNICIPIO == "DOURADOS")
+dourados$pop <- 243368
+
+obs2 <- rbind(obs2, dourados)
 # motorization rate
 #
 head(obs,2)
-obs[, AUTOS_PER_POP := TOTAL_AUTOS / pop]
-obs[, MOTOS_PER_POP := TOTAL_MOTOS / pop]
-obs[, MOTO_RATE := (TOTAL_AUTOS + TOTAL_MOTOS) / pop]
+obs2[, AUTOS_PER_POP := TOTAL_AUTOS / pop]
+obs2[, MOTOS_PER_POP := TOTAL_MOTOS / pop]
+obs2[, MOTO_RATE := (TOTAL_AUTOS + TOTAL_MOTOS) / pop]
 
 #
 # write files -------------------
 #
 
-dir.create("data/DENATRAN")
-readr::write_rds(obs,"data/DENATRAN/DENATRAN_jan.rds")
+dir.create("../data/DENATRAN")
+readr::write_rds(obs2,"../data/DENATRAN/DENATRAN_jan.rds")
+write.xlsx(obs2, "../data/DENATRAN/DENATRAN_jan_2022.xlsx")
 
