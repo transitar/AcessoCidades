@@ -8,9 +8,9 @@ library(read.dbc)
 
 library(aopdata)
 
-sigla_muni <- 'bel'
+sigla_muni <- 'man'
 ano <- 2019
-estado <- 'PA'
+estado <- 'AM'
 
 create_diretorios <- function(sigla_muni){
   
