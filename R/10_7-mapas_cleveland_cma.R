@@ -14,14 +14,16 @@ library(showtext)
 width <- 15
 height <- 10
 
-sigla_muni <- 'rma'
+sigla_muni <- 'pal'
+aprox_muni <- 0
+
 mode1 <- "transit"
 oportunidade <- "lazer"
 titulo_leg <- "Eq. de lazer"
 sigla_op <- "LZ"
 # time <- c(15,30,45,60)
 time <- 30
-type_acc <- "TMI"
+type_acc <- "CMA"
 
 
 
@@ -110,7 +112,15 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
   
-  path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+  if (aprox_muni == 1){
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+    
+  } else {
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+    
+  } 
   
   data_contorno <- read_rds(path_contorno)
   
@@ -200,6 +210,51 @@ faz_grafico_e_salva <- function(sigla_muni,
       #inserir drop na em cada gráfico
       dados_acc_maps <- dados_acc %>% mutate_if(is.numeric, list(~na_if(., Inf)))
       dados_acc <- dados_acc_maps
+      
+      
+      if (sigla_muni == "rma"){
+        #shapes dos municipios
+        arj <- geobr::read_municipality(code_muni = 2800308) %>% select(name_muni)
+        nss <- geobr::read_municipality(code_muni = 2804805) %>% select(name_muni)
+        bac <- geobr::read_municipality(code_muni = 2800605) %>% select(name_muni)
+        sac <- geobr::read_municipality(code_muni = 2806701) %>% select(name_muni)
+      
+        # mapview(rma)
+        
+        sigla_municipio <- sigla_muni
+        decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                                   sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+        # rma <- st_union(arj, nss) %>% st_union(bac) %>% st_union(sac)
+        
+        dados_acc_aju <- dados_acc %>%  st_transform(decisao_muni$epsg) %>%
+          st_intersection(arj %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "aju") %>%
+          mutate(area = as.numeric(st_area(.)))
+        
+        dados_acc_nss <- dados_acc %>%  st_transform(decisao_muni$epsg) %>%
+          st_intersection(nss %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "nss") %>%
+          mutate(area = as.numeric(st_area(.)))
+        
+        dados_acc_bac <- dados_acc %>%  st_transform(decisao_muni$epsg) %>%
+          st_intersection(bac %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "bac") %>%
+          mutate(area = as.numeric(st_area(.)))
+        
+        dados_acc_sac <- dados_acc %>%  st_transform(decisao_muni$epsg) %>%
+          st_intersection(sac %>% st_transform(decisao_muni$epsg)) %>% mutate(sigla_muni = "sac") %>%
+          mutate(area = as.numeric(st_area(.)))
+        
+        dados_acc <- rbind(dados_acc_aju,
+                           dados_acc_nss,
+                           dados_acc_bac,
+                           dados_acc_sac)
+        
+        dados_acc <- dados_acc %>% group_by(id_hex) %>%
+          arrange(-area) %>%
+          slice(1) %>%
+          ungroup()
+        
+        # mapview(dados_acc)
+      }
+        
     }
     
     if (type_acc == "CMA"){
@@ -265,7 +320,12 @@ faz_grafico_e_salva <- function(sigla_muni,
       acess <- dados_acc
     }
     
+    if (sigla_muni == "rma"){
+    rm(dados_acc_maps); gc()
+      
+    } else {
     rm(dados_acc, dados_acc_maps); gc()
+    }
     
     if (type_acc == "CMA"){
     sigla_munii <- sigla_muni
@@ -286,6 +346,22 @@ faz_grafico_e_salva <- function(sigla_muni,
     
     } else if (type_acc == "TMI"){
       
+      if (sigla_muni == "rma"){
+      
+        sigla_munii <- sigla_muni
+        # abrir acess
+        # acess <- acess %>% filter(sigla_muni == sigla_munii)
+        
+        
+        cols <- which(names(acess) %in% paste0(type_acc, sigla_op))
+        acess <- acess %>% filter(mode == mode1) %>%
+          select(id_hex, cols)
+        acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op)))
+        acess <- acess2
+        
+      
+      } else {
+        
       sigla_munii <- sigla_muni
       # abrir acess
       acess <- acess %>% filter(sigla_muni == sigla_munii)
@@ -295,12 +371,22 @@ faz_grafico_e_salva <- function(sigla_muni,
       acess2 <- acess %>% gather(ind, valor, which(names(acess) %in% paste0(type_acc,sigla_op)))
       acess <- acess2
       
+      }
       
     }
     #junção com os dados da microssimulação
     
     #Aqui, acess já foi filtrado pelo modo e data_micro já não contém amarelos e indigenas
     data_micro_acc <- data_micro2 %>% left_join(acess, by = c("hex"= "id_hex"))
+    
+    if (sigla_muni == "rma") {
+      
+      data_micro_acc <- data_micro_acc %>%
+        left_join(dados_acc %>% select(id_hex, sigla_muni) %>% st_drop_geometry(),
+                  by = c("hex"="id_hex"))
+      
+    }
+    
     rm(acess, acess2); gc()
     #precisa modificar os temas lá em cima para cada nível
     #por hora, funcionando apenas o tema para um único mapa
@@ -397,6 +483,43 @@ faz_grafico_e_salva <- function(sigla_muni,
         
       } else {
       
+        if (sigla_muni == "rma"){
+          
+          recorte_rr_acc <- data_micro_acc %>%
+            # mutate(total = "total") %>% 
+            mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+                   cor = case_when(cor == "pard_am_ing" ~ "Pretos",
+                                   cor == "pretos" ~ "Pretos",
+                                   cor == "brancos" ~ "Brancos")) %>%
+            mutate(
+              quintil_renda = ntile(Rend_pc, 4)) %>%
+            ungroup() %>%
+            group_by(cor, quintil_renda, genero, sigla_muni) %>% summarise(tempo = mean(valor, na.rm = TRUE),
+                                                               n = dplyr::n()) %>% 
+            drop_na(quintil_renda)  %>%
+            mutate(class = paste(genero, cor))
+          
+          pop_acc_time <- data_micro_acc %>% filter(valor < time) %>%
+            group_by(sigla_muni) %>%
+            summarise(n = n()) %>%
+            pull(n)
+          
+          pop_total <- data_micro_acc %>%
+            group_by(sigla_muni) %>%
+            summarise(n = n() )%>%
+            pull(n)
+          
+          percent_acc <- (pop_acc_time/pop_total)*100
+          
+          munis_rma <- c("Aracaju", "NSA Socorro", "Barra dos Coqueiros", "S. Cristóvão")
+          
+          print(paste(percent_acc, "da população de", munis_rma, "tem acesso à", titulo_leg, sigla_op,
+                      "por", mode1,"em até", time, "min"))
+          
+          
+          
+        }
+        
       recorte_rr_acc <- data_micro_acc %>%
         # mutate(total = "total") %>% 
         mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
@@ -417,6 +540,7 @@ faz_grafico_e_salva <- function(sigla_muni,
       
       print(paste(percent_acc, "da população de", sigla_muni, "tem acesso à", titulo_leg, sigla_op,
                   "por", mode1,"em até", time, "min"))
+      
       
       }
     }
@@ -989,11 +1113,12 @@ faz_grafico_e_salva <- function(sigla_muni,
   # #   theme(
   # #     legend.position = c(0.1,0.85)
   # #   )
+
   }
   
   
-  mapas_cma_clev(sigla_muni = 'rma',type_acc = "TMI", mode1 = "walk", oportunidade = "lazer",
-                 sigla_op = "LZ", titulo_leg = "Eq. de lazer", time = 15,
+  mapas_cma_clev(sigla_muni = 'pal',type_acc = "TMI", mode1 = "walk", oportunidade = "escolas",
+                 sigla_op = "EM", titulo_leg = "Escolas", time = 15,
   cols = 1,
   width = 15,
   height = 10)
@@ -1172,7 +1297,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'bel',
+                      sigla_muni = 'man',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -1211,7 +1336,7 @@ faz_grafico_e_salva <- function(sigla_muni,
   lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'noh',
+                      sigla_muni = 'man',
                       type_acc = "CMA",
                       cols = 1,
                       width = 15,
@@ -1407,12 +1532,49 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   
   furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
-                      sigla_muni = 'bel',
+                      sigla_muni = 'man',
                       type_acc = "TMI",
                       cols = 1,
                       width = 15,
                       height = 10)
+  # Aplicação para tmi todos os tempos somente TP -------------------------------
   
+  lista_modos <- c(rep(rep("transit", 9),4))
+  
+  lista_tempos <- rep(c(rep(15, 9), rep(30,9), rep(45, 9), rep(60, 9)),1)
+  
+  lista_oportunidade <- rep(rep(c(
+    
+    rep("escolas", 4),
+    rep("saude", 4),
+    "lazer"),4),1)
+  
+  lista_siglaop <- rep(rep(c(
+    "ET", "EI", "EF", "EM",
+    "ST", "SB", "SM", "SA",
+    "LZ"), 4),1)
+  
+  lista_titulo_leg <- rep(rep(c(
+    rep("Escolas", 4),
+    rep("Eq. de Saúde", 4),
+    "Eq. de Lazer"), 4),1)
+  
+  
+  
+  
+  lista_args <- list(lista_modos, lista_oportunidade, lista_siglaop, lista_titulo_leg, lista_tempos)
+  
+  library("future")
+  seed = TRUE
+  plan(multisession)
+  
+  
+  furrr::future_pwalk(.l = lista_args, .f = mapas_cma_clev,
+                      sigla_muni = 'man',
+                      type_acc = "TMI",
+                      cols = 1,
+                      width = 15,
+                      height = 10)
   
     
   
@@ -1478,4 +1640,5 @@ faz_grafico_e_salva <- function(sigla_muni,
   
   
   
-}
+  }
+
