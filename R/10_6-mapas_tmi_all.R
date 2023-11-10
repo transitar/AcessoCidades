@@ -9,8 +9,10 @@ options(scipen = 100000000)
 width <- 14
 height <- 10
 
-sigla_muni <- 'cit'
-mode1 <- "bike"
+sigla_muni <- 'man'
+aprox_muni <- 1
+
+mode1 <- "transit"
 oportunidade <- "escolas"
 titulo_leg <- "Escolas"
 sigla_op <- "EF"
@@ -140,7 +142,7 @@ tema_TMI <- function(base_size) {
     legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.20, 0.28),
+    legend.position = c(0.20, 0.34),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -193,7 +195,15 @@ mapas_tmi <- function(sigla_muni,
   
   dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
   
-  path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+  if (aprox_muni == 1){
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+    
+  } else {
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+    
+  }
   
   data_contorno <- read_rds(path_contorno)
   
@@ -414,7 +424,14 @@ mapas_tmi <- function(sigla_muni,
     legenda_text <- "por caminhada"
   }
   
+  if (sigla_muni %in% c("cit", "man")){
+    aguas <- st_read(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+                             sigla_muni,
+                             sigla_muni),
+                     layer = 'aguas')
+  }
   
+  cor_aguas <- "#92c1e3"
   
   plot3 <- ggplot()+
     geom_raster(data = map_tiles, aes(x, y, fill = hex), alpha = 1) +
@@ -447,26 +464,26 @@ mapas_tmi <- function(sigla_muni,
     
     ggnewscale::new_scale_fill() +
     
-    # geom_sf(data = dados_areas %>% st_transform(3857),
-    #         # aes(size = 2),
-    #         aes(color = "bairros"),
-    #         # color = "grey45",
-    #         # aes(fill = '#CFF0FF'),
-    #         fill = NA,
-    #         # stroke = 2,
-    #         # size = 2,
-    #         linewidth = 0.7,
-    #         alpha= 0.7) +
+    geom_sf(data = dados_areas %>% st_transform(3857),
+            # aes(size = 2),
+            aes(color = "bairros"),
+            # color = "grey45",
+            # aes(fill = '#CFF0FF'),
+            fill = NA,
+            # stroke = 2,
+            # size = 2,
+            linewidth = 0.7,
+            alpha= 0.7) +
 
-    geom_sf(data = assentamentos,
-            # aes(fill = "#d96e0a"),
-            aes(color = "assentamentos"),
-            
-            # fill = "#d96e0a",
-            linewidth = 0.5,
-            fill = "#f1886e",
-            show.legend = "polygon",
-            alpha = 0.3)+
+    # geom_sf(data = assentamentos,
+    #         # aes(fill = "#d96e0a"),
+    #         aes(color = "assentamentos"),
+    # 
+    #         # fill = "#d96e0a",
+    #         linewidth = 0.5,
+    #         fill = "#f1886e",
+    #         show.legend = "polygon",
+    #         alpha = 0.3)+
     
      geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
@@ -519,6 +536,8 @@ mapas_tmi <- function(sigla_muni,
   # facet_wrap(~ind, ncol = 2)+
   # tema+
   
+  geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+  
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
                               text_family = "encode_sans_bold",
@@ -548,12 +567,12 @@ mapas_tmi <- function(sigla_muni,
     #                                  colour = NA)
   # #       
   #                                          ) +
-  aproxima_muni_zoom(sigla_muni = sigla_muni) +
-    guides(color = guide_legend(override.aes = list(fill = c("#f1886e",
-                                                             # "white",
+  aproxima_muni(sigla_muni = sigla_muni) +
+    guides(color = guide_legend(override.aes = list(fill = c(#"#f1886e",
+                                                             "white",
                                                              "white"),
-                                                    color = c("#f1886e",
-                                                              # "grey60",
+                                                    color = c(#"#f1886e",
+                                                              "grey60",
                                                               "#fcfb76"),
                                                     linewidth = c(1,
                                                                   # 1,
@@ -1000,7 +1019,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'bel',
+                    sigla_muni = 'cit',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
@@ -1034,7 +1053,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'noh',
+                    sigla_muni = 'man',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
@@ -1149,7 +1168,7 @@ seed = TRUE
 plan(multisession)
 
 furrr::future_pwalk(.l = lista_args, .f = mapas_tmi,
-                    sigla_muni = 'cit',
+                    sigla_muni = 'man',
                     type_acc = "TMI",
                     cols = 1,
                     width = 16.5,
