@@ -1,6 +1,6 @@
 #geraação de mapas
 
-# rm(list = ls())
+# rm(list = ls()); gc()
 
 
 source('./R/fun/setup.R')
@@ -17,7 +17,8 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-sigla_muni <- 'cit'
+sigla_muni <- 'vic'
+aprox_muni <- 0
 
 
 graficos <- function(munis = "all"){
@@ -41,8 +42,15 @@ graficos <- function(munis = "all"){
     # path_muni_data_censo <- sprintf('../data-raw/censo_2021_info_muni_treated_v2/muni_%s.rds',sigla_muni)
     # path_muni_hex <- sprintf('../data/hex_municipio/hex_2019_%s_09.rds', sigla_muni)
     # path_muni_setor <- sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',sigla_muni)
-    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
-    
+    if (aprox_muni == 1){
+      
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+      
+    } else {
+      
+      path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+      
+    }
     # data_muni <- read_rds(path_muni_data_censo) %>%  mutate(Cod_setor = as.character(Cod_setor))
     # data_msetor <- read_rds(path_muni_setor)
     # data_mhex <- read_rds(path_muni_hex)
@@ -95,6 +103,15 @@ graficos <- function(munis = "all"){
                                      sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
       
     }
+    
+    
+    if (sigla_muni %in% c("cit", "man")){
+      aguas <- st_read(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+                               sigla_muni,
+                               sigla_muni),
+                       layer = 'aguas')
+    }
+    
     # mapview(dados_areas)
     # data_complete <- data_mhex %>% left_join(data_muni, by = c("id_hex"="Cod_setor")) %>% 
       # mutate(area = st_area(.)/10^6) %>%
@@ -142,7 +159,7 @@ graficos <- function(munis = "all"){
     
     dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds',
                                   sigla_muni, sigla_muni)) %>% st_as_sf()
-    
+    cor_aguas <- "#92c1e3"
 
 # Mapa de empregos anterior -----------------------------------------------
 
@@ -197,11 +214,13 @@ graficos <- function(munis = "all"){
     
 
 # Mapa de empregos --------------------------------------------------------
-
+    cor_aguas <- "#92c1e3"
     hist(dados_hex$n_jobs)
-    max_jobs <- 60
+    max_jobs <- 1000
     dados_empregos <- dados_hex %>% filter(n_jobs >0) %>%
       mutate(n_jobs = ifelse(n_jobs > max_jobs, max_jobs, n_jobs))
+    
+    sum_empregos <- sum(dados_hex$n_jobs, na.rm = T)
     
     limits <- c(0, max_jobs)
     breaks <- seq(0,max_jobs,max_jobs/4)
@@ -226,16 +245,16 @@ graficos <- function(munis = "all"){
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
       # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
       #         color = NA,alpha = .7, linewidth = 1) +
@@ -263,15 +282,15 @@ graficos <- function(munis = "all"){
               # size = 2,
               linewidth = 0.4,
               alpha= 0.7)  +
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.3,
-              fill = "#0F805E",
-              show.legend = "polygon",
-              alpha = 0.3)+
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      #         
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.3,
+      #         fill = "#0F805E",
+      #         show.legend = "polygon",
+      #         alpha = 0.3)+
       
       scale_color_manual(name = "Uso do solo",
                          breaks = c("ag", "urb", "areas"),
@@ -343,7 +362,10 @@ graficos <- function(munis = "all"){
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
     
-    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey85", size = .4) +
+    geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = .6) +
+      
+      
+      geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -385,7 +407,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.20, 0.26),
+      legend.position = c(0.16, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -399,8 +421,8 @@ graficos <- function(munis = "all"){
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("#0F805E",
-                                                               # "white",
+      guides(color = guide_legend(override.aes = list(fill = c(#"#0F805E",
+                                                               "white",
                                                                "white"),
                                                       linewidth = c(1,
                                                                     # 1,
@@ -482,6 +504,8 @@ graficos <- function(munis = "all"){
 # Mapa de Eq. de lazer novo -----------------------------------------------
 
     dados_lazer <- dados_hex %>% filter(lazer_tot >0)
+    sum_lazer <- sum(dados_hex$lazer_tot, na.rm = T)
+    
     map_lazer <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
       coord_equal() +
@@ -497,21 +521,21 @@ graficos <- function(munis = "all"){
               alpha=.8,
               size = 0)+
       
-      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.4) +
+      geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.6) +
       # labs(color = 'Infraestrutura Cicloviária',
       #      fill = 'População') +
       
 
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
       # geom_sf(data = st_transform(dados_ciclovias_buffer, 3857),aes(fill = '#33b099'),
       #         color = NA,alpha = .7, linewidth = 1) +
@@ -540,16 +564,16 @@ graficos <- function(munis = "all"){
             linewidth = 0.4,
             alpha= 0.7)  +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.3,
-              fill = "#d96e0a",
-              show.legend = "polygon",
-              alpha = 0.3)+
-      
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      # 
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.3,
+      #         fill = "#d96e0a",
+      #         show.legend = "polygon",
+      #         alpha = 0.3)+
+      # 
       scale_color_manual(name = "Uso do solo",
                          breaks = c("ag", "urb", "areas"),
                          values = c("urb" = "#8F040E",
@@ -566,9 +590,9 @@ graficos <- function(munis = "all"){
       scale_fill_gradientn(
         name = "Nº de Eq. de lazer",
         colors =colors_green ,
-        labels = c(0,3,6,9),
-        breaks = c(0, 3, 6, 9),
-        limits = c(0,9),
+        labels = c(0,5,10,15),
+        breaks = c(0, 5, 10, 15),
+        limits = c(0,15),
         # colours = hcl.colors(n = 10,palette = "oranges",rev = T),
         # values = NULL,
         space = "Lab",
@@ -612,7 +636,7 @@ graficos <- function(munis = "all"){
     #                   label = "Aglomerados\nSubnormais") +
     # labs(fill = '') +
     # geom_sf(data = st_transform(bairros,3857),fill = NA,color = 'grey80', size = .2) +
-    
+    geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
 
       
       ggspatial::annotation_scale(style = "ticks",
@@ -655,7 +679,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.28),
+      legend.position = c(0.16, 0.32),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -669,8 +693,9 @@ graficos <- function(munis = "all"){
     ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni)+
-      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a",
-                                                               # "white",
+      guides(color = guide_legend(override.aes = list(fill = c(
+        # "#d96e0a",
+                                                               "white",
                                                                "white"),
                                                       linewidth = c(1,
                                                                     # 1,
@@ -1155,16 +1180,16 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.4) +
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
 
     # ggnewscale::new_scale_color() +
     geom_sf(data = simplepolys %>% st_transform(3857),
@@ -1177,16 +1202,16 @@ graficos <- function(munis = "all"){
             # size = 2,
             linewidth = 0.4,
             alpha= 0.7)  +
-      
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.4,
-              fill = "#d96e0a",
-              show.legend = "polygon",
-              alpha = 0.3)+
+      # 
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      # 
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.4,
+      #         fill = "#d96e0a",
+      #         show.legend = "polygon",
+      #         alpha = 0.3)+
       
       scale_color_manual(name = "Uso do solo",
                          values = c("urb" = "#8F040E",
@@ -1197,7 +1222,8 @@ graficos <- function(munis = "all"){
                                    "ag" = "Aglomerados subnormais")
       )+
       
-      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",1))
+      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a",
+                                                               rep("white",1))
                                                       # color = c("#d96e0a", rep("#A09C9C", 2))
       ),
       order = 1)
@@ -1244,7 +1270,7 @@ graficos <- function(munis = "all"){
     #                             # "5" = "5"
     #                             )) +
 
-
+    geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -1274,7 +1300,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.18, 0.24),
+      legend.position = c(0.16, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1289,12 +1315,14 @@ graficos <- function(munis = "all"){
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) 
       
-      # guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",2))
+      # guides(color = guide_legend(override.aes = list(fill = c(
+      #   # "#d96e0a",
+      #   rep("white",2))
       #                                                 # color = c("#d96e0a", rep("#A09C9C", 2))
       # ),
       # order = 1)
       # # fill = guide_legend(override.aes = list(fill = c("#c4c9ed",
-      # #                                                  
+      # #
       # #                                                  "#96a0df",
       # #                                                  "#5766cc",
       # #                                                  # "4" = "#3b458a",
@@ -1314,7 +1342,7 @@ graficos <- function(munis = "all"){
     dados_saude_medio <- dados_hex %>% filter(S003 >0) %>%
       mutate(S003 = ifelse(S003 > 5, 5, S003))
     
-    saude_medio_total <- sum(dados_hex$S003)
+    saude_medio_total <- sum(dados_hex$S003, na.rm = T)
     
     map_saude_medio <- ggplot() +
       geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
@@ -1323,16 +1351,16 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
       
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
       # ggnewscale::new_scale_color() +
       geom_sf(data = simplepolys %>% st_transform(3857),
@@ -1346,18 +1374,18 @@ graficos <- function(munis = "all"){
               linewidth = 0.4,
               alpha= 0.7)  +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.4,
-              fill = "#d96e0a",
-              show.legend = "polygon",
-              alpha = 0.7)+
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      #         
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.4,
+      #         fill = "#d96e0a",
+      #         show.legend = "polygon",
+      #         alpha = 0.7)+
       
       geom_sf(data = st_transform(dados_saude_medio, 3857),
-              aes(fill = as.factor(S002)),
+              aes(fill = as.factor(S003)),
               colour = "grey70",
               alpha=.8,
               size = 0)+
@@ -1425,7 +1453,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.24),
+        legend.position = c(0.24, 0.30),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -1440,7 +1468,8 @@ graficos <- function(munis = "all"){
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
       
-      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",1))
+      guides(color = guide_legend(override.aes = list(fill = c(#"#d96e0a",
+                                                               rep("white",2))
                                                       # color = c("#d96e0a", rep("#A09C9C", 2))
       ),
       order = 1)
@@ -1473,16 +1502,16 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
 
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
     geom_sf(data = simplepolys %>% st_transform(3857),
             # aes(size = 2),
@@ -1495,16 +1524,16 @@ graficos <- function(munis = "all"){
             linewidth = 0.4,
             alpha= 0.7)  +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.4,
-              fill = "#d96e0a",
-              show.legend = "polygon",
-              alpha = 0.3)+
-      
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      # 
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.4,
+      #         fill = "#d96e0a",
+      #         show.legend = "polygon",
+      #         alpha = 0.3)+
+      # 
       geom_sf(data = st_transform(dados_saude_alta, 3857),
               aes(fill = as.factor(S004)),
               colour = "grey70",
@@ -1545,6 +1574,8 @@ graficos <- function(munis = "all"){
 
     geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey30", linewidth = 0.4) +
       
+      geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+      
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
                                   text_family = "encode_sans_bold",
@@ -1573,7 +1604,7 @@ graficos <- function(munis = "all"){
       legend.title=element_text(size=30, family = "encode_sans_bold"),
       plot.title = element_text(hjust = 0, vjust = 4),
       strip.text = element_text(size = 10),
-      legend.position = c(0.22, 0.22),
+      legend.position = c(0.22, 0.30),
       legend.box.background = element_rect(fill=alpha('white', 0.7),
                                            colour = "#A09C9C",
                                            linewidth = 0.8,
@@ -1588,7 +1619,8 @@ graficos <- function(munis = "all"){
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
       
-      guides(color = guide_legend(override.aes = list(fill = c("#d96e0a", rep("white",1))
+      guides(color = guide_legend(override.aes = list(fill = c(#"#d96e0a",
+                                                               rep("white",2))
                                                       # color = c("#d96e0a", rep("#A09C9C", 2))
       ),
       order = 1)
@@ -1606,7 +1638,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_saude_alta,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/6-saude-alta_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/6-saude-alta_%s_new_zoom.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = 16.5, height = 16.5, units = "cm" )
     
@@ -2628,16 +2660,16 @@ graficos <- function(munis = "all"){
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.4) +
       
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
@@ -2649,16 +2681,16 @@ graficos <- function(munis = "all"){
               # size = 2,
               linewidth = 0.4,
               alpha= 0.7)  +
-      
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.4,
-              fill = "#2B6CB0",
-              show.legend = "polygon",
-              alpha = 0.3)+
+
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      # 
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.4,
+      #         fill = "#2B6CB0",
+      #         show.legend = "polygon",
+      #         alpha = 0.3)+
       
       geom_sf(data = st_transform(dados_escolas_infantil, 3857),
               aes(fill = factor(E002)),
@@ -2702,7 +2734,7 @@ graficos <- function(munis = "all"){
       #   # colors
       # ) +
       
-
+    geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
       
       ggspatial::annotation_scale(style = "ticks",
                                   location = "br",
@@ -2732,7 +2764,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.18, 0.22),
+        legend.position = c(0.16, 0.26),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2746,8 +2778,8 @@ graficos <- function(munis = "all"){
       ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("#2B6CB0",
-                                                               # "white",
+      guides(color = guide_legend(override.aes = list(fill = c(#"#2B6CB0",
+                                                               "white",
                                                                "white")),
                                   order = 1),
              fill = guide_legend(order = 2)
@@ -2755,7 +2787,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas_infantil,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/12-escolas_infantis_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/12-escolas_infantis_%s_new_zoom.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
 
@@ -2773,16 +2805,16 @@ graficos <- function(munis = "all"){
       
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.4) +
       
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
@@ -2795,15 +2827,15 @@ graficos <- function(munis = "all"){
               linewidth = 0.4,
               alpha= 0.7)  +
       
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.4,
-              fill = "#2B6CB0",
-              show.legend = "polygon",
-              alpha = 0.5)+
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      # 
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.4,
+      #         fill = "#2B6CB0",
+      #         show.legend = "polygon",
+      #         alpha = 0.5)+
       
       geom_sf(data = st_transform(dados_escolas_fundamental, 3857),
               aes(fill = factor(E003)),
@@ -2858,6 +2890,8 @@ graficos <- function(munis = "all"){
       ) +
       ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
       
+      geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+      
       theme(
         strip.text.x = element_text(size=rel(1.2)),
         strip.background = element_blank(),
@@ -2875,7 +2909,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.22, 0.20),
+        legend.position = c(0.22, 0.26),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -2889,8 +2923,8 @@ graficos <- function(munis = "all"){
       ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("#2B6CB0",
-                                                               # "white",
+      guides(color = guide_legend(override.aes = list(fill = c(#"#2B6CB0",
+                                                               "white",
                                                                "white")),
                                   order = 1),
              fill = guide_legend(order = 2)
@@ -2898,7 +2932,7 @@ graficos <- function(munis = "all"){
     
     ggsave(map_escolas_fundamental,
            device = "png",
-           filename =  sprintf("../data/map_plots_amenities/muni_%s/13-escolas_fundamental_%s_new.png", sigla_muni, sigla_muni),
+           filename =  sprintf("../data/map_plots_amenities/muni_%s/13-escolas_fundamental_%s_new_zoom.png", sigla_muni, sigla_muni),
            dpi = 300,
            width = width, height = height, units = "cm" )
     
@@ -2915,16 +2949,16 @@ graficos <- function(munis = "all"){
       # nova escala
       new_scale_fill() +
       geom_sf(data = st_transform(data_contorno,3857),fill = NA,colour = "grey40", linewidth = 0.4) +
-      # geom_sf(data = dados_areas %>% st_transform(3857),
-      #         # aes(size = 2),
-      #         aes(color = "areas"),
-      #         # color = "grey45",
-      #         # aes(fill = '#CFF0FF'),
-      #         fill = NA,
-      #         # stroke = 2,
-      #         # size = 2,
-      #         linewidth = 0.5,
-      #         alpha= 0.7) +
+      geom_sf(data = dados_areas %>% st_transform(3857),
+              # aes(size = 2),
+              aes(color = "areas"),
+              # color = "grey45",
+              # aes(fill = '#CFF0FF'),
+              fill = NA,
+              # stroke = 2,
+              # size = 2,
+              linewidth = 0.5,
+              alpha= 0.7) +
       
       geom_sf(data = simplepolys %>% st_transform(3857),
               # aes(size = 2),
@@ -2936,16 +2970,16 @@ graficos <- function(munis = "all"){
               # size = 2,
               linewidth = 0.4,
               alpha= 0.7)  +
-      
-      geom_sf(data = assentamentos,
-              # aes(fill = "#d96e0a"),
-              aes(color = "ag"),
-              
-              # fill = "#d96e0a",
-              linewidth = 0.4,
-              fill = "#2B6CB0",
-              show.legend = "polygon",
-              alpha = 0.5)+
+      # 
+      # geom_sf(data = assentamentos,
+      #         # aes(fill = "#d96e0a"),
+      #         aes(color = "ag"),
+      # 
+      #         # fill = "#d96e0a",
+      #         linewidth = 0.4,
+      #         fill = "#2B6CB0",
+      #         show.legend = "polygon",
+      #         alpha = 0.5)+
       
       geom_sf(data = st_transform(dados_escolas_medio, 3857),
               aes(fill = factor(E004)),
@@ -2986,7 +3020,7 @@ graficos <- function(munis = "all"){
       #   aesthetics = "fill",
       #   # colors
       # ) +
-      
+      geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
 
       
       ggspatial::annotation_scale(style = "ticks",
@@ -3017,7 +3051,7 @@ graficos <- function(munis = "all"){
         legend.title=element_text(size=30, family = "encode_sans_bold"),
         plot.title = element_text(hjust = 0, vjust = 4),
         strip.text = element_text(size = 10),
-        legend.position = c(0.20, 0.20),
+        legend.position = c(0.20, 0.24),
         legend.box.background = element_rect(fill=alpha('white', 0.7),
                                              colour = "#A09C9C",
                                              linewidth = 0.8,
@@ -3031,8 +3065,8 @@ graficos <- function(munis = "all"){
       ) +
       # guides(fill = guide_legend(byrow = TRUE)) +
       aproxima_muni(sigla_muni = sigla_muni) +
-      guides(color = guide_legend(override.aes = list(fill = c("#2B6CB0",
-                                                               # "white",
+      guides(color = guide_legend(override.aes = list(fill = c(#"#2B6CB0",
+                                                               "white",
                                                                "white")),
                                   order = 1),
              fill = guide_legend(order = 2)
