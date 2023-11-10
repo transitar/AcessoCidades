@@ -3,13 +3,13 @@
 rm(list = ls()); gc()
 
 source('./R/fun/setup.R')
-sigla_muni <- 'bel'
+sigla_muni <- 'poa'
 width <- 16
 height <- 10
 
 
-mode1 <- "transit"
-type_acc <- "TMI"
+mode1 <- "walk"
+type_acc <- "CMA"
 ind_selec <- c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60")
 
 library(showtext)
@@ -18,7 +18,7 @@ font_add("encode_sans", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/En
 font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Regular.ttf')
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
-
+aprox_muni <- 0
 
 #automatizr escolha do tempo
 desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc, times){
@@ -29,7 +29,16 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc, times
   
   dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
   
-  path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+  
+  if (aprox_muni == 1){
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+    
+  } else {
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+    
+  }
   
   data_contorno <- read_rds(path_contorno)
   
@@ -163,7 +172,7 @@ desigualdade_function <- function(sigla_muni, mode1, ind_select, type_acc, times
 
 
 
-desigualdade_function(sigla_muni = "bel",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "transit",
               ind_select = c("CMATT60", "CMAST60", "CMAET60", "CMAMT60", "CMALZ60", "CMABK60", "CMAPR60"),
               type_acc = "CMA",
@@ -173,7 +182,7 @@ gini_temp_transit_selec <- gini_selec
 palma_temp_transit <- palma_data_frame
 palma_temp_transit_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "bel",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "bike",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA",
@@ -183,7 +192,7 @@ gini_temp_bike_selec <- gini_selec
 palma_temp_bike <- palma_data_frame
 palma_temp_bike_selec <- palma_selec
 
-desigualdade_function(sigla_muni = "bel",
+desigualdade_function(sigla_muni = "poa",
               mode1 = "walk",
               ind_select = c("CMATT15", "CMAST15", "CMAET15", "CMAMT15", "CMALZ15", "CMABK15", "CMAPR15"),
               type_acc = "CMA",
@@ -484,7 +493,7 @@ plot_gini_cma <- ggplot(dados_cma,
     axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_gini_cma, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/7-muni_%s_grafico_desigualdade_cma_new2.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/7-muni_%s_grafico_desigualdade_cma_new3.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = width, height = height, units = "cm")
 
@@ -600,8 +609,8 @@ plot_palma_cma <- ggplot(dados_cma,
            width = dados_cma$largura*0.7) +
   geom_hline(yintercept = 1, linetype =2, color = "grey70", linewidth = 1.2)+
   scale_y_continuous(
-    breaks = seq(0,4.5,0.5),
-    limits = c(0,4.5)) +
+    breaks = seq(0,4,0.5),
+    limits = c(0,4)) +
   labs(fill = "Modo de Transporte") +
   geom_text(aes(label = scales::label_number(suffix = "",
                                              decimal.mark = "," ,
@@ -692,7 +701,7 @@ labels = c(
     )
 
 ggsave(plot_palma_cma, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/9-muni_%s_grafico_razao_palma_cma_select.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/9-muni_%s_grafico_razao_palma_cma_select2.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = 16, height = height, units = "cm")
 
@@ -791,6 +800,8 @@ ggsave(plot_palma_tmi,
 
 
 # Razão de Medias por Cor CMA - Valores ----------------------------------------------------------
+
+# sigla_muni <- "vic"
 
 times <- c("45", "30", "15")
 
@@ -1037,11 +1048,11 @@ razao_medias_function_cor <- function(sigla_muni, type_acc, times){
   
 }
 
-medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "bel", "CMA", times = c("45","30","15"))
+medias_razoes_acc <- razao_medias_function_cor(sigla_muni = "vic", "CMA", times = c("45","30","15"))
 # medias_razoes_acc_cor <- razao_medias_function_cor(sigla_muni = "pal", "CMA")
-medias_razoes_acc <- medias_razoes_acc %>% drop_na()
+medias_razoes_acc <- medias_razoes_acc %>% drop_na() %>% mutate(city = sigla_muni)
 # head(medias_razoes_acc_cor)
-
+write.xlsx(medias_razoes_acc, sprintf('../data/ind_desigualdade/muni_%s/razoes_acc_recortes.xlsx', sigla_muni))
 
 # Gráfico de Razao de medias recorte de cor -------------------------------
 
@@ -1233,7 +1244,7 @@ plot_razoes_cma_cor <- ggplot(medias_razoes_acc_cor2,
     )
 
 ggsave(plot_razoes_cma_cor, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/1-muni_%s_grafico_razoes_cor_cma.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/1-muni_%s_grafico_razoes_cor_cma2.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = width, height = height, units = "cm")
 
@@ -1399,7 +1410,7 @@ plot_razoes_cma_gen <- ggplot(medias_razoes_acc_gen2,
     axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_razoes_cma_gen, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/2-muni_%s_grafico_razoes_genero_cma.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/2-muni_%s_grafico_razoes_genero_cma2.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = width, height = height, units = "cm")
 
@@ -1564,7 +1575,7 @@ plot_razoes_cma_resp <- ggplot(medias_razoes_acc_resp2,
     axis.title = ggtext::element_markdown(size=18, family = "encode_sans_bold", lineheight = 0.5))
 
 ggsave(plot_razoes_cma_resp, 
-       file= sprintf('../data/ind_desigualdade/muni_%s/3-muni_%s_grafico_razoes_responsavel_cma.png',
+       file= sprintf('../data/ind_desigualdade/muni_%s/3-muni_%s_grafico_razoes_responsavel_cma2.png',
                      sigla_muni, sigla_muni), 
        dpi = 200, width = width, height = height, units = "cm")
 
@@ -1895,8 +1906,6 @@ levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indí
 data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
 
 if (type_acc == "CMA"){
-  
-  
 
 # data_acess <- read_rds(sprintf('../r5r/accessibility/muni_%s/acc_%s.rds',
 #                                sigla_muni, sigla_muni)) %>% filter(mode == "transit")
@@ -2131,7 +2140,7 @@ mapview(quadras_percentil)
                              sigla_muni, sigla_muni),
                      layer = "areas")
   # mapview(quadras)
-  quadras <- quadras %>% st_transform(4083)
+  quadras <- quadras %>% st_transform(4083) %>% rename(bairro = NOME)
   
   quadras_acc <- dados_acc_hex %>% st_join(quadras)# %>% drop_na()
   # mapview(quadras_acc)
@@ -2166,7 +2175,7 @@ mapview(quadras_percentil)
   quadras_acc_med2 <- quadras_final %>% filter(acc_med_tmist > 0 & is.na(pop_quadra)==F & pop_quadra > 100) %>%
     arrange(-acc_med_tmist)
   
-  quadras10 <- quadras_acc_med2[1:10,]
+  quadras10 <- quadras_acc_med2[1:10,] %>% drop_na(bairro)
   quadras10_mais <- quadras_acc_med2 %>% arrange(acc_med_tmist)
   quadras10_mais <- quadras10_mais[1:10,]
   
@@ -2176,7 +2185,7 @@ mapview(quadras_percentil)
   
   quadras_percentil <- quadras_final %>% drop_na(pop_quadra) %>% 
     mutate(quartil = ntile(acc_med_tmist, 5)) %>%
-    filter(quartil >= 4) 
+    filter(quartil >= 4)  %>% drop_na(bairro)
   mapview(quadras_percentil)
   
   
@@ -2194,7 +2203,15 @@ path_contorno <- sprintf('../data-raw/municipios/2019/municipio_%s_2019.rds', si
 
 dados_hex <- read_rds(sprintf('../data/dados_hex/muni_%s/dados_hex_%s.rds', sigla_muni, sigla_muni))
 
-path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni)
+if (aprox_muni == 1){
+  
+  path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+  
+} else {
+  
+  path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+  
+}
 
 data_contorno <- read_rds(path_contorno)
 
@@ -2234,6 +2251,15 @@ pop_counts <- dados_simulacao %>%
 dados_areas <- read_sf(sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg',
                                sigla_muni, sigla_muni), layer= "areas") %>% st_transform(decisao_muni$epsg)
 
+if (sigla_muni %in% c("cit", "man")){
+  aguas <- st_read(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+                           sigla_muni,
+                           sigla_muni),
+                   layer = 'aguas')
+}
+
+cor_aguas <- "#92c1e3"
+
 options(scipen = 99999999)
 cor_ag <- "#96d6c2"
 
@@ -2270,22 +2296,22 @@ plot3 <- ggplot()+
   
   ggnewscale::new_scale_fill() +
   
-  geom_sf(data = assentamentos,
-          # aes(fill = "#d96e0a"),
-          aes(color = "ag"),
-          
-          # fill = "#d96e0a",
-          linewidth = 0.3,
-          fill = cor_ag,
-          show.legend = "polygon",
-          alpha = 0.7)+
+  # geom_sf(data = assentamentos,
+  #         # aes(fill = "#d96e0a"),
+  #         aes(color = "ag"),
+  # 
+  #         # fill = "#d96e0a",
+  #         linewidth = 0.3,
+  #         fill = cor_ag,
+  #         show.legend = "polygon",
+  #         alpha = 0.7)+
   
   
   
 
   
   # scale_fill_manual(name = "Assentamentos Precários",)
-  
+  # 
   geom_sf(data = dados_areas %>% st_transform(3857),
           # aes(size = 2),
           aes(color = "areas"),
@@ -2348,6 +2374,8 @@ plot3 <- ggplot()+
 # facet_wrap(~ind, ncol = 2)+
 # tema+
 
+geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+
 ggspatial::annotation_scale(style = "ticks",
                             location = "br",
                             text_family = "encode_sans_bold",
@@ -2357,7 +2385,7 @@ ggspatial::annotation_scale(style = "ticks",
                             pad_x = unit(0.35, "cm"),
                             pad_y = unit(0.35, "cm")
 ) +
-  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tl") +
+  ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
   
   
   
@@ -2383,7 +2411,7 @@ ggspatial::annotation_scale(style = "ticks",
     # legend.title= ggtext::element_markdown(size=30, family = "encode_sans_bold", lineheight = 0.15),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.30, 0.30),
+    legend.position = c(0.16, 0.30),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -2409,7 +2437,9 @@ ggspatial::annotation_scale(style = "ticks",
 # #       
 #                                          ) +
 aproxima_muni(sigla_muni = sigla_muni) +
-  guides(color = guide_legend(override.aes = list(fill = c(cor_ag, "white", "white")),
+  guides(color = guide_legend(override.aes = list(fill = c(#cor_ag,
+                                                           "white",
+                                                           "white")),
                               byrow = T,
                               order = 1,
                               keyheight = unit(0.75,"line")),
@@ -2435,7 +2465,7 @@ aproxima_muni(sigla_muni = sigla_muni) +
 
 ggsave(plot3,
        device = "png",
-       file= sprintf("../data/ind_desigualdade/muni_%s/11-muni_%s_bairros_menor_acc_45min.png",
+       file= sprintf("../data/ind_desigualdade/muni_%s/11-muni_%s_bairros_menor_acc_tmi_saude_zoom.png",
                      sigla_muni,
                      sigla_muni),
              
