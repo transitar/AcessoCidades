@@ -7,7 +7,7 @@ source('./R/fun/setup.R')
 
 
 
-sigla_muni <- "rma"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
+sigla_muni <- "man"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
 # sigla_muni <- "spo"; ano=2019
 # sigla_muni <- "for"; ano=2019
 # sigla_muni <- "for"; ano=2017
@@ -35,10 +35,21 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
   # status message
   message('Woking on city ', sigla_muni, ' at year ', ano,  '\n')
   
-  dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
-                                      sigla_muni, sigla_muni))
-  hex_com_pop <- dados_simulacao %>% group_by(hex) %>%
-    summarise(n = n()) %>% filter(n>0) %>% pull(hex)
+  # dados_simulacao <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
+  #                                     sigla_muni, sigla_muni))
+  # hex_com_pop <- dados_simulacao %>% group_by(hex) %>%
+  #   summarise(n = n()) %>% filter(n>0) %>% pull(hex)
+  
+  sigla_municipio <- sigla_muni
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
+  
+  hex <- read_rds(sprintf("../data/dados_hex/muni_%s/dados_hex_%s.rds",
+                     sigla_muni, sigla_muni)) %>% st_transform(decisao_muni$epsg)
+  area_filtro <- st_read('../data-raw/area_filtro/muni_man/filtro_hex_man.gpkg') %>%
+    st_transform(decisao_muni$epsg) %>% mutate(tipo = "filtro")
+  
+  hex_filtro <- hex %>% st_join(area_filtro) %>% filter(tipo == "filtro") %>% pull(id_hex)
   
   # hex_origens <- hex_orig %>%
   #   filter(if_all(n_jobs:lazer_tot, ~ !.x  %in% 0))
@@ -58,7 +69,10 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
     # ttmatrix2 <- ttmatrix %>%
     #   filter(origin %in% hex_com_pop)
     
-    # ttmatrix <- ttmatrix2
+    ttmatrix2 <- ttmatrix %>%
+      filter(origin %in% hex_filtro)
+    
+    ttmatrix <- ttmatrix2
     
     if (modo == "ativo") ttmatrix <- ttmatrix[mode %in% c("bike", "walk")] else ttmatrix
     
@@ -1169,10 +1183,9 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       #          TMISA = min(travel_time_p50[which(saude_alta >= 1)]),
       #          TMIET = min(travel_time_p50[which(edu_total >= 1)]),
       #          TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
-      #          TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),       
-      #          TMIEM = min(travel_time_p50[which(edu_medio >= 1)]), 
-      #          TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
-      #          TMIPR = min(travel_time_p50[which(paraciclos >= 1)])
+      #          TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),
+      #          TMIEM = min(travel_time_p50[which(edu_medio >= 1)]),
+      #          TMILZ = min(travel_time_p50[which(lazer_total >= 1)])
       #          )
       
       tictoc::toc()
@@ -1192,26 +1205,37 @@ calcular_acess_muni <- function(sigla_muni, ano, BFCA = FALSE, mode_access = "al
       #                            TMIEI = min(travel_time_p50[which(edu_infantil >= 1)]),
       #                            TMIEF = min(travel_time_p50[which(edu_fundamental >= 1)]),
       #                            TMIEM = min(travel_time_p50[which(edu_medio >= 1)]),
-      #                            TMILZ = min(travel_time_p50[which(lazer_total >= 1)]),
-      #                            TMIPR = min(travel_time_p50[which(paraciclos >= 1)])),
+      #                            TMILZ = min(travel_time_p50[which(lazer_total >= 1)])#,
+      #                            # TMIPR = min(travel_time_p50[which(paraciclos >= 1)])
+      #                            ),
       #                       by=.(mode, origin)]
       # tictoc::toc()
       
-      # acess_tmi1 <- list(
-      #   
-      #   ttmatrix[saude_total >= 1, .(TMIST = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[saude_baixa >= 1, .(TMISB = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[saude_media >= 1, .(TMISM = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[saude_alta >= 1, .(TMISA = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[edu_total >= 1, .(TMIET = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[edu_infantil >= 1, .(TMIEI = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[edu_fundamental >= 1, .(TMIEF = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[edu_medio >= 1, .(TMIEM = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)],
-      #   ttmatrix[cras_total >= 1, .(TMICT = min(travel_time, na.rm = TRUE)), by=.(city, mode, origin, pico)]
-      #   
-      # )
-      # tictoc::toc()
-      # acess_tmi1 <- reduce(acess_tmi1, full_join, by=c("city", "mode", "origin", "pico")) %>% setDT()
+      tictoc::tic()
+      
+      acess_tmi1 <- list(
+
+        ttmatrix[saude_total >= 1, .(TMIST = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[saude_baixa >= 1, .(TMISB = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[saude_media >= 1, .(TMISM = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[saude_alta >= 1, .(TMISA = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[edu_total >= 1, .(TMIET = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[edu_infantil >= 1, .(TMIEI = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[edu_fundamental >= 1, .(TMIEF = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[edu_medio >= 1, .(TMIEM = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)],
+        ttmatrix[lazer_total >= 1, .(TMILZ = min(travel_time_p50, na.rm = TRUE)), by=.(city, mode, origin, pico)]
+
+      )
+      tictoc::toc()
+      acess_tmi1 <- reduce(acess_tmi1, full_join, by=c("city", "mode", "origin", "pico")) %>% setDT()
+      
+      
+      acess_tmi2 <- acess_tmi1 %>%  distinct(origin, .keep_all = TRUE)
+      
+      #escrita 
+      suppressWarnings(dir.create(sprintf('../r5r/accessibility/muni_%s/tmi/', sigla_muni)))
+      write_rds(acess_tmi2, sprintf('../r5r/accessibility/muni_%s/tmi/acc_tmi_%s.rds', sigla_muni, sigla_muni))
+      
       
     }
   }
