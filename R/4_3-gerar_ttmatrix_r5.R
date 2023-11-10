@@ -5,7 +5,7 @@ rm(list = ls(all.names = T)); gc()
 
 # carregar bibliotecas
 # options(r5r.montecarlo_draws = 0L)
-options(java.parameters = '-4XmxG')
+options(java.parameters = '-6XmxG')
 library(r5r)
 source('./R/fun/setup.R')
 # source("./R/fun/selecionar_data_gtfs.R")
@@ -25,7 +25,7 @@ create_diretorios <- function(sigla_muni){
 walk(munis_list$munis_df$abrev_muni, create_diretorios)
 
 # sigla_munii <- 'bho'; ano <- 2017; modo <- c("WALK", "TRANSIT")
-sigla_munii <- 'noh'; ano <- 2022; modo <- c("WALK", "TRANSIT")
+sigla_munii <- 'man'; ano <- 2022; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017; modo <- c("WALK", "TRANSIT")
 # sigla_munii <- 'for'; ano <- 2017
 # sigla_munii <- 'spo'; ano <- 2019; modo <- c("WALK", "TRANSIT")
@@ -86,7 +86,15 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   if (sigla_munii == 'bel') {
     date <- '2023-01-12'
   }
-  
+  if (sigla_munii == 'cit') {
+    date <- '2023-01-12'
+  }
+  if (sigla_munii == 'vic') {
+    date <- '2023-01-12'
+  }
+  if (sigla_munii == 'man') {
+    date <- '2023-01-12'
+  }
   # if (modes == "todos") {
   #   
   #   
@@ -130,8 +138,8 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                    time_window = 180,
                                    max_walk_time = max_walk_dist,
                                    max_trip_duration = max_trip_duration,
-                                   n_threads = 15,
-                                   # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni),
+                                   n_threads = 10,
+                                   output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_munii),
                                    progress = TRUE
                                    # verbose =TRUE
                                    )
@@ -140,10 +148,10 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
     time_ttmatrix_tp_pico <- Sys.time() - a
     print(time_ttmatrix_tp_pico)
     
-    files <- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_muni), full.names = T)
+    files <- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_tp', sigla_munii), full.names = T)
     
     
-    plan(multicore, workers = 15)
+    plan(multicore, workers = 10)
     tictoc::tic()
     ttm_pico <- furrr::future_map_dfr(.x = files, .f = fread)
     tictoc::toc()
@@ -233,6 +241,9 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni))
   time_ttmatrix_walk <- Sys.time() - a
   
+  # ttm_walk <- fread('../r5r/routing/2022/muni_cit/ttmatrix_walk_2022_cit_r5_pico.csv')
+  # ttm_bike <- fread('../r5r/routing/2022/muni_cit/ttmatrix_bike_2022_cit_r5_pico.csv')
+  
   files_walk<- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_walk', sigla_muni),
                            full.names = T,
                            pattern = ".csv")
@@ -271,7 +282,7 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
   #                           sigla_munii,
   #                           ano,
   #                           sigla_munii))
-  
+  # 
   dir.create(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_munii), recursive = T)
   a <- Sys.time()
   ttm_bike <- travel_time_matrix(r5r_core = setup,
@@ -280,12 +291,13 @@ calculate_ttmatrix <- function(sigla_munii, ano, break_ttmatrix = FALSE) {
                                  mode = "BICYCLE",
                                  max_trip_duration = max_trip_duration_bike,
                                  n_threads = 15,
-                                 progress = T)
-                                 # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni))
+                                 progress = T#,
+                                 # output_dir = sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_munii)
+                                 )
   time_ttmatrix_bike <- Sys.time() - a
   print(paste0("Routing Bike took:", time_ttmatrix_bike))
   
-  files_bike<- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_muni),
+  files_bike<- list.files(sprintf('../r5r/routing/2022/muni_%s/routing_files/180_min_bike', sigla_munii),
                           full.names = T,
                           pattern = ".csv")
   a <- Sys.time()
