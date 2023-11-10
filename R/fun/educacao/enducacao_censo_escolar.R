@@ -213,7 +213,7 @@ educacao_filter <- function(ano, download = FALSE) {
   chave_google_maps <- readline(prompt = "API key google maps: ")
   register_google(key = chave_google_maps)
   
-  sigla_muni <- "cit"
+  sigla_muni <- "vic"
   escolas_censo_muni <- function(sigla_muni){
     
     if (sigla_muni == "rma"){
@@ -262,6 +262,8 @@ educacao_filter <- function(ano, download = FALSE) {
                                            ano,
                                            sigla_muni,
                                            ano), append = F)
+    
+    #leitura dos dados ajustados manualmente
     
     escolas_geocoded_sf <- read_sf(sprintf("../data-raw/educacao/censo_escolar/%s/muni_%s_educacao_%s/muni_%s_geocode_%s.shp",
                                          ano,
