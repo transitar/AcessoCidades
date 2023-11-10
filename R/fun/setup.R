@@ -11,6 +11,8 @@ lpak<- function(pkg){sapply(pkg, require, character.only = TRUE)}
 
 
 packages <- c('osmdata',
+              'showtext',
+              'nngeo',
               'tidyr',
               'raster',
               'ggplot2',
@@ -196,14 +198,40 @@ aproxima_muni <- function(sigla_muni) {
     coord_sf(ylim = c(-2339207,-2389118), xlim = c(-4625581,-4562226), expand = FALSE)
     # coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
     
+  } else if (sigla_muni == "vic") {
+    #zoom
+    coord_sf(ylim = c(-1664674,-1684450), xlim = c(-4568312,-4537114), expand = FALSE)
+    
+    #Centralizado TP
+    # coord_sf(ylim = c(-1664674,-1684450), xlim = c(-4563278,-4531391), expand = FALSE)
     
     
+    # coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
 
+    # -4574915,-1657510
+    
 
-  }
+    
+  # } else if (sigla_muni == "man") {
+  #   #zoom
+  #   coord_sf(ylim = c(-319982,-357198), xlim = c(-6711334,-6657773), expand = FALSE)
+  #   # coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
+  #   
+  #   #   -6657773,-357198
+  #   #-6711334,-319982
+  #   
+  # }
+  
+  
+} else if (sigla_muni == "man") {
+  #zoom
+  coord_sf(ylim = c(-324276,-353319), xlim = c(-6705378,-6659389), expand = FALSE)
+  # coord_sf(ylim = c(-2367514,-2381494), xlim = c(-4592071,  -4573587), expand = FALSE)
+  
+
+}
    
-  
-  
+
 }
 
 aproxima_muni_recortes <- function(sigla_muni) {
@@ -225,12 +253,7 @@ aproxima_muni_recortes <- function(sigla_muni) {
     coord_sf(ylim = c(1.291373*(-6086358--6114267)-2557777,-2557777), xlim = c(-6114267, -6086358), expand = FALSE)
 
   } 
-  # else if (sigla_muni == "rma") {
-  #   
-  #   coord_sf(ylim = c(1.291373*(-4097369--4158337)-1269731,-1269731), xlim = c(-4158337, -4097369), expand = FALSE)
-  # 
-  # }
-  
+
   else if (sigla_muni == "rma") {
     
     coord_sf(ylim = c(1.291373*(-4119220--4144039)-1244912,-1244912), xlim = c(-4144039, -4119220), expand = FALSE)
@@ -249,8 +272,19 @@ aproxima_muni_recortes <- function(sigla_muni) {
    
   }  else if (sigla_muni == "cit") {
     coord_sf(ylim = c(1.291373*(-4573728--4586249)-2382024,-2382024), xlim = c(-4586249, -4573728), expand = FALSE)
+    
+  }  else if (sigla_muni == "vic") {
+    
+    coord_sf(ylim = c(1.291373*(-4537812--4556965)-1684824,-1684824), xlim = c(-4556965, -4537812), expand = FALSE)
+  }  else if (sigla_muni == "man") {
+    
+    coord_sf(ylim = c(1.291373*(-6658419--6693973)-360661,-360661), xlim = c(-6693973, -6658419), expand = FALSE)
   }
-
+  
+  
+  
+  
+  
 }
 
 
@@ -258,13 +292,13 @@ munis_recorte_limites = tribble(
   ~abrev_muni, ~legenda,           ~rec_gen,  ~rec_dif_gen, ~rec_brancos, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
   "poa", "Bairros",      3000,      200,         2000,         1000,       1000,          200,          100,             1500,          1500,          200,
   "bel",  "Bairros / Ilhas",       2000,         300,          1000,      3000,          2000,           40,           8,             600,          600,          200,
-  "man",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "man",  "Bairros",               1600,         150,         800,      2400,         1500,           40,           20,             400,          400,          150,
   "slz",  "Centro histórico",                   1500,        200,       1000,         2000,       1200,           40,           12,            400,         400,         150,
   "rma",  "Bairros",                   1600,         250,      1000,         2000,        500,           30,           10,            500,         500,         150,
   "noh",  "Bairros",                    600,        100,        1000,          200,         800,           4,          4,             250,          250,          100,
   "dou",  "Setores",                    800,       100,          500,          500,        500,           40,          100,            400,         400,         200,
   "con",  "Unid. de planej.",  1500,      200,         1000,         1500,        200,           40,          20,            160,         160,          80,
-  "vic",  NA,                            NA,         NA,           NA,           NA,         NA,           NA,           NA,             NA,          NA,          NA,
+  "vic",  "Bairros",         1000,        200,         800,         1400,       600,         10,           4,             300,          300,          150,
   "cit",  "Bairros",        1000,         100,       1200,         1200,       400,         10,           4,             400,          300,          200,
   "pal",  "Área de planej.",      800,       150,          600,         1000,        500,           60,            5,            400,         400,         150,
   
@@ -274,22 +308,40 @@ munis_recorte_limites = tribble(
 
 munis_names = tribble(
 
-~muni,   ~ uf, ~cod_muni_uf, ~pop, ~cod_ibge, ~muni_abrev, ~estado_nome,
-"Porto Alegre",	"RS",	"Porto Alegre RS", 	1492530, 4314902, "poa", "Rio Grande do Sul",
-"Belém", "PA",	"Belém PA",	1506420	, 1501402, "bel", "Pará",
-"Manaus",	'AM',	"Manaus AM",2255903	, 1302603	, "man", "Amazonas",
-"São Luís",	"MA", "São Luís MA",	1115932,	2111300,	"slz", "Maranhão",
-"Aracaju",	"SE",	"Aracaju SE",	672614,	2800308,	"arj", "Sergipe",
-"Nossa Senhora do Socorro",	"SE",	"Nossa Senhora do Socorro SE",	187733,	2804805,	"nss", "Sergipe",
-"Barra dos Coqueiros",	"SE", "Barra dos Coqueiros SE",	31439,	2800605, 	"bac", "Sergipe",
-"São Cristóvão",	"SE",	"São Cristóvão SE",	92090, 2806701,	"sac", "Sergipe",
-"Novo Hamburgo",	"RS", "Novo Hamburgo RS",	247303,	4313409,	"noh", "Sergipe",
-"Dourados",	"MS",	"Dourados MS",	227990,	5003702,	"dou", "Mato Grosso do Sul",
-"Contagem",	"MG",	"Contagem MG",	673849,	3118601,	"com", "Minas Gerais",
-"Vitória da Conquista",	"BA",	"Vitória da Conquista BA",	343643,	2933307,	"vic", "Bahia",
-"Cachoeiro de Itapemirim", 	"ES",	"Cachoeiro de Itapemirim ES",	212172,	3201209	, "cit", "Espírito Santo",
-"Palmas",	"TO",	"Palmas TO",	313349,	1721000,	"pal", "Tocantins"
+~muni,   ~ uf, ~cod_muni_uf, ~pop, ~cod_ibge, ~muni_abrev, ~estado_nome, ~pop_2022,
+"Porto Alegre",	"RS",	"Porto Alegre RS", 	1492530, 4314902, "poa", "Rio Grande do Sul", 1332570,
+"Belém", "PA",	"Belém PA",	1506420	, 1501402, "bel", "Pará", 1303389,
+"Manaus",	'AM',	"Manaus AM",2255903	, 1302603	, "man", "Amazonas", 2063547,
+"São Luís",	"MA", "São Luís MA",	1115932,	2111300,	"slz", "Maranhão", 1037775,
+"Aracaju",	"SE",	"Aracaju SE",	672614,	2800308,	"arj", "Sergipe", 602757,
+"Nossa Senhora do Socorro",	"SE",	"Nossa Senhora do Socorro SE",	187733,	2804805,	"nss", "Sergipe", 192330,
+"Barra dos Coqueiros",	"SE", "Barra dos Coqueiros SE",	31439,	2800605, 	"bac", "Sergipe", 41511,
+"São Cristóvão",	"SE",	"São Cristóvão SE",	92090, 2806701,	"sac", "Sergipe", 95612,
+"Novo Hamburgo",	"RS", "Novo Hamburgo RS",	247303,	4313409,	"noh", "Rio Grande do Sul", 227732,
+"Contagem",	"MG",	"Contagem MG",	673849,	3118601,	"com", "Minas Gerais", 621865,
+"Vitória da Conquista",	"BA",	"Vitória da Conquista BA",	343643,	2933307,	"vic", "Bahia", 370868,
+"Cachoeiro de Itapemirim", 	"ES",	"Cachoeiro de Itapemirim ES",	212172,	3201209	, "cit", "Espírito Santo", 185784,
+"Palmas",	"TO",	"Palmas TO",	313349,	1721000,	"pal", "Tocantins", 302692,
+"Dourados", "MS", "Dourados MS", 243368, 5003702, "dou", "Mato Grosso do Sul", 243368
 
+) %>% setDT()
+
+
+munis_pnad = tribble(
+  
+  ~muni,   ~ pnad, ~nome_pnad,
+  "poa",	1, "Município de Porto Alegre (RS)",
+  "bel", 1, "Município de Belém (PA)",
+  "man",	1, "Município de Manaus (AM)",
+  "slz",	1, "Município de São Luís (MA)",
+  "rma",	1, "Município de Aracaju (SE)",
+  "noh",	0, NA,
+  "dou",	0, NA,
+  "con",	0, NA,
+  "vic",	0, NA,
+  "cit", 	0, NA,
+  "pal",	1, "Município de Palmas (TO)"
+  
 ) %>% setDT()
 
 # munis_legend_position = tribble(
@@ -326,6 +378,13 @@ aproxima_muni_zoom <- function(sigla_muni) {
     #sem zoom
     # coord_sf(ylim = c(-2339207,-2389118), xlim = c(-4625581,-4562226), expand = FALSE)
 
+  } else if (sigla_muni == "vic"){
+    
+    coord_sf(ylim = c(-1637108,-1754082), xlim = c(-4652239,  -4494324), expand = FALSE)
+    
+    #sem zoom
+    
+    
   }
   
 }
