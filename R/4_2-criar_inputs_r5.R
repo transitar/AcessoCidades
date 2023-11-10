@@ -3,10 +3,10 @@
 # 2. Scripts em Python
 
 # carregar bibliotecas
-options(java.parameters = '-Xmx3G')
+options(java.parameters = '-Xmx5G')
 source('./R/fun/setup.R')
 
-sigla_muni <- 'cit'
+sigla_muni <- 'man'
 ano <- 2022
 
 ### 1) Funcao para gerar pontos de origem e destino -----------------------------------
