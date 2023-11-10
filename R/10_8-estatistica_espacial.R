@@ -18,7 +18,8 @@ font_add("encode_sans_regular", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/
 font_add("encode_sans_bold", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Bold.ttf')
 font_add("encode_sans_light", 'C:/Users/nilso/AppData/Local/Microsoft/Windows/Fonts/EncodeSans-Light.ttf')
 
-sigla_muni <- 'poa'
+sigla_muni <- 'man'
+aprox_muni <- 1
 
 # manaus coord_sf(xlim = c(-6700693,-6654021), ylim = c(-354102,-325873), expand = FALSE)
 
@@ -44,7 +45,15 @@ faz_lisa <- function(sigla_muni){
   # path_muni_data_censo <- sprintf('../data-raw/censo_2021_info_muni_treated_v2/muni_%s.rds',sigla_muni)
   # path_muni_hex <- sprintf('../data/hex_municipio/hex_2019_%s_09.rds', sigla_muni)
   # path_muni_setor <- sprintf('../data-raw/setores_censitarios/2019/setores_%s_2019.rds',sigla_muni)
-  path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+  if (aprox_muni == 1){
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019_aprox.rds',sigla_muni)
+    
+  } else {
+    
+    path_maptiles <- sprintf('../data/maptiles_crop/2019/mapbox_2/maptile_crop_mapbox_%s_2019.rds',sigla_muni) 
+    
+  }
   
   # data_muni <- read_rds(path_muni_data_censo) %>%  mutate(Cod_setor = as.character(Cod_setor))
   # data_msetor <- read_rds(path_muni_setor)
@@ -152,17 +161,24 @@ hex_muni <- read_rds(sprintf('../data/hex_municipio/hex_2019_%s_09.rds',sigla_mu
 
 dados_micro_sf <- hex_muni %>% left_join(data_micro2, by = c("id_hex"="hex"))
 
+if (sigla_muni %in% c("cit", "man")){
+  aguas <- st_read(sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
+                           sigla_muni,
+                           sigla_muni),
+                   layer = 'aguas')
+}
+
 #poa -> id
 #outros -> id_g
 
 data_complete <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id) %>%
+  drop_na(id_g) %>%
   group_by(id_hex, genero, cor) %>%
   summarise(n = n(), renda_per_capita = mean(Rend_pc))
 
 
 data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id) %>%
+  drop_na(id_g) %>%
   group_by(id_hex, genero) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc))  %>%
@@ -178,7 +194,7 @@ data_complete_genero <- dados_micro_sf %>% st_drop_geometry() %>%
 
 
 data_complete_cor <- dados_micro_sf %>% st_drop_geometry() %>%
-  drop_na(id) %>%
+  drop_na(id_g) %>%
   group_by(id_hex, cor) %>%
   summarise(n = n(),
             renda_per_capita = mean(Rend_pc)) %>%
@@ -304,7 +320,7 @@ tema <- function(base_size) {
     legend.title=element_text(size=35, family = "encode_sans_bold"),
     plot.title = element_text(hjust = 0, vjust = 4),
     strip.text = element_text(size = 10),
-    legend.position = c(0.22, 0.25),
+    legend.position = c(0.18, 0.34),
     legend.box.background = element_rect(fill=alpha('white', 0.7),
                                          colour = "#A09C9C",
                                          linewidth = 0.8,
@@ -351,6 +367,8 @@ tema <- function(base_size) {
 
 # Mapa lisa cor novo ----------------------------------------------------
 
+cor_aguas <- "#92c1e3"
+
 data_complete_cor <- data_complete_cor %>% filter(cluster_bp != "Undefined")
 
 map_lisa_cor <- ggplot()+
@@ -379,7 +397,7 @@ map_lisa_cor <- ggplot()+
           fill = "#0A7E5C",
           linewidth = 0.4,
           alpha = 0.3)+
-  
+  # 
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
           aes(color = "urb"),
@@ -416,11 +434,12 @@ map_lisa_cor <- ggplot()+
                                'High-Low' = '#f1ed0c'
                                ),
                     labels = c('Not significant' = 'Não significativo',
-                               'High-High' = '> Predominância de brancos',
-                               'Low-Low' = '< Predominância de brancos',
+                               'High-High' = '< Predominância de negros',
+                               'Low-Low' = '> Predominância de negros',
                                'Low-High' = '+ Negros próximos a brancos',
                                'High-Low' = '+ Brancos próximos a negros'
                                )) +
+  geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
   
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
@@ -431,21 +450,26 @@ map_lisa_cor <- ggplot()+
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
+  
+  
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
   
   tema()+
   
-  theme(legend.position = c(0.22,0.24)) +
+  theme(legend.position = c(0.22,0.32)) +
 
   aproxima_muni(sigla_muni = sigla_muni) +
   
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
+  guides(color = guide_legend(override.aes = list(fill = c(
+    "#0A7E5C",
                                                            "white",
                                                            "white"),
-                                                  color = c("#0A7E5C",
+                                                  color = c(
+                                                    "#0A7E5C",
                                                             "grey50",
                                                             "#fde9be"),
-                                                  linewidth = c(1,
+                                                  linewidth = c(
+                                                    1,
                                                                 1,
                                                                 1)),
                               order = 2))
@@ -454,7 +478,7 @@ map_lisa_cor <- ggplot()+
 
 ggsave(map_lisa_cor,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/3-lisa_cor_%s_new.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/3-lisa_cor_%s_new_ag.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
@@ -979,6 +1003,46 @@ levels(renda$cluster_renda) <- lisa_renda$GetLabels()
 
 renda <- renda %>% filter(cluster_renda != "Undefined")
 
+renda_analise_not_significant <- renda %>% filter(cluster_renda == "Not significant") %>%
+  mutate(decil = ntile(renda,100))
+
+percent1sm <- renda_analise_not_significant %>%
+  filter(renda <= 1) %>% nrow()/nrow(renda_analise_not_significant)
+
+renda_percent90 <- renda_analise_not_significant %>%
+  filter(decil <= 90)
+max(renda_percent90$renda)
+
+# hist(renda_analise_not_significant$renda)
+summary(renda_analise_not_significant$renda)
+
+hist_renda_not_significant <- ggplot(renda_analise_not_significant, aes(x = renda)) +
+  geom_histogram(aes(y = (..count..)/sum(..count..)),
+                 fill = '#d96e0a') + 
+  # scale_x_continuous(limits = c(0,5))+
+  scale_y_continuous(labels = scales::percent)+
+  xlab("Rendas sem agrupamento") +
+  ylab('Porcentagem de hexagonos')+
+  theme_minimal() +
+  theme(
+    axis.text=element_text(size=50), #, family = "encode_sans_light"),
+    axis.title=element_text(size=60),#, family = "encode_sans_bold"),
+    plot.title = element_text(size = 50),#, family = "encode_sans_bold"),
+    legend.position = "bottom",
+
+  )
+
+ggsave(hist_renda_not_significant,
+       device = "png",
+       filename =  sprintf('../data/map_plots_population/muni_%s/99-hist_renda_not_significant_%s.png',
+                           sigla_muni,
+                           sigla_muni),
+       dpi = 300,
+       width = 16.5, height = 16.5, units = "cm" )
+
+
+
+
 map_lisa_renda <- ggplot() +
   geom_raster(data = maptiles, aes(x, y, fill = hex), alpha = 1) +
   coord_equal() +
@@ -996,16 +1060,16 @@ map_lisa_renda <- ggplot() +
   
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
   
-  # geom_sf(data = dados_areas %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "bairros"),
-  #         # color = "grey45",
-  #         # aes(fill = '#CFF0FF'),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = 0.3,
-  #         alpha= 0.7) +
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "bairros"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
   
   geom_sf(data = assentamentos,
           aes(colour = "assentamentos"),
@@ -1054,6 +1118,7 @@ map_lisa_renda <- ggplot() +
                                'High-Low' = 'Renda maior próximo a menor')
                     ) +
   
+  geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
   
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
@@ -1064,22 +1129,27 @@ map_lisa_renda <- ggplot() +
                               pad_x = unit(0.35, "cm"),
                               pad_y = unit(0.35, "cm")
   ) +
+  
+  
   ggspatial::annotation_north_arrow(style = north_arrow_minimal(text_size = 0), location = "tr") +
   
   tema() +
   
-  theme(legend.position = c(0.22,0.26)) +
+  theme(legend.position = c(0.22,0.32)) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
-                                                           # "white",
+  guides(color = guide_legend(override.aes = list(fill = c(
+    "#0A7E5C",
+                                                           "white",
                                                            "white"),
-                                                  color = c("#0A7E5C",
-                                                            # "grey50",
+                                                  color = c(
+                                                    "#0A7E5C",
+                                                            "grey50",
                                                             "#fde9be"),
-                                                  linewidth = c(1,
-                                                                # 1,
+                                                  linewidth = c(
+                                                    1,
+                                                                1,
                                                                 1)),
                               order = 2))
 
@@ -1088,7 +1158,7 @@ suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sig
 
 ggsave(map_lisa_renda,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/5-lisa_renda_%s_new.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/5-lisa_renda_%s_new_ag.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
@@ -1447,23 +1517,23 @@ map_lisa_responsaveis <- ggplot() +
   
   geom_sf(data = st_transform(data_contorno, 3857), fill = NA, colour = "grey60", linewidth = 0.3) +
   
-  # geom_sf(data = dados_areas %>% st_transform(3857),
-  #         # aes(size = 2),
-  #         aes(color = "bairros"),
-  #         # color = "grey45",
-  #         # aes(fill = '#CFF0FF'),
-  #         fill = NA,
-  #         # stroke = 2,
-  #         # size = 2,
-  #         linewidth = 0.3,
-  #         alpha= 0.7) +
+  geom_sf(data = dados_areas %>% st_transform(3857),
+          # aes(size = 2),
+          aes(color = "bairros"),
+          # color = "grey45",
+          # aes(fill = '#CFF0FF'),
+          fill = NA,
+          # stroke = 2,
+          # size = 2,
+          linewidth = 0.3,
+          alpha= 0.7) +
   
   geom_sf(data = assentamentos,
           aes(colour = "assentamentos"),
           fill = "#0A7E5C",
           linewidth = 0.4,
           alpha = 0.3)+
-  
+  # 
   geom_sf(data = simplepolys %>% st_transform(3857),
           # aes(size = 2),
           aes(color = "urb"),
@@ -1506,6 +1576,8 @@ map_lisa_responsaveis <- ggplot() +
                                'High-Low' = '+ Resp. masc. próximos a + resp. fem.')
   ) +
   
+  geom_sf(data = st_transform(aguas,3857), fill = cor_aguas, colour = NA) +
+  
 
   ggspatial::annotation_scale(style = "ticks",
                               location = "br",
@@ -1520,21 +1592,24 @@ map_lisa_responsaveis <- ggplot() +
   
   tema() +
   
-  theme(legend.position = c(0.22,0.24),
+  theme(legend.position = c(0.23,0.32),
         legend.text=element_text(size=25, family = "encode_sans_light"),
         legend.title=element_text(size=27, family = "encode_sans_bold")
         ) +
   
   aproxima_muni(sigla_muni = sigla_muni) +
   
-  guides(color = guide_legend(override.aes = list(fill = c("#0A7E5C",
-                                                           # "white",
+  guides(color = guide_legend(override.aes = list(fill = c(
+    "#0A7E5C",
+                                                           "white",
                                                            "white"),
-                                                  color = c("#0A7E5C",
-                                                            # "grey50",
+                                                  color = c(
+                                                    "#0A7E5C",
+                                                            "grey50",
                                                             "#fde9be"),
-                                                  linewidth = c(1,
-                                                                # 1,
+                                                  linewidth = c(
+                                                    1,
+                                                                1,
                                                                 1)),
                               order = 2))
 
@@ -1549,7 +1624,7 @@ suppressWarnings(dir.create(sprintf('../data/map_plots_population/muni_%s/', sig
 
 ggsave(map_lisa_responsaveis,
        device = "png",
-       filename =  sprintf('../data/map_plots_population/muni_%s/6-lisa_resp_hm_%s_new2.png',
+       filename =  sprintf('../data/map_plots_population/muni_%s/6-lisa_resp_hm_%s_new_ag.png',
                            sigla_muni,
                            sigla_muni),
        dpi = 300,
