@@ -2,7 +2,7 @@
 rm(list = ls(all.names=T)); gc()
 source('./R/fun/setup.R')
 
-sigla_muni <- "cit"
+sigla_muni <- "man"
 
 create_diretorios <- function(sigla_muni){
   
@@ -129,9 +129,9 @@ download_osm <- function(munis = 'all'){
     ciclo_final <- ciclo %>% st_filter(muni_shape)
     
     # mapview(ciclo_final)
-    
+    ciclo_final <- ciclo_final %>% mutate(lenth = as.numeric(st_length(.)))
     # mapview(muni_shape) + mapview(ciclo_final)
-    
+    # sum(ciclo_final$lenth)
     write_sf(ciclo_final,
                      sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
                              sigla_muni,
