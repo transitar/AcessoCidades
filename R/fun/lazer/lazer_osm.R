@@ -13,11 +13,14 @@
 #Para utilizar esse scrip, forneça a sigla do seu município
 #no argumento munis
 
+
+#limpa o ambiente de trabalho
 rm(list =ls())
+
+#Carrega as funções e pacotes necessários
 source('./R/fun/setup.R')
 
-sigla_muni <- 'bel'
-
+#função de query dos dados de lazer do OSM
 lazer_osm <- function(munis = 'all'){
   
   salva_lazer_osm <- function(sigla_muni, width = 16.5, height = 16.5){
@@ -272,9 +275,10 @@ lazer_osm <- function(munis = 'all'){
   
 }
 
+#aplica a função para um município
 lazer_osm(munis = 'bel')
 
-
+#função de salvamento dos dados após consolidação manual em sofware GIS
 consolida_lazer <- function(munis = 'all'){
   
   salva_lazer_rds <- function(sigla_muni){
@@ -454,4 +458,5 @@ consolida_lazer <- function(munis = 'all'){
   
 }
 
+#aplica função de salvamento dos dados consolidados
 consolida_lazer(munis = 'bel')
