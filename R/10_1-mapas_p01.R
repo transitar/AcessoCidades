@@ -20,7 +20,7 @@ font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
 
 #Seleção do município pela sigla:
 
-sigla_muni <- 'man'
+sigla_muni <- 'noh'
 aprox_muni <- 0
 
 ano <- 2019
@@ -186,7 +186,20 @@ graficos <- function(munis = "all"){
     
     #remocão dos habitantes de cor amarela e indígena
     levels(data_micro2$V0606) <- c("Brancos", "Pretos", "Amarelos", "Pardos", "Indígenas")
-    # data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+    # # data_micro2 <- data_micro2 %>% filter(!V0606 %in% c("Amarelos", "Indígenas"))
+    # 
+    # # 
+    # data_micro2 <- data_micro2 %>%
+    #   # mutate(total = "total") %>%
+    #   mutate(genero = ifelse(age_sex %like% 'w', "Mulheres", "Homens"),
+    #          cor = case_when(V0606 == "Pardos" ~ "Negros",
+    #                          V0606 == "Pretos" ~ "Negros",
+    #                          V0606 == "Brancos" ~ "Brancos",
+    #                          V0606 == "Amarelos" ~ "Amarelos",
+    #                          V0606 == "Indígenas" ~ "Indígenas"))
+    # summ <- data_micro2 %>% group_by(cor) %>% summarise(n = n()) %>%
+    #   mutate(percent = 100*n/sum(n))
+    # 
     
     data_micro2 <- data_micro2 %>%
       # mutate(total = "total") %>% 
