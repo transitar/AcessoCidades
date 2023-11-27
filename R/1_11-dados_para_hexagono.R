@@ -1,12 +1,8 @@
-#Este scrip agrega no nível de hexágono os dados de:
-#Empregos, Escolas, Equipamentos de Saúde e de Lazer.
-
-#Libera espaço da memória
+#Levar empregos
 rm(list = ls(all.names = TRUE)); gc()
 
-#Carrega funções e pacotes necessários
 source('./R/fun/setup.R')
-
+library(aopdata)
 
 create_diretorios <- function(sigla_muni){
   
@@ -23,34 +19,48 @@ save_hex_gpkg <- function(sigla_muni){
 }
 walk(munis_list$munis_df$abrev_muni, save_hex_gpkg)
 
+# source_emp = rais / aop
+# source_escolas = censo_escolar / aop / muni
+# source_lazer = osm / muni
+# source_saude = cnes / aop / muni
+# ano = ano dos empregos da rais
 
-#IMPORTANTE
-#A fonde dos dados de cada tipo de oportunidade deve ser especificada
-#antes de executada a função
+#leitura dos dados de empregos
 
-#para empregos: source_emp = rais / aop
-#para escolas: source_escolas = censo_escolar / aop / muni
-#para equipamentos de lazer: source_lazer = osm / muni
-#para equipamentos de saude: source_saude = cnes / aop / muni
-#ano = ano dos empregos da rais
+sigla_muni <- 'man'; ano <- 2018; source_saude <- 'aop'; source_lazer <- 'osm'; source_escolas <- "aop"; source_emp <- "aop"
 
-ano <- 2018;
-source_saude <- 'aop';
-source_lazer <- 'osm';
-source_escolas <- "aop";
-source_emp <- "aop"
-
-#função de agregação dos dados de oportunidades no nível do hexágono
 infos_to_hex <- function(sigla_muni, ano) {
   
-  message(paste("Agregando dados de", munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)]))
+  
+  
   #dados da microssimulação
   
   data_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/micro_muni_%s.RDS',
                                  sigla_muni, sigla_muni))
+  #ajeitar o formato
+  # grid_micro <- read_rds(sprintf('../data/microssimulacao/muni_%s/grid_muni_%s.RDS',
+  #                                sigla_muni, sigla_muni))
+  
+  #checar setores com todos os renda_class_pc == n_col
+  
+  # lista_tract <- data_micro %>% group_by(code_tract, renda_class_pc) %>%
+  #   summarise(n = n()) %>% ungroup() %>%
+  #   group_by(code_tract) %>% summarise(n_classes = length(code_tract), 
+  #                                      n_classes_col = length(code_tract[renda_class_pc == "n_col"])) %>%
+  #   filter(n_classes > n_classes_col) %>% pull(code_tract)
+  # 
+  # data_micro2 <- data_micro %>% filter(code_tract %in% lista_tract)
+  
+  
+  
+
+  
+  
+  
   
   sigla_municipio <- sigla_muni
-  decisao_muni <- planilha_municipios %>% filter(sigla_muni == abrev_muni)
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
   
   epsg <- decisao_muni$epsg
   
@@ -59,11 +69,14 @@ infos_to_hex <- function(sigla_muni, ano) {
   #empregos
   file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', 2019, sigla_muni)
   hex <- read_rds(file_hex)
-
+  # teste <- hex %>% mutate(area = st_area(.)) %>% mutate(areakm2 = as.numeric(area)/10^6)
+  # mapview(hex)
+  
   #leitura do shape do município
   file_shape <- sprintf('../data-raw/municipios/%s/municipio_%s_%s.rds', 2019, sigla_muni, 2019)
   shape_muni <- read_rds(file_shape)
-
+  # mapview(shape_muni)
+  
   #leitura dos dados de empregos
   if (source_emp == "aop"){
     
@@ -72,13 +85,21 @@ infos_to_hex <- function(sigla_muni, ano) {
     hex3 <- empregos %>% select(n_jobs = T001, id_hex) %>% st_drop_geometry()
     
   } else {
-    
   file <- sprintf('../data-raw/empregos/%s_empregos%s.gpkg', sigla_muni, ano)
   empregos <- read_sf(file)
   empregos <- empregos %>% rename(jobs = EMPREGOS)
   sum(empregos$jobs)
+  # sum(empregos$EMPREGOS)
+  # mapview(empregos)
+  #leitura dos hexágonos
+  
   ano <- 2019
-
+  
+  
+  # intersection <- st_intersection(x = hex, y = empregos)
+  # plot(polygon, graticule = st_crs(4326), key.pos = 1)
+  
+  
   join_jobs_hex <- sf::st_join(st_transform(empregos, epsg), st_transform(hex, epsg))
   
   hex2 <- join_jobs_hex %>%
@@ -90,10 +111,16 @@ infos_to_hex <- function(sigla_muni, ano) {
     mutate(n_jobs = ifelse(is.na(n_jobs)==T,
                            0,
                            n_jobs)) %>%
+    # filter(n_jobs > 0) %>%
     st_drop_geometry()
   
   }
- 
+  
+
+  # mapview(hex3, zcol = 'n_jobs')
+  
+  #saúde
+  
   if (sigla_muni == "pal"){
     file_saude <- '../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg'
     dados_saude <- read_sf(file_saude, layer = "saude") %>%
@@ -171,34 +198,6 @@ infos_to_hex <- function(sigla_muni, ano) {
     file_saude <- sprintf('../data/saude/%s/muni_%s_saude_%s/muni_%s.rds',source,  sigla_muni,
                           source,  sigla_muni)
     dados_saude <- read_rds(file_saude) %>% st_drop_geometry()
-    
-  } else if (source == "muni"){
-    
-    file_saude <- sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg', sigla_muni, sigla_muni)
-    dados_saude <- read_sf(file_saude, layer = "saude") %>%
-      mutate(S001 = 1) %>%
-      select(S001,
-             S002,
-             S003,
-             S004)
-    
-    join_saude_hex <- sf::st_join(dados_saude, hex)
-    
-    hex2 <- join_saude_hex %>%
-      st_drop_geometry() %>%
-      group_by(id_hex) %>% 
-      summarise(S001 = sum(S001),
-                S002 = sum(S002),
-                S003 = sum(S003),
-                S004 = sum(S004))
-    
-    hex_saude <- left_join(hex, hex2, by = "id_hex") %>%
-      mutate(S001 = ifelse(is.na(S001)==T, 0, S001),
-             S002 = ifelse(is.na(S002)==T, 0, S002),
-             S003 = ifelse(is.na(S003)==T, 0, S003),
-             S004 = ifelse(is.na(S004)==T, 0, S004)) %>% st_drop_geometry() %>%
-      select(-h3_resolution, -sigla_muni)
-    dados_saude <- hex_saude
     
   }
   
@@ -306,48 +305,29 @@ infos_to_hex <- function(sigla_muni, ano) {
     
     
     
-  } else if(source_escolas == "muni"){
-    
-    ano = 2021
-    file_educacao <- sprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg', sigla_muni, sigla_muni)
-    dados_educacao <- read_sf(file_educacao, layer = "educacao") %>%
-    dados_educacao <- file_educacao %>%
-      mutate(E001 = 1) %>%
-      select(E001, E002, E003, E004)
-    
-    join_educacao_hex <- sf::st_join(dados_educacao, hex)
-    
-    hex2 <- join_educacao_hex %>%
-      st_drop_geometry() %>%
-      group_by(id_hex) %>% 
-      summarise(E001 = sum(E001),
-                E002 = sum(E002),
-                E003 = sum(E003),
-                E004 = sum(E004))
-    
-    hex_educacao <- left_join(hex, hex2, by = "id_hex") %>%
-      mutate(E001 = ifelse(is.na(E001)==T, 0, E001),
-             E002 = ifelse(is.na(E002)==T, 0, E002),
-             E003 = ifelse(is.na(E003)==T, 0, E003),
-             E004 = ifelse(is.na(E004)==T, 0, E004)) %>% st_drop_geometry() %>%
-      select(-h3_resolution, -sigla_muni)
-    dados_educacao <- hex_educacao
-  
   } else {
-    
+  
+  
   source <- "aop"
   file_educacao <- sprintf('../data/educacao/%s/muni_%s_educacao_%s/muni_%s.rds',source,  sigla_muni, source,  sigla_muni)
   dados_educacao <- read_rds(file_educacao) %>% st_drop_geometry()
   
   }
-
+  # mapview(dados_saude, zcol = "S001")
+  
   hex5 <- left_join(hex4, dados_educacao, by = "id_hex")
   
-
-  if (source_lazer == "osm") {
+  # mapview(hex5, zcol = 'M001')
   
+  # hex <- hex %>% st_drop_geometry() %>% select(-lazer_tot)
+  
+
   file_lazer <- sprintf('../data-raw/lazer/%s/muni_%s_lazer_%s/muni_%s_lazer_%s.rds',source_lazer,
                         sigla_muni, source_lazer,  sigla_muni, source_lazer)
+  
+  sigla_municipio <- sigla_muni
+  decisao_muni <- read_excel('../planilha_municipios.xlsx',
+                             sheet = 'dados') %>% filter(sigla_muni == sigla_municipio)
   
   dados_lazer <- read_rds(file_lazer) %>% st_transform(decisao_muni$epsg)
   
@@ -359,6 +339,16 @@ infos_to_hex <- function(sigla_muni, ano) {
     dados_lazer <- dados_lazer_muni
     
   }
+  
+  # dados_lazer2 <- read_sf('../data-raw/dados_municipais_recebidos/muni_pal/muni_pal.gpkg',
+  #                        layer = "lazer") %>%
+  #   mutate(name = "prefeitura", type = "municipal") %>%
+  #   select(name, type, osm_id = Id, geometry = geom) %>% st_transform(decisao_muni$epsg)
+  
+  # dados_lazer <- rbind(dados_lazer, dados_lazer2)
+  
+  # mapview(dados_lazer)
+  # mapview(dados_saude, zcol = "S001")
   
   #contar lazer no hexagono
   
@@ -391,37 +381,9 @@ infos_to_hex <- function(sigla_muni, ano) {
   
   hex_total <- left_join(hex5, hex_lazer3, by = "id_hex")
   
-  
-  } else {
-    
-    file_lazer <- ssprintf('../data-raw/dados_municipais_recebidos/muni_%s/muni_%s.gpkg', sigla_muni, sigla_muni)
-    dados_lazer <- read_sf(file_lazer, layer = "lazer") %>% st_transform(decisao_muni$epsg)
-
-    no <- 2019
-    file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)
-    hex_empty <- read_rds(file_hex) %>% select(id_hex)
-    
-    hex_lazer <- sf::st_join(hex_empty %>% st_transform(decisao_muni$epsg), dados_lazer)
-    
-    hex_lazer2 <- hex_lazer %>% mutate(count = ifelse(is.na(type)== TRUE,
-                                                      0,
-                                                      1)) %>%
-      st_drop_geometry() %>%
-      group_by(id_hex) %>% 
-      summarise(lazer_tot = sum(count)) %>% distinct(id_hex, .keep_all = T)
-    hex_lazer3 <- left_join(hex_empty,hex_lazer2 , by = "id_hex") %>% select(id_hex, lazer_tot) %>%
-      st_drop_geometry()
-    
-    
-    hex_total <- left_join(hex5, hex_lazer3, by = "id_hex")
-    
-  }
   # mapview(hex_total_sf, zcol = 'lazer_tot')
   
   #paraciclos
-  
-  if (planilha_municipios$paraciclos[which(planilha_municipios$abrev_muni==sigla_muni)]== 1){
-  
   if (sigla_muni == "poa"){
   paraciclos_hex <- read_rds(sprintf('../data/paraciclos/muni_%s/paraciclos_%s.rds', sigla_muni, sigla_muni))
   } else if (sigla_muni == "dou"){
@@ -444,32 +406,11 @@ infos_to_hex <- function(sigla_muni, ano) {
     #                          0,
     #                          n_jobs)) %>% st_drop_geometry()
     
-  } else if (planilha_municipios$fonte_paraciclos[which(planilha_municipios$abrev_muni==sigla_muni)]=="osm"){
-    
-    paraciclos <- st_read(
-      sprintf('../data-raw/dados_municipais_osm/muni_%s/muni_%s.gpkg',
-              sigla_muni,
-              sigla_muni),
-      layer = "paraciclos")
-    
-    join_paraciclos_hex <- sf::st_join(paraciclos, hex)
-    
-    paraciclos_hex <- join_paraciclos_hex %>%
-      st_drop_geometry() %>%
-      group_by(id_hex) %>% 
-      summarise(paraciclos = n())
-    
-  } else if (planilha_municipios$fonte_paraciclos[which(planilha_municipios$abrev_muni==sigla_muni)]=="muni"){
-    
-    paraciclos_hex <- read_rds(sprintf('../data/paraciclos/muni_%s/paraciclos_%s.rds', sigla_muni, sigla_muni))
-    
   }
   
   # hex_total <- read_rds('../data/dados_hex/muni_poa/dados_hex_poa.rds') %>% st_drop_geometry()
-  hex_total <- left_join(hex_total, paraciclos_hex, by = "id_hex")
   
-  }
-    
+  hex_total <- left_join(hex_total, paraciclos_hex, by = "id_hex")
   
   
   #bikes compartilhadas
@@ -487,7 +428,9 @@ infos_to_hex <- function(sigla_muni, ano) {
                                  layer = "bike_comp"
        )
      }
-     
+    
+   }
+  
   dados_bikecomp <- dados_bikecomp %>% st_transform(decisao_muni$epsg)
   
   join_bikecomp_hex <- sf::st_join(dados_bikecomp,st_transform(hex_empty,decisao_muni$epsg ))
@@ -496,15 +439,11 @@ infos_to_hex <- function(sigla_muni, ano) {
     st_drop_geometry() %>%
     group_by(id_hex) %>% 
     summarise(n_bikes = n())
-     
+  
   hex_total <- left_join(hex_total, hex2, by = "id_hex") %>%
     mutate(n_bikes = ifelse(is.na(n_bikes)==T,
                            0,
                            n_bikes)) %>% st_drop_geometry()
-    
-   }
-  
-  
   
 
   # sum(hex_total_sf$n_jobs)
@@ -528,12 +467,7 @@ infos_to_hex <- function(sigla_muni, ano) {
   write_sf(hex_total_sf, sprintf("../data/dados_hex/muni_%s/dados_hex_%s.gpkg", sigla_muni, sigla_muni))
 
   # mapview(hex_total_sf, zcol = "n_jobs")
+
   
-  message(paste("Dados agregados por hexágono de", munis_list$munis_df$name_muni[which(munis_list$munis_df$abrev_muni==sigla_muni)],
-                "salvos em", sprintf("../data/dados_hex/muni_%s/dados_hex_%s.gpkg", sigla_muni, sigla_muni)))
   
 }
-
-#aplica a função para o município
-infos_to_hex(sigla_muni = "bel", ano = 2018)
-
