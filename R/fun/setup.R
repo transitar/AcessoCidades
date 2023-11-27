@@ -1,3 +1,5 @@
+#Esse script contém funções, pacotes e planilhas de decisão das análises
+
 Sys.setenv(TZ='UTC') # Fuso horario local
 
 ipak <- function(pkg){
@@ -11,6 +13,7 @@ lpak<- function(pkg){sapply(pkg, require, character.only = TRUE)}
 
 
 packages <- c('osmdata',
+              'aopdata',
               'showtext',
               'nngeo',
               'tidyr',
@@ -118,6 +121,13 @@ n_int_digits = function(x) {
   result
 }
 
+# Adição das fontesd e texto usadas pelos mapas e gráficos
+showtext_auto()
+font_add("encode_sans", '../data/fontes/EncodeSans-VariableFont_wdth,wght.ttf')
+font_add("encode_sans_regular", '../data/fontes/EncodeSans-Regular.ttf')
+font_add("encode_sans_bold", '../data/fontes/EncodeSans-Bold.ttf')
+font_add("encode_sans_light", '../data/fontes/EncodeSans-Light.ttf')
+
 #cores
 
 colors_purple <- c("#F1F2FE","#9FA4F9","#767DCE","#21367D","#1A295B")
@@ -153,6 +163,7 @@ colors_acc <- c("#090e20","#111B3F", "#21367D",
                 "#EB9432", "#F5C226", "#FAD920",
                 "#FDE63A", "#FFF354")
 viridis_magma_discrete <- c('#2B105F', '#C43C75', '#F3655C', '#FDE0A1')
+
 
 aproxima_muni <- function(sigla_muni) {
   
@@ -287,6 +298,40 @@ aproxima_muni_recortes <- function(sigla_muni) {
   
 }
 
+planilha_municipios <- munis_parameters <- tribble(
+  ~abrev_muni, ~ano,           ~gtfs,   ~fonte_ciclo, ~fonte_tp, ~terminais, ~bike_comp, ~fonte_bikecomp, ~paraciclos, ~fonte_paraciclos, ~fonte_dados_tp,    ~epsg,  ~tarifa, ~aguas,
+  "poa",       2022,      "gtfs_poa",         "muni",    "gtfs",          0,          1,           "muni",           1,         "0",    "muni_shape",    31982,     4.80,      0,
+  "bel",       2022,      "gtfs_bel",          "osm",    "gtfs",          1,          0,              "0",           0,         "0",    "muni_shape",    31982,     4.00,      0,
+  "man",       2022,      "gtfs_man",         "muni",    "gtfs",          1,          0,              "0",           0,         "0",    "muni_shape",    31981,     4.50,      1,
+  "slz",       2022,      "gtfs_slz",         "muni",    "gtfs",          1,          0,              "0",           0,         "0",    "muni_shape",    31983,     4.20,      0,
+  "rma",       2022,      "gtfs_rma",          "osm",    "gtfs",          1,          0,              "0",           1,       "osm",    "muni_shape",    31984,     4.50,      0,
+  "noh",       2022,      "gtfs_noh",          "osm",    "gtfs",          0,          0,              "0",           1,      "muni",    "muni_shape",    31982,     4.00,      0,
+  "dou",       2022,      "gtfs_dou",          "osm",    "gtfs",          0,          0,              "0",           1,       "osm",    "muni_shape",    31981,     3.25,      0,
+  "con",       2022,      "gtfs_con",          "osm",    "gtfs",          0,          0,              "0",           0,         "0",    "muni_shape",    31983,     5.50,      0,
+  "vic",       2022,             "0",          "osm",       "0",          0,          0,              "0",           0,         "0",             "0",    31984,     3.80,      0,
+  "cit",       2022,             "0",          "osm",    "gtfs",          0,          0,              "0",           0,         "0",    "muni_shape",    31984,     4.40,      1,
+  "pal",       2022,      "gtfs_pal",         "muni",    "gtfs",          0,          0,              "0",           1,       "osm",    "muni_shape",    31983,     3.85,      0
+  
+  
+) %>% setDT()
+
+munis_parameters <- tribble(
+  ~abrev_muni, ~aprox_maptiles,  ~frequencias,  ~ac_finan, ~rec_brancos, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
+  "poa",                     0,             1,          1,         2000,         1000,       1000,          200,          100,             1500,          1500,          200,
+  "bel",                     0,             1,          1,          1000,      3000,          2000,           40,           8,             600,          600,          200,
+  "man",                     1,             1,          1,         800,      2400,         1500,           40,           20,             400,          400,          150,
+  "slz",                     0,             1,          1,       1000,         2000,       1200,           40,           12,            400,         400,         150,
+  "rma",                     0,             1,          1,      1000,         2000,        500,           30,           10,            500,         500,         150,
+  "noh",                     0,             1,          1,        1000,          200,         800,           4,          4,             250,          250,          100,
+  "dou",                     1,             1,          1,          500,          500,        500,           40,          100,            400,         400,         200,
+  "con",                     0,             1,          1,         1000,         1500,        200,           40,          20,            160,         160,          80,
+  "vic",                     1,             0,          0,         800,         1400,       600,         10,           4,             300,          300,          150,
+  "cit",                     1,             1,          1,       1200,         1200,       400,         10,           4,             400,          300,          200,
+  "pal",                     1,             1,          1,          600,         1000,        500,           60,            5,            400,         400,         150,
+  
+  
+) %>% setDT()
+
 
 munis_recorte_limites = tribble(
   ~abrev_muni, ~legenda,           ~rec_gen,  ~rec_dif_gen, ~rec_brancos, ~rec_pretos, ~rec_dif_cor, ~rec_amarelos, ~rec_indigenas, ~rec_resp_h, ~res_resp_m, ~rec_dif_resp,
@@ -331,7 +376,7 @@ munis_pnad = tribble(
   
   ~muni,   ~ pnad, ~nome_pnad,
   "poa",	1, "Município de Porto Alegre (RS)",
-  "bel", 1, "Município de Belém (PA)",
+  "bel",  1, "Município de Belém (PA)",
   "man",	1, "Município de Manaus (AM)",
   "slz",	1, "Município de São Luís (MA)",
   "rma",	1, "Município de Aracaju (SE)",

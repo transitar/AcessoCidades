@@ -20,7 +20,7 @@ endereco_grade <- grades_muni <- paste0(
 
 # endereco_grade <- '../data-raw/censo_2021_info_muni_treated_v2/muni_pal.rds'
 
-gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
+gerar_pontos_r5 <- function(sigla_muni, ano) {
   
   # sigla_muni <- "for"; ano <- 2017
   # sigla_muni <- "mac"; ano <- 2017
@@ -126,7 +126,7 @@ gerar_pontos_OTP_muni <- function(sigla_muni, ano) {
   
 }
 
-gerar_pontos_OTP_muni(sigla_muni = "rma", ano = 2022)
+gerar_pontos_r5r(sigla_muni = "rma", ano = 2022)
 # write do gsheets
 a <- lapply(munis_list$munis_metro[ano_metro == 2017]$abrev_muni, gerar_pontos_OTP_muni, ano = 2017)
 b <- lapply(munis_list$munis_metro[ano_metro == 2018]$abrev_muni, gerar_pontos_OTP_muni, ano = 2018)

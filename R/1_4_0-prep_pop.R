@@ -5,6 +5,7 @@ library(data.table)
 library(geobr)
 library(sidrar)
 library(readr)
+library(purrr)
 rm(list=ls())
 gc(reset=T)
 
@@ -54,3 +55,7 @@ pop_proj_br <- pop_proj_br[,.SD,.SDcols = c("municipio_codigo","ano","valor")]
 
 rbind_pop <- rbind(popcenso_br,pop_proj_br)
 readr::write_rds(rbind_pop,"../data/pop_2010-2021.rds",compress="gz")
+
+
+pop <- read_rds("../data/pop_2010-2021.rds")
+xlsx::write.xlsx(pop, "../data/pop_2010-2021.xlsx")

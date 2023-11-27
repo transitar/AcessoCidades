@@ -25,19 +25,12 @@ source('./R/fun/setup.R')
 library(httr)
 library(raster)
 
+#Credenciais para acessar os dados do SRTM
+message("Informe usuário e senha para acessar https://urs.earthdata.nasa.gov ")
+username <- readline("Usuário : ")
+password <- readline("Senha : ")
 
-message("Inform username and password to access https://urs.earthdata.nasa.gov ")
-username <- readline("Give the username : ")
-password <- readline("Give the password : ")
-
-
-# username <- "user"
-# password <- "pass"
-
-ano <- 2019
-sigla_muni <- "rma"
-# sigla_muni="for"
-
+#função de download dos dados do SRTM
 download_srtm <- function(sigla_muni) {
   # read municipality boundary
   message(paste("rodando", sigla_muni))
@@ -104,10 +97,8 @@ download_srtm <- function(sigla_muni) {
                       overwrite = TRUE)
 }
 
-download_srtm("rma")
-# download_srtm("bel")
-walk(munis_list$munis_df$abrev_muni, download_srtm)
+#Aplicação da função para o município
+download_srtm(sigla_muni = "bel")
 
-# walk('rma', download_srtm)
 
 

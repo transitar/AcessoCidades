@@ -2,9 +2,10 @@
 
 #Mapas e gráficos de transporte público
 
-#Este código produz os mapas de cobertura da infraestrutura cicloviária,
-#empregos próximos à paraciclos e cobertura de estações de
-#bicicleta compartilhadas
+#Este código produz os mapas de cobertura de transporte público,
+#gráfico de desigualdade por recortes na cobvertura, mapa de frequências,
+#e gráfico de desigualdade por recorte nas frequências e mapa de acesso
+#financeiro, juntamnete com o cleveland de desigualdade no acesso financeiro.
 
 # rm(list = ls());gc()
 

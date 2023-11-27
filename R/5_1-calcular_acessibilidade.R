@@ -8,18 +8,6 @@ source('./R/fun/setup.R')
 
 
 sigla_muni <- "man"; ano=2022; mode_access = 'transit'; indicator_access <- "active"
-# sigla_muni <- "spo"; ano=2019
-# sigla_muni <- "for"; ano=2019
-# sigla_muni <- "for"; ano=2017
-# sigla_muni <- "sal"; ano=2019; mode1 <- "all"; access <- "all"
-# sigla_muni <- "bel"; ano=2019; mode1 <- "all"; access <- "all"
-# sigla_muni <- "bho"; ano=2019; mode1 <- "all"; access <- "all"
-# sigla_muni <- "for"; ano = 2019; mode_access <- "car"
-# sigla_muni <- "spo"; ano = 2019; mode1 <- "car"
-# sigla_muni <- "bsb_origin1"; ano = 2017; mode1 <- "car"
-# sigla_muni <- "bsb_dest1"; ano = 2019; mode1 <- "car"
-# sigla_muni <- "for"; ano = 2019; BFCA <- FALSE
-# sigla_muni <- "spo"; ano = 2019; BFCA <- FALSE
 
 #' OS parametros de mode_access e indicator_access so foram adicionados para permitir
 #' o calculo da acessibilidade de cidades que nao cabiam na memoria (especialmente matrizes de carro)

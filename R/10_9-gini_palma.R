@@ -2475,3 +2475,9 @@ assentamentos_bairros <- st_join(st_transform(quadras10, decisao_muni$epsg),
                                   st_transform(assentamentos, decisao_muni$epsg)) %>%
   drop_na(NM_AGSN)
 
+ranking_bairros(sigla_muni = "bel",
+                type_acc = "CMA",
+                modo_acc = "transit",
+                oportunidade = "TT",
+                time = 45,
+                nome_bairro = "areas")

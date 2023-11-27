@@ -1,3 +1,10 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#Esse script trata da filtragem e georreferenciamento dos dados de 
+#estabelecimentos de saúde da base de dados do CNES para um município
+#especificado.
+
+
 rm(list = ls())
 
 source('./R/fun/setup.R')
@@ -5,33 +12,11 @@ source('./R/fun/setup.R')
 #função ler dados de saúde e filtrá-los
 
 library(read.dbc)
-
 library(aopdata)
 
-sigla_muni <- 'man'
-ano_cnes <- 2022
-estado <- 'AM'
-
-
-library(ggmap)
-chave_google_maps <- readline(prompt = "API key google maps: ")
-register_google(key = chave_google_maps)
-
-create_diretorios <- function(sigla_muni){
-  
-  dir.create(sprintf("../data/saude/aop/muni_%s_saude_aop/", sigla_muni), recursive = TRUE)
-  
-}
-
-walk(munis_list$munis_df$abrev_muni, create_diretorios)
-
-create_diretorios <- function(sigla_muni){
-  
-  dir.create(sprintf("../data/saude/cnes/muni_%s_saude_cnes/", sigla_muni), recursive = TRUE)
-  
-}
-
-walk(munis_list$munis_df$abrev_muni, create_diretorios)
+sigla_muni <- 'bel'
+ano_cnes <- 2019
+estado <- 'PA'
 
 
 ano<- 2019
@@ -39,34 +24,46 @@ file_hex <- sprintf('../data/hex_municipio/hex_%s_%s_09.rds', ano, sigla_muni)
 hex <- read_rds(file_hex)
 
 if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
+  
+  
+  create_diretorios_aop <- function(sigla_muni){
+    
+    dir.create(sprintf("../data/saude/aop/muni_%s_saude_aop/", sigla_muni), recursive = TRUE)
+    
+  }
+  
+  walk(munis_list$munis_df$abrev_muni, create_diretorios_aop)
+  
   dados_aop_poa <- read_landuse(city = sigla_muni)
   hex <- dados_aop_poa %>% left_join(hex, by = "id_hex") %>% st_as_sf()
   hex <- hex %>% select(id_hex, S001, S002, S003, S004) #%>%
-    # drop_na(h3_resolution)
-  # sum(dados_aop_poa$S001)
-  # sum(dados_aop_poa$S002)+ sum(dados_aop_poa$S003)+sum(dados_aop_poa$S004)
-  # 
-  # sum(dados_aop_poa$M001)
-  # sum(dados_aop_poa$M002)+sum(dados_aop_poa$M003)+sum(dados_aop_poa$M004)
-  # 
-  # sum(dados_aop_poa$E001)
-  # sum(dados_aop_poa$E002)+sum(dados_aop_poa$E003)+sum(dados_aop_poa$E004)
-  
+
   readr::write_rds(hex, sprintf('../data/saude/aop/muni_%s_saude_aop/muni_%s.rds', sigla_muni, sigla_muni))
   
 } else {
   
-  # hex_scholl <- dados_aop_poa %>% left_join(hex, by = "id_hex") %>% st_as_sf()
-  # 
-  # mapview(hex_scholl, zcol = 'E001')
-  #cod_uf faltando o ultimo digito nos dados do cnes
+  create_diretorios_cnes <- function(sigla_muni){
+    
+    dir.create(sprintf("../data/saude/cnes/muni_%s_saude_cnes/", sigla_muni), recursive = TRUE)
+    
+  }
   
-  # dados_leitos <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/leitos_%s_%s.dbc',
-  #                                            estado, tolower(estado), ano_cnes)) %>%
-  #   filter(CODUFMUN == munis_list$munis_metro[abrev_muni == sigla_muni]$code_muni)
+  walk(munis_list$munis_df$abrev_muni, create_diretorios_cnes)
+
+  library(ggmap)
+  chave_google_maps <- readline(prompt = "API key google maps: ")
   
-  dados_estabelecimentos <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/estabelecimentos_%s_%s.dbc',
-                                                       estado, tolower(estado), ano_cnes))
+  if (chave_google_maps == ""){message("Erro: uma chave de API deve ser fornecida!")}
+  
+  stopifnot(!is.null(chave_google_maps), !missing(chave_google_maps), !chave_google_maps=="")
+  
+  register_google(key = chave_google_maps)
+  
+  # dados_estabelecimentos <- read.dbc::read.dbc(sprintf('../data-raw/saude_estado/%s/estabelecimentos_%s_%s.dbc',
+  #                                                      estado, tolower(estado), ano_cnes))
+  
+  dados_estabelecimentos <- fread(sprintf('../data-raw/saude_cnes_%s/tbEstabelecimento%s01.csv',
+                                                       ano_cnes, ano_cnes))
   
   
   dados_estabelecimentos2 <- dados_estabelecimentos %>% select(CNES,
@@ -75,6 +72,35 @@ if (sigla_muni %in% munis_list$munis_df_aop$abrev_muni) {
                                                                COD_CEP,
                                                                PF_PJ,
                                                                TP_UNID,
+                                                               VINC_SUS,
+                                                               GESPRG1E,
+                                                               GESPRG1M,
+                                                               GESPRG2E,
+                                                               GESPRG2M,
+                                                               GESPRG4E,
+                                                               NIVATE_A,
+                                                               GESPRG5E,
+                                                               GESPRG4M,
+                                                               GESPRG5M,
+                                                               GESPRG6E,
+                                                               GESPRG6M,
+                                                               NIVATE_H)
+  
+  
+  dados_estabelecimentos2 <- dados_estabelecimentos %>% select(CO_CNES,
+                                                               NU_CNPJ_MANTENEDORA,
+                                                               CO_ESTADO_GESTOR,
+                                                               CO_MUNICIPIO_GESTOR,
+                                                               CO_CEP,
+                                                               TP_PFPJ,
+                                                               NO_RAZAO_SOCIAL,
+                                                               NO_FANTASIA,
+                                                               NU_ENDERECO,
+                                                               NO_COMPLEMENTO,
+                                                               NO_BAIRRO,
+                                                               
+                                                               
+                                                               TP_UNIDADE,
                                                                VINC_SUS,
                                                                GESPRG1E,
                                                                GESPRG1M,

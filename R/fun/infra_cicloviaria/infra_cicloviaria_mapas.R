@@ -2,7 +2,7 @@
 #### Mapas cicloviários
 
 #Este código produz os mapas de cobertura da infraestrutura cicloviária,
-#empregos próximos à paraciclos e cobertura de estações de
+#empregos próximos a paraciclos e cobertura de estações de
 #bicicleta compartilhadas
 
 #Remove todos os objetos no ambiente de trabalho

@@ -35,20 +35,20 @@ dados_motor$muni_abrev <- factor(x = dados_motor$muni_abrev, levels = c(
   "com",
   "poa",
   "noh"), labels = c(
-    "Aracaju",
-    "B. Coqueiros",
-    "N.S. Socorro",
-    "S. Cristóvão",
-    "V. Conquista",
-    "São Luís",
-    "Manaus",
-    "Palmas",
-    "Belém",
-    "Dourados",
-    "C. Itapemirim",
-    "Contagem",
-    "Porto Alegre",
-    "Novo Hamburgo"
+    "Aracaju/SE",
+    "B. Coqueiros/SE",
+    "N.S. Socorro/SE",
+    "S. Cristóvão/SE",
+    "V. Conquista/BA",
+    "São Luís/MA",
+    "Manaus/AM",
+    "Palmas/TO",
+    "Belém/PA",
+    "Dourados/MS",
+    "C. Itapemirim/ES",
+    "Contagem/MG",
+    "Porto Alegre/RS",
+    "Novo Hamburgo/RS"
   ))
 
 showtext_auto()
@@ -63,20 +63,20 @@ labels_data <- dados_motor %>%
   filter(ANO == 2022) %>%
   ungroup()
 
-labels_data <- labels_data %>% mutate(position = case_when(muni_abrev == 'São Luís' ~ MOTO_RATE,
-                                                           muni_abrev == 'Manaus' ~ MOTO_RATE,
-                                                           muni_abrev == 'Belém' ~ MOTO_RATE,
-                                                           muni_abrev == 'C. Itapemirim' ~ MOTO_RATE,
-                                                           muni_abrev == 'Porto Alegre' ~ MOTO_RATE,
-                                                           muni_abrev == 'Palmas' ~ MOTO_RATE,
-                                                           muni_abrev == 'Dourados' ~ MOTO_RATE,
-                                                           muni_abrev == "N.S. Socorro" ~ 0.25,
-                                                           muni_abrev == "B. Coqueiros" ~ 0.265,
-                                                           muni_abrev == "S. Cristóvão" ~ 0.28,
-                                                           muni_abrev == "V. Conquista" ~ 0.41,
-                                                           muni_abrev == "Aracaju" ~ 0.425,
-                                                           muni_abrev == "Contagem" ~ 0.445,
-                                                           muni_abrev == "Novo Hamburgo" ~ 0.65))
+labels_data <- labels_data %>% mutate(position = case_when(muni_abrev == 'São Luís/MA' ~ MOTO_RATE,
+                                                           muni_abrev == 'Manaus/AM' ~ MOTO_RATE,
+                                                           muni_abrev == 'Belém/PA' ~ MOTO_RATE,
+                                                           muni_abrev == 'C. Itapemirim/ES' ~ MOTO_RATE,
+                                                           muni_abrev == 'Porto Alegre/RS' ~ MOTO_RATE,
+                                                           muni_abrev == 'Palmas/TO' ~ MOTO_RATE,
+                                                           muni_abrev == 'Dourados/MS' ~ MOTO_RATE,
+                                                           muni_abrev == "N.S. Socorro/SE" ~ 0.25,
+                                                           muni_abrev == "B. Coqueiros/SE" ~ 0.265,
+                                                           muni_abrev == "S. Cristóvão/SE" ~ 0.28,
+                                                           muni_abrev == "V. Conquista/BA" ~ 0.41,
+                                                           muni_abrev == "Aracaju/SE" ~ 0.425,
+                                                           muni_abrev == "Contagem/MG" ~ 0.445,
+                                                           muni_abrev == "Novo Hamburgo/RS" ~ 0.65))
 
 grid_h <- data.frame(xend = as.factor(rep(2022, 8)),
                      x = rep(0, 8),
@@ -160,6 +160,7 @@ grafico_mot <- ggplot(dados_motor) +
     plot.title = element_text(size = 35, margin = margin(b=10), family = "encode_sans_bold"),
     plot.subtitle = element_text(size=10, color = "darkslategrey", margin = margin(b = 25)),
     plot.caption = element_text(size = 30, margin = margin(t=10), color = "grey70", hjust = 0),
+    plot.background = element_blank(),
     #legenda
     legend.title = element_text(size = 35, family = "encode_sans_bold"),
     legend.text = element_text(size = 30, family = "encode_sans_light"),
@@ -167,6 +168,7 @@ grafico_mot <- ggplot(dados_motor) +
     legend.position = "right",
     legend.background = element_blank(),
     legend.spacing.y = unit(0.2, "cm"),
+    legend.key = element_blank(),
     #Eixos
     axis.text = element_text(size = 30, family = "encode_sans_light", angle = 90),
     axis.title = element_text(size = 35, family = "encode_sans_bold")) +
@@ -179,6 +181,6 @@ grafico_mot <- ggplot(dados_motor) +
   guides(color=guide_legend(override.aes=list(size=0.5))) #ajuste tamanho da bolinha da legenda 
 
 ggsave(grafico_mot, 
-       file= "../data/DENATRAN/grafico_motorizacao4.png", 
-       dpi = 350, width = 17.8, height = 13, units = "cm")
+       file= "../data/DENATRAN/grafico_motorizacao6.png", 
+       dpi = 350, width = 20.5, height = 13, units = "cm")
 
